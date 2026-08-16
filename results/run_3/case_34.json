@@ -1,0 +1,99 @@
+{
+  "case_number": 34,
+  "question": "Can you give me context on PROJ-355?",
+  "expected_doc_ids": [
+    "PROJ-355",
+    "PR-645"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "incident-response-process-standard-operating-procedure"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1712,
+      "cost_usd": 0.006656,
+      "time_sec": 5.760510206222534,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "incident-response-process-standard-operating-procedure"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1690,
+      "cost_usd": 0.00618,
+      "time_sec": 4.615561008453369,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.14285714285714285,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1151",
+        "PR-625",
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-330",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "api-rate-limiting-guide",
+        "incident-response-process-standard-operating-procedure",
+        "partner-eng-2026-08-09",
+        "partner-integration-best-practices"
+      ],
+      "retrieval_calls": 180,
+      "llm_calls": 40,
+      "tokens": 134353,
+      "cost_usd": 0.39052800000000004,
+      "time_sec": 191.69757890701294,
+      "stop_reason": "reached processing cap (20/20)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents provided, here's the context for **PROJ-355**:\n\n**Ticket:** PROJ-355 \u2014 \"Fix misaligned button on account settings page\"\n\n**Description:** The design team flagged a misaligned \"Save\" button on the account settings page that appeared incorrectly at certain viewport widths. This was categorized as a minor cosmetic fix.\n\n**Comments (from Layla Haddad):**\n- The fix was a small CSS change, tracked in PR-645.\n- The fix was merged and shipped with the next release.\n\n**Related PR:** [PR-645](gitrepo:PR-645) \u2014 \"Fix misaligned settings-page button at narrow viewport widths\"\n- Description matches the ticket: a small CSS fix for the misaligned Save button at narrow viewport widths, as flagged by design.\n- Review comment from Yuki Tanaka: \"Confirmed fixed at the reported width. Approved.\"\n\n**Summary:** This was a straightforward, low-priority cosmetic bug \u2014 a CSS alignment issue with a button on the account settings page. It was fixed quickly via a small CSS change (PR-645), reviewed and approved, and merged into the next release. There's no indication of further complications or follow-up work needed.",
+    "2-hop": "Based on the documents, here's the context for PROJ-355:\n\n**PROJ-355 \u2014 Fix misaligned button on account settings page**\n\n- **Description:** The design team flagged a misaligned \"Save\" button on the account settings page at certain viewport widths. It's characterized as a minor cosmetic fix.\n- **Resolution:** Layla Haddad commented that this was a small CSS fix, addressed via **PR-645**, and noted it was merged with the next release.\n\n**Related PR-645** (\"Fix misaligned settings-page button at narrow viewport widths\") confirms the same issue \u2014 a small CSS fix for the misaligned \"Save\" button flagged by design at narrow viewport widths. Yuki Tanaka reviewed and approved it, confirming the fix worked at the reported width.\n\nSo in short: PROJ-355 was a minor, low-effort UI bug fix (misaligned button on the settings page), resolved via a small CSS change in PR-645, reviewed/approved by Yuki Tanaka, and merged into the next release per Layla Haddad's comments.",
+    "ESG (v2)": "## Direct Answer\n\n**PROJ-355** is a small, closed (Done) ticket titled **\"Fix misaligned button on account settings page\"**. It was a minor cosmetic fix: the design team flagged that the \"Save\" button on the account settings page was misaligned at certain viewport widths. It was resolved with a small CSS fix in **PR-645**, authored/handled by **Layla Haddad**, and merged into the next release. It has no connection to the rate-limiting/partner-tier issues (PROJ-330, INC1151, PROJ-255) also present in this graph \u2014 those are separate, unrelated tickets.\n\n## Supporting Evidence\n\n- **jira:PROJ-355:0** \u2014 The ticket itself: status \"Done,\" description states the design team flagged a misaligned \"Save\" button on the account settings page at certain viewport widths, calling it a \"minor cosmetic fix.\"\n  - Comment from **Layla Haddad**: \"Small CSS fix, PR-645.\"\n  - Comment from **Layla Haddad**: \"Merged with next release.\"\n\n- **gitrepo:PR-645:0** \u2014 The linked pull request, titled \"Fix misaligned settings-page button at narrow viewport widths,\" status **Merged**. Description matches the ticket: a small CSS fix for the misaligned Save button at narrow viewport widths, as flagged by the design team.\n  - Review comment from **Yuki Tanaka**: \"Confirmed fixed at the reported width. Approved.\"\n\nThat's the complete picture available: a straightforward, low-priority UI bug reported by design, fixed with a small CSS change, reviewed and merged.\n\n## Note on Other Graph Content\n\nThe rest of the graph (PROJ-255, PROJ-330, INC1151, PR-625, API Rate Limiting Guide, partner-tier/standard-tier discussion, Omar Farouk, etc.) concerns an unrelated rate-limiting/partner-provisioning issue and does not bear on PROJ-355. Similarly, PROJ-440, PROJ-350, PROJ-345, PROJ-270 are unrelated backlog items that surfaced in the search but have no connection to PROJ-355. I've excluded these from the answer above since they don't provide context for this specific ticket."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers correctly identify PROJ-355 as a minor cosmetic CSS fix resolved via PR-645, with the same key facts (Layla Haddad, Yuki Tanaka's review, merged into next release). ESG adds explicit clarification that other retrieved documents (PROJ-330, INC1151, PR-625, etc.) are unrelated, which is a helpful but not materially different addition - it doesn't add new facts about PROJ-355 itself beyond what flat-RAG/2-hop already state. All three are grounded in the expected documents (PROJ-355, PR-645) with no fabrication. The core content and confidence level are essentially the same across all three; ESG's extra note about irrelevant tickets is cosmetic/organizational rather than materially informative."
+}

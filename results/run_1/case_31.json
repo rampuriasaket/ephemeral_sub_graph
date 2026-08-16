@@ -1,0 +1,119 @@
+{
+  "case_number": 31,
+  "question": "What's the latest on PROJ-305?",
+  "expected_doc_ids": [
+    "PROJ-305",
+    "eng-search-2026-08-05",
+    "PR-605"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PROJ-230"
+      ],
+      "retrieved_doc_ids": [
+        "INC1108",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 2751,
+      "cost_usd": 0.00927,
+      "time_sec": 7.340010166168213,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.16666666666666666,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1070",
+        "INC1108",
+        "INC1236",
+        "PR-470",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-230",
+        "PROJ-244",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 65,
+      "llm_calls": 1,
+      "tokens": 3838,
+      "cost_usd": 0.010164,
+      "time_sec": 4.7654149532318115,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.21428571428571427,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-470",
+        "PROJ-230"
+      ],
+      "retrieved_doc_ids": [
+        "INC1108",
+        "INC1236",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 155,
+      "llm_calls": 45,
+      "tokens": 121228,
+      "cost_usd": 0.32453299999999996,
+      "time_sec": 156.8393828868866,
+      "stop_reason": "reached processing cap (20/20)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents, here's the latest on **PROJ-305** (Autocomplete index uses stale cache separate from main search index):\n\n**Status: Resolved/Merged and verified**\n\n- **Root cause**: Autocomplete suggestions were pulling from a separate, slower-refreshing cache instead of the primary search index \u2014 this was the same category of staleness issue as PROJ-230, but affecting a different, previously-unfixed cache (jira:PROJ-305).\n- **Fix**: PR-605 repointed autocomplete-service directly at the primary search index instead of its own cache (gitrepo:PR-605, jira:PROJ-305).\n- **Latest comment** from Layla Haddad: \"PR-605 points autocomplete at the primary index directly. Merged, verified in staging.\" (jira:PROJ-305)\n- This also resolved the related incident **INC1108** (Autocomplete suggestions showing outdated product names), which explicitly notes it was \"Tracked in PROJ-305, fixed via PR-605\" (servicenow:INC1108).\n- Context from Slack thread (slack:eng-search-2026-08-05) confirms the same narrative: Omar Farouk approved the PR, noting \"Makes sense that this got missed the first time since it's a different service.\"\n\n**Bottom line**: The ticket appears closed out \u2014 the fix has been merged and verified in staging, with no open follow-up items mentioned in these documents.",
+    "2-hop": "**PROJ-305 \u2014 Autocomplete index uses stale cache separate from main search index: Resolved/Fixed**\n\n- **Root cause:** Autocomplete suggestions were showing outdated product names (INC1108) because autocomplete pulled from a separate, slower-refreshing cache rather than the primary search index \u2014 a similar staleness issue to PROJ-230, but a distinct cache that was never repointed when the main index was fixed.\n\n- **Fix:** PR-605 repointed autocomplete-service at the primary search index instead of its own cache.\n\n- **Status:** Per Layla Haddad's final comment on PROJ-305, \"PR-605 points autocomplete at the primary index directly. Merged, verified in staging.\" This is corroborated by INC1108's resolution notes, which confirm the fix was tracked in PROJ-305 and delivered via PR-605.\n\nSo the latest status is: fix merged and verified in staging \u2014 issue resolved.",
+    "ESG (v2)": "## Direct Answer\n\n**PROJ-305 is Done/resolved.** It tracked autocomplete suggestions showing outdated, renamed/discontinued product names \u2014 the fix has been merged and verified.\n\n## Supporting Evidence\n\n**Ticket status (jira:PROJ-305:0):** PROJ-305, titled \"Autocomplete index uses stale cache separate from main search index,\" is marked **Done**. The description explains: autocomplete suggestions were showing outdated product names (tracked as INC1108) even though main search results were current. Root cause was that autocomplete pulled from a separate, slower-refreshing cache rather than the primary search index used by main search.\n\n**Root cause context:** Layla Haddad noted in comments that this was \"same category of staleness issue as PROJ-230, but a completely separate cache \u2014 autocomplete was never repointed when we fixed the main index\" (PROJ-230 had previously fixed staleness on the *main* search index, via PR-470, per gitrepo:PR-605:0's description).\n\n**Fix delivered:** Layla Haddad's follow-up comment on PROJ-305 confirms: \"PR-605 points autocomplete at the primary index directly. Merged, verified in staging.\" This is corroborated by gitrepo:PR-605:0, which shows the PR (\"Point autocomplete at primary search index\") with status **Merged**, reviewed and approved by Omar Farouk, who commented \"Makes sense that this got missed the first time since it's a different service.\"\n\n**Incident linkage:** servicenow:INC1108:0 (status **Resolved**) \u2014 \"Autocomplete suggestions showing outdated product names\" \u2014 explicitly states the resolution: \"Autocomplete was repointed at the primary, already-fresh index. Tracked in PROJ-305, fixed via PR-605.\"\n\n**Informal discussion trail:** slack:eng-search-2026-08-05:0 shows the team (Layla Haddad, Omar Farouk) diagnosing the issue in real time \u2014 recognizing autocomplete had its own untouched cache separate from the main index fixed in PROJ-230 \u2014 and deciding to repoint it, with Layla noting \"PR going up today,\" which aligns with the eventual PR-605 merge.\n\n## Summary\n\nAll available evidence (ticket, incident record, PR, and Slack thread) is consistent and points to the same conclusion: PROJ-305 has been fully resolved \u2014 the autocomplete cache was repointed to the primary search index via PR-605, merged and verified in staging, closing out both the ticket and the related incident INC1108. No open follow-up work or outstanding questions on PROJ-305 appear in the graph."
+  },
+  "verdict": "unknown",
+  "verdict_reasoning": "All three answers converge on the same core facts: PROJ-305 tracked stale autocomplete cache, root cause was separate cache from main index, fix via PR-605 merged and verified in staging, linked to INC1108. ESG's answer is grounded in the same expected documents (PROJ-305, PR-605, eng-search-2026-08-05) plus additional retrieved docs (INC1108, PROJ-230 references, support-eng-2026-08-14) that don't contradict anything. No fabrication apparent - all details trace to plausible retrieved documents. The three answers are materially equivalent in facts conveyed and confidence level; ESG is more verbose but doesn't add incorrect claims or omit anything the baselines have. This is essentially cosmetic difference.</reasoning>\n<parameter name=\"verdict\">same"
+}

@@ -1,0 +1,73 @@
+{
+  "case_number": 5,
+  "question": "what's the latest on the TLS certificate expiring for the billing API?",
+  "expected_doc_ids": [
+    "INC1090"
+  ],
+  "excluded_doc_ids": [
+    "api-rate-limiting-guide"
+  ],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1090"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 641,
+      "cost_usd": 0.003578,
+      "time_sec": 5.075930833816528,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1090"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 648,
+      "cost_usd": 0.003392,
+      "time_sec": 5.276970148086548,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1090"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 5,
+      "tokens": 13886,
+      "cost_usd": 0.036822,
+      "time_sec": 24.507431983947754,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the single available document, here's the current status:\n\n**INC1090** \u2014 TLS certificate for `api.internal-billing` is set to expire in 14 days. This was flagged by automated certificate-expiry monitoring.\n\nKey details from the ticket:\n- It's classified as a **routine, low-urgency alert** with ample lead time to address it.\n- **No customer impact** at this time.\n- There are **no related tickets or documentation** yet.\n- It's expected to be **handled directly by the on-call engineer** without further formal tracking.\n\n**What's missing:** There's no follow-up information indicating whether the certificate has actually been renewed, who the on-call engineer assigned was, or a resolution/closure update. If you need confirmation that the renewal was completed, that information isn't present in the documents I have access to \u2014 you may want to check with the on-call engineer directly or look for a closure update on INC1090.",
+    "2-hop": "Based on INC1090, here's the latest available information:\n\n**INC1090 \u2014 TLS certificate for api.internal-billing expiring in 14 days**\n\n- Automated certificate-expiry monitoring flagged that the TLS certificate used by the internal billing API is due to expire in 14 days.\n- It's characterized as a **routine, low-urgency alert** with ample lead time before expiry.\n- **No customer impact** at this time.\n- The ticket notes there are **no related tickets or documentation** yet, and it's expected to be handled directly by the on-call engineer without further formal tracking.\n\nThat's all the information available in the retrieved documents \u2014 there's no follow-up ticket, resolution note, or renewal confirmation on record, so I can't confirm whether the certificate has since been renewed or if any further action was taken.",
+    "ESG (v2)": "## Direct Answer\n\nThe only record found is **INC1090**, a low-urgency, informational alert stating that the TLS certificate for `api.internal-billing` (the internal billing API) is set to expire in **14 days**. As of this ticket, there is **no customer impact**, and the status is **New**. There is no indication of any further action, escalation, or resolution beyond this initial alert.\n\n## Supporting Evidence\n\n- **INC1090** (servicenow, status: New): The ticket description states this was raised by automated certificate-expiry monitoring, flagging that the TLS certificate for the internal billing API is due to expire in 14 days. It explicitly characterizes this as \"a routine, low-urgency alert with ample lead time\" and notes \"No customer impact at this time.\"\n- The ticket also notes that \"No related tickets or documentation exist yet; this will likely be handled directly by the on-call engineer without further tracking\" \u2014 meaning at the time this record was created, no remediation ticket, change request, or renewal confirmation had been logged.\n\n## What's Missing\n\nThe graph contains no follow-up tickets, PRs, or documentation showing:\n- Whether the certificate was actually renewed,\n- Which on-call engineer (if any) picked this up,\n- Or the current status of the certificate relative to the original 14-day expiry window.\n\nSince the search frontier is exhausted and no additional related tickets or updates were found, there's no evidence in this graph of resolution \u2014 only the initial low-urgency alert. If a more current status is needed, it would require checking for a newer ticket or change record not present in this dataset."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers are grounded in INC1090 and convey the same core facts: TLS cert for api.internal-billing expiring in 14 days, low-urgency, no customer impact, no follow-up documented. All three correctly hedge that resolution/renewal status is unknown. ESG adds slightly more structure and explicit note about \"status: New\" and \"search frontier exhausted\" but this doesn't add new material facts beyond the baselines. No fabrications, no confidently wrong claims. Differences are cosmetic/formatting only."
+}

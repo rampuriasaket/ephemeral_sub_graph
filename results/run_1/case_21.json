@@ -1,0 +1,87 @@
+{
+  "case_number": 21,
+  "question": "Are customers stacking discount codes somehow?",
+  "expected_doc_ids": [
+    "INC1201",
+    "PROJ-401",
+    "PR-701",
+    "coupon-discount-validation-rules",
+    "customer-support-eng-2026-08-10"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.2,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-701",
+        "PROJ-401"
+      ],
+      "retrieved_doc_ids": [
+        "INC1201"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 613,
+      "cost_usd": 0.002698,
+      "time_sec": 5.047888994216919,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.8,
+      "precision": 0.8,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1201",
+        "PR-701",
+        "PROJ-401",
+        "coupon-discount-validation-rules",
+        "eng-checkout-2026-08-10"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 1,
+      "tokens": 1705,
+      "cost_usd": 0.007082,
+      "time_sec": 7.7953526973724365,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.8333333333333334,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1201",
+        "PR-701",
+        "PROJ-401",
+        "coupon-discount-validation-rules",
+        "customer-support-eng-2026-08-10",
+        "eng-checkout-2026-08-10"
+      ],
+      "retrieval_calls": 100,
+      "llm_calls": 22,
+      "tokens": 67047,
+      "cost_usd": 0.1778,
+      "time_sec": 121.57664608955383,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Yes. According to servicenow:INC1201, customers were able to stack discounts by applying two distinct coupon codes to the same order when only one should have been allowed.\n\nRoot cause: coupon validation only checked for duplicate codes (i.e., the same code used twice), but didn't prevent multiple *different* codes from being applied to a single cart.\n\nResolution: A single-coupon-per-order rule was enforced at the validation layer (tracked in PROJ-401, fixed via PR-701). Affected orders with the double discounts are being reviewed separately by finance.",
+    "2-hop": "Yes \u2014 this was confirmed in INC1201. Customers (or the checkout flow) were able to apply two distinct, valid coupon codes to the same order, causing discounts to stack when only one coupon should have been allowed per order.\n\n**Root cause:** Coupon validation only checked whether the *same* code was being applied twice (\"is this code already applied\"), but never checked whether *any* code had already been applied to the order. This gap meant two different valid codes could both be accepted on one cart (INC1201, confirmed in PROJ-401 comments by Aisha Rahman, and discussed in slack:eng-checkout-2026-08-10).\n\n**Fix:** A single-coupon-per-order rule was enforced at the validation layer, rejecting any second coupon (not just duplicates of the same code) once one is already applied to the order \u2014 implemented in PR-701 and tracked via PROJ-401. Per confluence:coupon-discount-validation-rules, this validation was also moved to cart-finalization time rather than code-entry time, to fully close the window where two distinct valid codes could slip through before the single-coupon rule kicked in.\n\n**Note:** INC1201's resolution notes state that affected orders (where stacking already occurred) are being reviewed separately by finance \u2014 the documents provided don't include details on that review's findings or scope, so I can't say how many customers were affected or what actions (refund clawback, etc.) resulted.",
+    "ESG (v2)": "## Short Answer\n\n**Yes \u2014 this happened, but it has already been identified and fixed.** Customers were able to apply two different discount codes to the same order (stacking discounts) due to a bug in coupon validation. This was tracked as incident INC1201, root-caused and fixed via PROJ-401/PR-701, and the fix has been documented in the checkout validation rules going forward.\n\n## Supporting Evidence\n\n**The incident itself:** INC1201 (\"Coupon code stacking allows double discounts at checkout\") describes exactly this scenario \u2014 Finance flagged an unusual spike in orders with unusually large discounts. Investigation confirmed that under specific conditions, two coupon codes could be applied to the same order when only one should have been allowed (servicenow:INC1201:0).\n\n**Root cause:** Per INC1201 and PROJ-401, the coupon validation logic only checked whether the *same* code was being applied twice (\"is this code already applied\"), but it never checked whether *any* code had already been applied to the order (\"is any code already applied\"). This let two distinct, individually-valid codes both go through. Aisha Rahman confirmed this in PROJ-401 comments: \"validation logic checked 'is this code already applied' not 'is any code already applied'. Easy miss.\" The same explanation appears in the engineering Slack thread eng-checkout-2026-08-10, where Diego Alvarez asks \"multiple codes on one order somehow?\" and Aisha confirms \"yep... never considered that combo.\"\n\n**The fix:** PR-701 (\"Enforce single-coupon-per-order at validation layer\") was merged to reject any second coupon code once one is already applied to an order, rather than only rejecting duplicates of the same code. Diego Alvarez reviewed and approved it, noting the distinction between \"duplicate\" and \"multiple distinct\" codes. This work was tracked under PROJ-401 (status: Done) and closes out INC1201 (status: Resolved).\n\n**Process change:** The Confluence page coupon-discount-validation-rules documents the resulting policy \u2014 one coupon per order, now validated at cart-finalization time (the `cart-finalization` component) rather than at code-entry time, specifically to close the gap where two distinct valid codes could both be applied before the single-coupon rule was enforced.\n\n**Customer-facing corroboration:** A separate support/engineering Slack thread (customer-support-eng-2026-08-10) shows support-eng-liaison flagging a handful of support tickets where customers mentioned using \"two promo codes\" on one order, asking whether this was intentional and flagging it to engineering \"just in case.\" This is consistent with the INC1201 stacking bug, though the graph does not explicitly link this thread's tickets to a specific date range or confirm whether these particular customer reports predate or postdate the PR-701 fix.\n\n## Gaps\n\nThe graph doesn't specify the timeline of when INC1201 occurred relative to the customer-support-eng-2026-08-10 thread, so it's not fully confirmed whether the support tickets mentioned there are new instances of the same bug (i.e., stacking still occurring after the fix) or reports from before PR-701 was merged. There's also no data on the scope/impact (e.g., how many orders or how much revenue was affected) beyond \"Finance is reviewing affected orders separately,\" as noted in INC1201."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "All three systems correctly confirm that customers could stack discount codes\u2014applying two distinct coupon codes to the same order when only one should have been allowed. The root cause (validation checked for duplicate codes but not whether any code was already applied) and the fix (single-coupon-per-order rule enforced at validation layer via PR-701/PROJ-401) are consistent across all answers and well-grounded in the expected documents (INC1201, PROJ-401, PR-701, coupon-discount-validation-rules).\n\nESG retrieved all five expected documents plus one additional document (eng-checkout-2026-08-10) that appears in its retrieved set and is cited appropriately. Critically, ESG does cite customer-support-eng-2026-08-10 (one of the five expected documents) in its \"Customer-facing corroboration\" section, correctly noting that it shows support tickets mentioning \"two promo codes\" on one order. However, ESG then appropriately hedges its interpretation: the thread doesn't explicitly confirm whether these customer reports predate or postdate the PR-701 fix, so it's unclear whether they represent new instances or old ones.\n\nThe 2-hop baseline mentions eng-checkout-2026-08-10 in passing but does not cite customer-support-eng-2026-08-10 at all\u2014a document that was in its retrieved set but not surfaced in the answer. ESG surfaces this additional expected document with appropriate caution about what can and cannot be concluded from it. This additional grounding, combined with ESG's explicit acknowledgment of limitations and timeline gaps, represents material completeness without overconfidence.\n\nESG's framing and hedging are all calibrated correctly: it acknowledges data gaps (no explicit timeline linking support tickets to the bug fix, no scope/impact data) while still confidently confirming the core fact (yes, stacking happened and was fixed). This is exactly the kind of additional completeness that should be valued when it doesn't involve false claims\u2014ESG brings in a relevant expected document (customer-support-eng-2026-08-10) and makes appropriately tentative use of it."
+}

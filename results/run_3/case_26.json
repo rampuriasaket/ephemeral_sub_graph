@@ -1,0 +1,75 @@
+{
+  "case_number": 26,
+  "question": "Why is customer support queue time increasing?",
+  "expected_doc_ids": [
+    "INC1236",
+    "PROJ-420",
+    "support-eng-2026-08-14"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.3333333333333333,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1236"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 582,
+      "cost_usd": 0.003484,
+      "time_sec": 4.620659828186035,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.3333333333333333,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1236"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 734,
+      "cost_usd": 0.004748,
+      "time_sec": 6.243291139602661,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1236",
+        "PROJ-420",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 50,
+      "llm_calls": 11,
+      "tokens": 42861,
+      "cost_usd": 0.131083,
+      "time_sec": 70.75952219963074,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "I don't have enough information to answer this question definitively.\n\nThe only document provided, **INC1236**, states that customer support queue times (specifically average time-to-first-response) have been climbing over the past week, but explicitly notes there is **no clear staffing or volume explanation** identified yet. It mentions that support leadership has asked engineering to investigate whether a tooling issue could be contributing \u2014 but this ticket does not contain any findings, root cause analysis, or engineering conclusions.\n\nThere are no other tickets, incidents, or PRs in the provided set that reference tooling diagnostics, related outages, deployments, or other contributing factors for INC1236.\n\n**What's missing:** Any follow-up investigation results, engineering findings, related incident/PR references, or root cause documentation that would explain *why* the queue time is increasing. Without that, I can't state a cause \u2014 only that it's under investigation per INC1236.",
+    "2-hop": "Based on the single document provided (**INC1236**), I can only confirm the symptom, not the cause:\n\n- **INC1236** reports that average time-to-first-response in the customer support queue has been climbing steadily over the past week, with \"no clear staffing or volume explanation.\" Support leadership asked engineering to investigate whether a tooling issue might be contributing.\n\nHowever, the document does not identify a root cause \u2014 it doesn't reference any specific tool, system, incident, or PR ID that would explain the increase, so there's nothing in it (or in a follow-up) to trace further. \n\n**What's missing:** Any linked incident/PR/ticket documenting an actual tooling problem (e.g., a support platform outage, integration failure, or performance regression) that engineering found when investigating. Without such a document, I can't state why queue times are actually increasing \u2014 only that INC1236 flags the symptom and requests investigation.",
+    "ESG (v2)": "## Direct Answer\n\n**The root cause has not yet been determined.** The investigation confirmed that customer support queue times (time-to-first-response) have been climbing steadily over the past week, and the leading hypothesis is a slowdown in the support tool's ticket-routing integration \u2014 but this has not been confirmed, and no fix or root cause has been identified as of the last update.\n\n## Supporting Evidence\n\n**The problem itself (INC1236):** ServiceNow incident INC1236 documents that average time-to-first-response in the support queue has climbed steadily over the past week \"without a clear staffing or volume explanation.\" Support leadership explicitly asked engineering to check whether a tooling issue could be contributing.\n\n**Engineering investigation (PROJ-420):** Jira ticket PROJ-420, \"Investigate rising support queue response times,\" was opened in response to INC1236 and remains **In Progress**. Its only comment (unassigned) states the team is \"checking whether the support tool's ticket-routing integration has slowed down \u2014 no conclusion yet.\"\n\n**Support team's own observations (Slack thread support-eng-2026-08-14):** support-eng-liaison reported that response times have been climbing all week, but noted that ticket **volume looks normal**, which rules out a simple surge in demand as the explanation. This person raised the same suspicion as PROJ-420 \u2014 that the **routing tool** may be responsible \u2014 and opened a ticket with engineering to check the integration. As of the thread, there was still \"no answer yet on cause.\"\n\n## What's Missing\n\nThe graph does not contain any evidence confirming or ruling out the routing tool as the actual cause \u2014 no diagnostic results, logs, metrics, or a resolved ticket showing what engineering found when they checked the integration. The frontier was exhausted without turning up a follow-up chunk (e.g., a PROJ-420 resolution comment or a subsequent incident update) that identifies a definitive root cause. \n\n**In short:** all available sources converge on the same unconfirmed hypothesis \u2014 a possible slowdown in the ticket-routing tool integration, with normal ticket volume ruling out simple demand growth \u2014 but no source in the graph confirms this as the actual cause or points to a different one. Further investigation (the outcome of PROJ-420) would be needed to close this out."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "ESG retrieved all three expected documents (INC1236, PROJ-420, support-eng-2026-08-14) while both baselines only retrieved INC1236. ESG correctly surfaces additional material facts that the baselines missed entirely: PROJ-420 shows an active engineering investigation pointing to a suspected slowdown in the support tool's ticket-routing integration, and the Slack thread corroborates this hypothesis while ruling out volume as a cause. ESG appropriately hedges that this is not confirmed as the root cause, avoiding overclaiming, while still giving the reader the leading hypothesis and ruling out demand surge - both material facts unavailable to the baselines. This is a clear case where the baselines' \"not enough information\" hedge was overly conservative given the expected documents actually contained additional useful investigative context that ESG correctly found and calibrated confidence around."
+}

@@ -1,0 +1,79 @@
+{
+  "case_number": 30,
+  "question": "Anything I should know about upcoming team events or offsites?",
+  "expected_doc_ids": [
+    "team-offsite-planning-fall-2026",
+    "social-committee-2026-08-01",
+    "social-committee-2026-08-15"
+  ],
+  "excluded_doc_ids": [
+    "vendor-contract-renewals-q3",
+    "q3-design-review-notes"
+  ],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.6666666666666666,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "social-committee-2026-08-01",
+        "team-offsite-planning-fall-2026"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 781,
+      "cost_usd": 0.004546,
+      "time_sec": 5.03569221496582,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.6666666666666666,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "social-committee-2026-08-01",
+        "team-offsite-planning-fall-2026"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 757,
+      "cost_usd": 0.00405,
+      "time_sec": 4.598446846008301,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 0.6666666666666666,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "social-committee-2026-08-01",
+        "team-offsite-planning-fall-2026"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 6,
+      "tokens": 13620,
+      "cost_usd": 0.040477,
+      "time_sec": 24.312283992767334,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "I found two documents that touch on team events, but neither contains substantive details that would actually answer your question \u2014 both are explicitly limited in scope:\n\n1. **confluence:team-offsite-planning-fall-2026** \u2014 \"Team Offsite Planning \u2014 Fall 2026\": This page is described as covering logistics for an upcoming fall engineering offsite (venue options, proposed agenda topics, request for team leads to submit session ideas). However, the document itself states \"No technical content,\" and no actual venue, date, or agenda details are included in what was provided.\n\n2. **slack:social-committee-2026-08-01** \u2014 \"holiday party planning kickoff\": A brief thread where the social committee starts discussing holiday party venue ideas, with someone suggesting reusing \"the same spot as last year.\" No venue name, date, or final decision is included.\n\n**What's missing:** Specific dates, confirmed venues, agenda details, or RSVP/logistics information for either event. Based on what's in these documents, I can't tell you when the fall offsite is, where it will be held, or what the holiday party plans have settled on \u2014 you'd need to check the full Confluence page or the complete Slack thread for those details.",
+    "2-hop": "Based on the documents provided, here's what's available:\n\n**Fall 2026 Team Offsite** (confluence:team-offsite-planning-fall-2026): There's planning underway for an upcoming fall engineering offsite. The page covers venue options, proposed agenda topics, and includes a request for team leads to submit session ideas. No technical/agenda details beyond that are included in the document.\n\n**Holiday Party Planning** (slack:social-committee-2026-08-01): The social committee has kicked off planning for the holiday party. Early discussion suggests reusing the same venue as last year, which reportedly worked well. Availability is being checked, but no confirmed date or venue is mentioned yet.\n\nThat's the extent of what these documents cover \u2014 there's no information here on specific dates, locations, confirmed agendas, or RSVP details for either event. If you need those specifics, you'd want to check with the team leads (for offsite session submissions) or the social committee (for holiday party details) directly.",
+    "ESG (v2)": "## Short Answer\n\nYes \u2014 there are two relevant items in the graph: a **Fall 2026 engineering team offsite** currently in the logistics/planning stage, and a **holiday party** being organized by the social committee (thread started 2026-08-01). Details on both are still light, as the underlying source documents are largely planning notes rather than finalized schedules.\n\n## Supporting Evidence\n\n**1. Fall 2026 Team Offsite (confluence:team-offsite-planning-fall-2026:0)**\n- A Confluence wiki page titled \"Team Offsite Planning \u2014 Fall 2026\" documents early logistics planning for an upcoming fall engineering offsite.\n- Content includes venue options, proposed agenda topics, and a request for team leads to submit session ideas.\n- Note: this page is explicitly logistics-focused with \"no technical content\" \u2014 no finalized dates, venue, or agenda are captured in this chunk.\n\n**2. Holiday Party Planning (slack:social-committee-2026-08-01:0)**\n- A Slack thread (ticket ID `social-committee-2026-08-01`) titled \"holiday party planning kickoff\" shows the social committee beginning to organize a holiday party.\n- Messages indicate the group is soliciting venue ideas, with one participant suggesting reusing \"the same spot as last year\" since it \"worked well,\" and others agreeing to check availability.\n- This is an early-stage planning conversation \u2014 no confirmed date, venue, or final details yet.\n\n## What's Missing\n\nThe graph does not contain:\n- Confirmed dates, times, or locations for either the offsite or the holiday party\n- The actual agenda or session list for the fall offsite (only that leads were asked to submit ideas)\n- Any outcome of the venue-availability check mentioned in the Slack thread\n- Any other team events/offsites beyond these two\n\nIf you need firm dates or finalized plans, you'd want to check for follow-up updates to these two documents (later messages in the Slack thread or revisions to the Confluence page), which aren't present in the current graph."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three systems retrieved the same two of three expected documents (missing social-committee-2026-08-15, which likely contains the follow-up/finalized details). None of the systems surfaced the third expected document, so all hedge similarly about missing confirmed dates/venues. ESG's answer conveys the same facts as flat-RAG and 2-hop (offsite planning stage, holiday party planning kickoff, no confirmed details), just with different formatting (headers, bullet points). No system fabricates content or claims settled facts not supported by the documents. The core information and hedging is materially identical across all three."
+}

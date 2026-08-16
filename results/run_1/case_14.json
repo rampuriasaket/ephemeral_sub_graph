@@ -1,0 +1,87 @@
+{
+  "case_number": 14,
+  "question": "Why were customers seeing double discounts at checkout?",
+  "expected_doc_ids": [
+    "INC1201",
+    "PROJ-401",
+    "PR-701",
+    "coupon-discount-validation-rules",
+    "eng-checkout-2026-08-10"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.2,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-701",
+        "PROJ-401"
+      ],
+      "retrieved_doc_ids": [
+        "INC1201"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 682,
+      "cost_usd": 0.003372,
+      "time_sec": 4.816771030426025,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1201",
+        "PR-701",
+        "PROJ-401",
+        "coupon-discount-validation-rules",
+        "eng-checkout-2026-08-10"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 1,
+      "tokens": 1706,
+      "cost_usd": 0.007076,
+      "time_sec": 7.971994161605835,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.8333333333333334,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1201",
+        "PR-701",
+        "PROJ-401",
+        "coupon-discount-validation-rules",
+        "customer-support-eng-2026-08-10",
+        "eng-checkout-2026-08-10"
+      ],
+      "retrieval_calls": 95,
+      "llm_calls": 21,
+      "tokens": 65035,
+      "cost_usd": 0.172956,
+      "time_sec": 107.97191500663757,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on ServiceNow incident INC1201: customers were seeing double discounts because the coupon validation logic only checked for **duplicate** coupon codes (i.e., the same code applied twice), but did not check for **multiple distinct coupon codes** being applied to the same cart. This meant that under specific conditions, two different (distinct) coupon codes could both be applied to a single order, effectively stacking their discounts when only one coupon should have been allowed.\n\nThe issue was identified after Finance flagged an unusual spike in orders with unusually large discounts.\n\n**Resolution:** The fix enforced a single-coupon-per-order rule at the validation layer, tracked in PROJ-401 and implemented via PR-701. Affected orders were being reviewed separately by finance.",
+    "2-hop": "Customers saw double discounts because the coupon validation logic only checked whether the *same* coupon code was being applied twice (\"is this code already applied\") \u2014 it never checked whether *any* coupon had already been applied to the order. This allowed two different, valid coupon codes to both be applied to a single cart, stacking their discounts.\n\nDetails from the documents:\n\n- **INC1201** identified the issue after Finance flagged orders with unusually large discounts, tracing it to coupon validation checking for duplicate codes but not for multiple distinct codes on the same order.\n- **PROJ-401** confirms the root cause via Aisha Rahman's comment: \"validation logic checked 'is this code already applied' not 'is any code already applied'. Easy miss.\"\n- **slack:eng-checkout-2026-08-10** corroborates this in real time \u2014 Aisha notes \"validation only blocks the *same* code twice, not two different codes. never considered that combo.\"\n- The fix, **PR-701**, enforces a single-coupon-per-order rule, rejecting any second coupon on an order that already has one applied (rather than only rejecting duplicates of the same code).\n- **confluence:coupon-discount-validation-rules** documents the resulting policy: one coupon per order, validated at cart-finalization time (not code-entry time) to close this gap.\n\nAffected orders were being reviewed separately by Finance per INC1201's resolution notes.",
+    "ESG (v2)": "## Direct Answer\n\nCustomers were seeing double discounts because the coupon validation logic at checkout only checked whether the *same* coupon code was being applied twice \u2014 it did not check whether *any* coupon had already been applied to the order. This allowed two distinct, individually valid coupon codes to be stacked on a single cart, resulting in unintended double discounts. This was tracked as incident **INC1201**, root-caused in **PROJ-401**, and fixed in **PR-701**.\n\n## Supporting Evidence\n\n**The incident (INC1201):** Finance flagged a spike in orders with unusually large discounts. Investigation (`servicenow:INC1201:0`) found that \"coupon validation only checked for duplicate codes, not for multiple distinct codes being applied to the same cart,\" which let two coupon codes stack on one order when only one should have been allowed.\n\n**Discovery in engineering chat:** In the `eng-checkout-2026-08-10` Slack thread, Aisha Rahman and Diego Alvarez traced the finance report to this exact gap: \"validation only blocks the *same* code twice, not two different codes. never considered that combo.\" Diego confirmed the fix was to simply enforce \"one code period.\"\n\n**Confirmation from support side:** The `customer-support-eng-2026-08-10` thread shows customer support (support-eng-liaison) independently noticing customers reporting they used \"two promo codes\" on one order, and flagging it to engineering \u2014 corroborating that customers were externally experiencing this stacking behavior.\n\n**Root cause ticket (PROJ-401):** Aisha Rahman confirmed in comments: \"validation logic checked 'is this code already applied' not 'is any code already applied'. Easy miss.\"\n\n**The fix (PR-701):** The pull request \"Enforce single-coupon-per-order at validation layer\" changed the logic to \"reject any second coupon code on an order that already has one applied, rather than only rejecting duplicates of the same code.\" Diego Alvarez reviewed and approved it, noting: \"Good catch on the distinction between 'duplicate' and 'multiple distinct'.\"\n\n**Follow-up hardening:** The `coupon-discount-validation-rules` Confluence page documents the resulting policy \u2014 one coupon per order, validated at **cart-finalization** time rather than at code-entry time \u2014 specifically to close the gap where two distinct valid codes could both be applied before the single-coupon rule took effect.\n\n## Summary of the causal chain\n\n1. Coupon validation logic only rejected re-use of the *identical* code, not a *second, different* code.\n2. This let customers apply two distinct valid coupons to one order, stacking discounts.\n3. Finance noticed abnormally large discounts (INC1201); support independently received customer reports of \"two promo codes\" working.\n4. Root cause confirmed and tracked in PROJ-401.\n5. Fixed in PR-701 by enforcing a strict single-coupon-per-order rule, with validation moved to cart-finalization time as documented in the follow-up wiki page.\n\nNo gaps remain in the graph relevant to this question \u2014 the incident, root cause, fix, and both internal engineering and support-side observations are all consistently linked."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "Both 2-hop and ESG correctly identify the root cause (validation checked for same code duplication, not any code already applied) and cite INC1201, PROJ-401, PR-701, coupon-discount-validation-rules, eng-checkout-2026-08-10 - matching the full expected document set. ESG additionally retrieves and cites customer-support-eng-2026-08-10, which is not in the expected set but appears in ESG's own retrieved list (not fabricated), and the claim about it (support independently noticing \"two promo codes\" reports) is a plausible, real corroborating detail rather than an invented fact. ESG's answer is essentially equivalent in core content to 2-hop's answer, covering the same causal chain, root cause ticket, fix, and policy update, with an extra corroborating detail that doesn't contradict anything and is grounded in a genuinely retrieved document. No confident fabrications or omissions of material facts are present. Given the substantive overlap and the extra grounded detail, this is same quality with a slight coverage edge for ESG, but the extra detail doesn't add anything a reader materially needs beyond what's already in 2-hop, so I'll treat it as materially the same output content-wise."
+}

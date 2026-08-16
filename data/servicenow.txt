@@ -1,0 +1,767 @@
+SERVICE NOW — INCIDENT EXPORT
+System: ServiceNow (ITSM)
+Export scope: Production incidents, last 90 days
+====================================================================
+
+INCIDENT: INC1042
+TITLE: Users unable to log in — auth-service returning 401 on valid credentials
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Priya Nair (Platform Reliability)
+CREATED: 2026-08-01 03:12 UTC
+RESOLVED: 2026-08-01 05:47 UTC
+RELATED WORK: PROJ-201
+--------------------------------------------------------------------
+DESCRIPTION:
+Starting around 03:00 UTC, customer support began receiving a spike in
+tickets from users reporting they could not log in despite entering
+correct credentials. The authentication service (auth-service) was
+returning HTTP 401 for a large percentage of login attempts. Initial
+triage confirmed this was not a customer-side issue — internal test
+accounts were also failing. Traffic to auth-service was otherwise
+healthy, ruling out a capacity issue.
+
+RESOLUTION NOTES:
+Root cause was traced to an expired JWT signing key that had not been
+rotated ahead of its expiry window. Once the key was rotated, login
+success rates returned to baseline within minutes. A follow-up story
+was opened (PROJ-201) to add automated alerting before key expiry.
+Engineering confirmed the fix via a hotfix pull request. A postmortem
+document has been drafted by the Platform team.
+====================================================================
+
+INCIDENT: INC1055
+TITLE: Intermittent timeouts on payment-gateway during checkout
+STATUS: In Progress
+PRIORITY: P2 - High
+ASSIGNED TO: Marcus Webb (Payments Team)
+CREATED: 2026-08-05 14:20 UTC
+UPDATED: 2026-08-06 09:10 UTC
+RELATED WORK: PROJ-215
+--------------------------------------------------------------------
+DESCRIPTION:
+Multiple customers have reported checkout failures with a generic
+"something went wrong, please try again" error. Logs show the
+payment-gateway service is timing out on roughly 3-4% of requests
+during peak traffic windows (12:00-14:00 UTC and 18:00-20:00 UTC).
+No single upstream dependency has been conclusively identified yet.
+The team suspects connection pool exhaustion under load but this has
+not been confirmed.
+
+CURRENT STATUS:
+Payments team is running a load test to reproduce the timeout pattern
+in staging. A Jira story has been opened to track the investigation.
+No fix has been merged yet. Incident remains open pending root cause.
+====================================================================
+
+INCIDENT: INC1061
+TITLE: Elevated 500 errors on checkout-service
+STATUS: New
+PRIORITY: P3 - Moderate
+ASSIGNED TO: Unassigned
+CREATED: 2026-08-07 22:05 UTC
+UPDATED: 2026-08-07 22:05 UTC
+RELATED WORK: (none yet)
+--------------------------------------------------------------------
+DESCRIPTION:
+Monitoring dashboards show a step increase in HTTP 500 responses from
+checkout-service beginning at approximately 21:50 UTC. Error rate is
+currently around 1.8%, up from a baseline of 0.1%. No customer reports
+have come in yet. This incident was auto-created from an alerting
+threshold breach and has not yet been triaged by an engineer. No
+related Jira story, pull request, or documentation exists at this
+time.
+====================================================================
+
+INCIDENT: INC0980
+TITLE: order-service unresponsive — database connection pool exhausted
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Diego Alvarez (Order Platform)
+CREATED: 2026-05-14 11:02 UTC
+RESOLVED: 2026-05-14 13:40 UTC
+RELATED WORK: (none — resolved via config change, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+order-service became fully unresponsive for approximately 18 minutes.
+Investigation showed the database connection pool had been fully
+exhausted, with connections held open by a slow query pattern
+introduced during a batch reconciliation job.
+
+RESOLUTION NOTES:
+On-call engineer manually increased the connection pool ceiling as an
+immediate mitigation and killed the long-running batch job. No
+permanent code fix was tracked in a ticket at the time; the on-call
+runbook was updated afterward with these mitigation steps for future
+recurrences. This incident is referenced in the Order Service On-Call
+Runbook as a known failure pattern.
+====================================================================
+
+INCIDENT: INC1070
+TITLE: Push notifications delayed by 10+ minutes for a subset of users
+STATUS: Investigating
+PRIORITY: P2 - High
+ASSIGNED TO: Chen Liu (Messaging Team)
+CREATED: 2026-08-06 08:15 UTC
+UPDATED: 2026-08-07 16:30 UTC
+RELATED WORK: PROJ-244
+--------------------------------------------------------------------
+DESCRIPTION:
+Users have reported push notifications (order confirmations, shipping
+updates) arriving 10-20 minutes late instead of near-instantly. The
+notification-worker queue depth has been steadily climbing since
+yesterday evening, suggesting the consumer side cannot keep pace with
+incoming messages. No message loss has been observed, only delay.
+
+CURRENT STATUS:
+Messaging team has opened a Jira story to investigate queue backlog
+causes and is prototyping a fix to increase worker concurrency. Fix is
+still in a draft pull request and has not been merged or deployed.
+====================================================================
+
+INCIDENT: INC1082
+TITLE: Checkout latency spike during flash sale event
+STATUS: In Progress
+PRIORITY: P1 - Critical
+ASSIGNED TO: Aisha Rahman (Performance Team)
+CREATED: 2026-08-08 17:45 UTC
+UPDATED: 2026-08-08 19:20 UTC
+RELATED WORK: PROJ-260
+--------------------------------------------------------------------
+DESCRIPTION:
+During today's flash sale, checkout p95 latency rose from a baseline
+of ~400ms to over 6 seconds under peak concurrent load. Customers
+report the checkout button "spinning" for extended periods before
+either succeeding or timing out.
+
+CURRENT STATUS:
+Profiling in progress. Early findings point toward lock contention in
+inventory-service during concurrent stock-decrement operations, though
+this has not been confirmed as the sole cause. A Jira story is open to
+track the investigation. Business has been notified of the ongoing
+customer impact.
+====================================================================
+
+INCIDENT: INC1090
+TITLE: TLS certificate for api.internal-billing expiring in 14 days
+STATUS: New
+PRIORITY: P4 - Low
+ASSIGNED TO: Unassigned
+CREATED: 2026-08-08 06:00 UTC
+UPDATED: 2026-08-08 06:00 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Automated certificate-expiry monitoring flagged that the TLS
+certificate used by the internal billing API is due to expire in 14
+days. This is a routine, low-urgency alert with ample lead time. No
+customer impact at this time. No related tickets or documentation
+exist yet; this will likely be handled directly by the on-call
+engineer without further tracking.
+====================================================================
+
+INCIDENT: INC1099
+TITLE: Nightly reporting batch job failed — reporting-service
+STATUS: Resolved
+PRIORITY: P3 - Moderate
+ASSIGNED TO: Sam Okafor (Data Platform)
+CREATED: 2026-08-04 02:10 UTC
+RESOLVED: 2026-08-04 04:55 UTC
+RELATED WORK: (none tracked)
+--------------------------------------------------------------------
+DESCRIPTION:
+The nightly reporting batch job for reporting-service failed with an
+out-of-memory error partway through execution, leaving the previous
+day's report stale.
+
+RESOLUTION NOTES:
+On-call engineer re-ran the job manually with an increased memory
+allocation and it completed successfully. Considered a one-off
+resource sizing issue rather than a code defect; no Jira story, pull
+request, or documentation update was created.
+====================================================================
+
+INCIDENT: INC1101
+TITLE: Customers charged twice during checkout retry
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Aisha Rahman (Performance Team)
+CREATED: 2026-08-09 10:05 UTC
+RESOLVED: 2026-08-09 12:40 UTC
+RELATED WORK: PROJ-301
+--------------------------------------------------------------------
+DESCRIPTION:
+Several customers reported being charged twice for the same order.
+Investigation showed checkout-service was retrying payment-gateway
+calls after a timeout without any idempotency protection, so a slow
+but eventually-successful original request and its retry could both
+succeed as separate charges.
+
+RESOLUTION NOTES:
+Root cause confirmed as missing idempotency keys on checkout retry
+logic. A hotfix was deployed to disable automatic retries pending a
+permanent fix. PROJ-301 tracks the permanent fix, merged same day via
+PR-601. Affected customers were identified and refunded manually.
+====================================================================
+
+INCIDENT: INC1108
+TITLE: Autocomplete suggestions showing outdated product names
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Layla Haddad
+CREATED: 2026-08-05 09:30 UTC
+RESOLVED: 2026-08-06 10:15 UTC
+RELATED WORK: PROJ-305
+--------------------------------------------------------------------
+DESCRIPTION:
+Customers reported search autocomplete suggesting product names that
+had been renamed or discontinued weeks earlier, even though the main
+search results themselves were correct and current.
+
+RESOLUTION NOTES:
+Root cause: the autocomplete index was built from a separate cache
+with a much slower refresh interval than the primary search index
+(the same one addressed for a different staleness issue in PROJ-230).
+Autocomplete was repointed at the primary, already-fresh index.
+Tracked in PROJ-305, fixed via PR-605.
+====================================================================
+
+INCIDENT: INC1115
+TITLE: Users logged out after 5 minutes of inactivity, expected 30
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Priya Nair (Platform Reliability)
+CREATED: 2026-08-07 13:00 UTC
+RESOLVED: 2026-08-07 15:20 UTC
+RELATED WORK: PROJ-312
+--------------------------------------------------------------------
+DESCRIPTION:
+Support began receiving complaints that users were being logged out of
+the web app after only about 5 minutes of inactivity, well short of
+the documented 30-minute session timeout.
+
+RESOLUTION NOTES:
+A recent, unrelated auth-service deploy had inadvertently shipped with
+a session TTL config regression (separate from the JWT key rotation
+work in PROJ-201/PR-455). The TTL value was reverted to the correct
+30-minute setting. Tracked in PROJ-312, fixed via PR-611.
+====================================================================
+
+INCIDENT: INC1122
+TITLE: iOS app crashing on checkout screen for subset of users
+STATUS: Investigating
+PRIORITY: P2 - High
+ASSIGNED TO: Sam Okafor
+CREATED: 2026-08-04 15:40 UTC
+UPDATED: 2026-08-05 11:00 UTC
+RELATED WORK: (none yet)
+--------------------------------------------------------------------
+DESCRIPTION:
+A cluster of crash reports from the iOS app are concentrated around
+the checkout screen for a subset of users. Crash logs suggest memory
+pressure building up over the course of a session rather than a single
+bad input. No Jira story has been opened yet; mobile team is
+investigating informally before filing a ticket.
+====================================================================
+
+INCIDENT: INC1130
+TITLE: Shipping label generation failing intermittently
+STATUS: In Progress
+PRIORITY: P2 - High
+ASSIGNED TO: Diego Alvarez (Order Platform)
+CREATED: 2026-08-06 08:50 UTC
+UPDATED: 2026-08-06 17:15 UTC
+RELATED WORK: PROJ-318
+--------------------------------------------------------------------
+DESCRIPTION:
+shipping-label-service is intermittently failing to generate shipping
+labels, correlating with periods of peak order volume. Logs show the
+external carrier API returning HTTP 429 (rate limit exceeded) during
+these windows.
+
+CURRENT STATUS:
+Confirmed the 429s track closely with peak-hour order volume. Team is
+weighing adding client-side backoff versus requesting a higher rate
+limit from the carrier. No fix merged yet.
+====================================================================
+
+INCIDENT: INC1137
+TITLE: Inventory counts in system don't match physical warehouse counts
+STATUS: New
+PRIORITY: P3 - Moderate
+ASSIGNED TO: Sam Okafor
+CREATED: 2026-08-03 09:00 UTC
+UPDATED: 2026-08-03 09:00 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+A routine warehouse audit found a discrepancy between system-recorded
+inventory counts and physical counts for several SKUs. Not yet clear
+whether this is a sync-job bug or a physical process issue. Not yet
+triaged; no related ticket exists.
+====================================================================
+
+INCIDENT: INC1144
+TITLE: Refunds taking 5+ days to process after gateway migration
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Marcus Webb (Payments Team)
+CREATED: 2026-08-08 09:00 UTC
+RESOLVED: 2026-08-08 16:30 UTC
+RELATED WORK: PROJ-325
+--------------------------------------------------------------------
+DESCRIPTION:
+Customers requesting refunds reported waiting 5+ days instead of the
+usual 1-2 business days, following last month's payment gateway
+migration.
+
+RESOLUTION NOTES:
+The refund webhook handler had not been updated for the new gateway's
+payload format and was silently failing to mark refunds as processed.
+Handler fixed and the backlog of stuck refunds reprocessed. Tracked in
+PROJ-325, fixed via PR-618.
+====================================================================
+
+INCIDENT: INC1151
+TITLE: Partner integration traffic being rate-limited incorrectly
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Yuki Tanaka
+CREATED: 2026-08-09 07:20 UTC
+RESOLVED: 2026-08-09 09:10 UTC
+RELATED WORK: PROJ-330
+--------------------------------------------------------------------
+DESCRIPTION:
+A newly onboarded partner integration was being rate-limited at the
+standard-tier threshold (100 req/min) instead of the partner tier
+(500 req/min), causing significant request failures for their
+integration.
+
+RESOLUTION NOTES:
+New partner accounts were defaulting to standard tier instead of
+partner tier at provisioning time. Corrected the default and
+re-provisioned the affected account. Tracked in PROJ-330, fixed via
+PR-625.
+====================================================================
+
+INCIDENT: INC1158
+TITLE: Intermittent Redis latency spikes across multiple services
+STATUS: Investigating
+PRIORITY: P2 - High
+ASSIGNED TO: Unassigned
+CREATED: 2026-08-07 12:00 UTC
+UPDATED: 2026-08-08 14:00 UTC
+RELATED WORK: PROJ-335
+--------------------------------------------------------------------
+DESCRIPTION:
+Multiple, otherwise-unrelated services are seeing Redis latency spike
+to 2-3x baseline at irregular intervals, with no clear trigger
+identified. Connection pool sizing has been checked and ruled out.
+
+CURRENT STATUS:
+No root cause identified yet. Being escalated to the infrastructure
+team to check for a network-level cause. No fix in progress.
+====================================================================
+
+INCIDENT: INC1165
+TITLE: Transactional email delivery rate dropped 15% this week
+STATUS: Investigating
+PRIORITY: P2 - High
+ASSIGNED TO: Chen Liu (Messaging Team)
+CREATED: 2026-08-06 10:00 UTC
+UPDATED: 2026-08-08 15:45 UTC
+RELATED WORK: PROJ-340
+--------------------------------------------------------------------
+DESCRIPTION:
+Delivery rate for transactional emails (order confirmations, password
+resets) has dropped roughly 15% compared to the prior week's baseline.
+No change in send volume or template content has been identified yet.
+
+CURRENT STATUS:
+Suspect a deliverability/reputation issue with the email provider,
+still being confirmed with the vendor. No fix yet.
+====================================================================
+
+INCIDENT: INC1172
+TITLE: New engineer laptop provisioning delayed
+STATUS: Resolved
+PRIORITY: P4 - Low
+ASSIGNED TO: IT Support
+CREATED: 2026-08-01 08:00 UTC
+RESOLVED: 2026-08-02 16:00 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+A new engineering hire's laptop provisioning request was delayed due
+to a backlog in the IT queue. Resolved once the request was manually
+expedited. Routine IT ticket, unrelated to any engineering incident.
+====================================================================
+
+INCIDENT: INC1179
+TITLE: Password reset request — locked out of internal wiki
+STATUS: Resolved
+PRIORITY: P4 - Low
+ASSIGNED TO: IT Support
+CREATED: 2026-08-08 11:00 UTC
+RESOLVED: 2026-08-08 11:20 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Routine password reset request after an employee was locked out of the
+internal wiki following too many failed login attempts. No further
+action needed.
+====================================================================
+
+INCIDENT: INC1201
+TITLE: Coupon code stacking allows double discounts at checkout
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Aisha Rahman (Performance Team)
+CREATED: 2026-08-10 09:15 UTC
+RESOLVED: 2026-08-10 13:00 UTC
+RELATED WORK: PROJ-401
+--------------------------------------------------------------------
+DESCRIPTION:
+Finance flagged an unusual spike in orders with unusually large
+discounts applied. Investigation found that under specific conditions,
+two coupon codes could be applied to the same order when only one
+should have been allowed, effectively stacking discounts.
+
+RESOLUTION NOTES:
+Root cause: coupon validation only checked for duplicate codes, not
+for multiple distinct codes being applied to the same cart. Fixed by
+enforcing a single-coupon-per-order rule at the validation layer.
+Tracked in PROJ-401, fixed via PR-701. Affected orders are being
+reviewed by finance separately.
+====================================================================
+
+INCIDENT: INC1208
+TITLE: Analytics dashboard showing revenue numbers ~20% below actual
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Sam Okafor (Data Platform)
+CREATED: 2026-08-11 08:00 UTC
+RESOLVED: 2026-08-11 15:30 UTC
+RELATED WORK: PROJ-405
+--------------------------------------------------------------------
+DESCRIPTION:
+Finance noticed the internal analytics dashboard was reporting daily
+revenue roughly 20% below what the payment processor's own reports
+showed for the same period.
+
+RESOLUTION NOTES:
+Root cause: the dashboard's aggregation query was excluding orders
+that used a coupon code due to a join condition bug, undercounting
+their revenue contribution. Fixed the join logic. Tracked in PROJ-405,
+fixed via PR-705.
+====================================================================
+
+INCIDENT: INC1215
+TITLE: Password reset emails not arriving for Gmail users
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Chen Liu (Messaging Team)
+CREATED: 2026-08-12 10:00 UTC
+RESOLVED: 2026-08-12 17:00 UTC
+RELATED WORK: PROJ-410
+--------------------------------------------------------------------
+DESCRIPTION:
+Support began receiving reports specifically from Gmail users that
+password reset emails were never arriving, while other providers
+seemed unaffected.
+
+RESOLUTION NOTES:
+Root cause: a recent sender-domain authentication change had not
+updated the DKIM record Gmail specifically validates strictly against,
+causing silent filtering. Fixed the DNS record. Tracked in PROJ-410,
+fixed via PR-710. Related to the general deliverability concerns
+raised earlier this month around transactional email.
+====================================================================
+
+INCIDENT: INC1222
+TITLE: API response times degraded across several endpoints
+STATUS: Investigating
+PRIORITY: P2 - High
+ASSIGNED TO: Diego Alvarez (Order Platform)
+CREATED: 2026-08-13 11:00 UTC
+UPDATED: 2026-08-13 16:00 UTC
+RELATED WORK: (none yet)
+--------------------------------------------------------------------
+DESCRIPTION:
+Several unrelated API endpoints have shown a gradual increase in p95
+response time over the past several days, without a corresponding
+traffic increase. No single service has been identified as the cause;
+several teams are independently looking at their own query patterns.
+====================================================================
+
+INCIDENT: INC1229
+TITLE: Third-party analytics script slowing page load
+STATUS: In Progress
+PRIORITY: P3 - Moderate
+ASSIGNED TO: Layla Haddad
+CREATED: 2026-08-14 09:00 UTC
+UPDATED: 2026-08-14 14:00 UTC
+RELATED WORK: PROJ-415
+--------------------------------------------------------------------
+DESCRIPTION:
+Page load time metrics show a regression correlating with the rollout
+of a new third-party analytics script on product pages. The script
+appears to block rendering longer than expected under slow network
+conditions.
+====================================================================
+
+INCIDENT: INC1236
+TITLE: Customer support queue times increasing over the past week
+STATUS: Investigating
+PRIORITY: P2 - High
+ASSIGNED TO: Unassigned
+CREATED: 2026-08-14 12:00 UTC
+UPDATED: 2026-08-15 09:00 UTC
+RELATED WORK: PROJ-420
+--------------------------------------------------------------------
+DESCRIPTION:
+Average time-to-first-response in the support queue has climbed
+steadily over the past week without a clear staffing or volume
+explanation. Support leadership has asked engineering to check whether
+a tooling issue could be contributing.
+====================================================================
+
+INCIDENT: INC1243
+TITLE: Sporadic 502 errors from API gateway, cause unknown
+STATUS: Investigating
+PRIORITY: P2 - High
+ASSIGNED TO: Unassigned
+CREATED: 2026-08-15 13:00 UTC
+UPDATED: 2026-08-16 10:00 UTC
+RELATED WORK: PROJ-425
+--------------------------------------------------------------------
+DESCRIPTION:
+Low-frequency 502 errors (roughly 0.05% of requests) have been
+observed at the API gateway with no consistent pattern by endpoint,
+time of day, or upstream service. Attempts to reproduce on demand have
+been unsuccessful so far.
+====================================================================
+
+INCIDENT: INC1250
+TITLE: Bulk export feature timing out for large accounts
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Sam Okafor (Data Platform)
+CREATED: 2026-08-16 08:30 UTC
+RESOLVED: 2026-08-16 16:00 UTC
+RELATED WORK: PROJ-430
+--------------------------------------------------------------------
+DESCRIPTION:
+Accounts with very large order histories were seeing the bulk export
+feature time out entirely rather than completing slowly, blocking
+several enterprise customers from retrieving their data.
+
+RESOLUTION NOTES:
+Root cause: the export ran as a single synchronous request with no
+pagination or streaming, so large accounts exceeded the request
+timeout outright. Reworked to stream results in chunks. Tracked in
+PROJ-430, fixed via PR-715.
+====================================================================
+
+INCIDENT: INC1257
+TITLE: Mobile push notification opt-in rate dropped sharply
+STATUS: Investigating
+PRIORITY: P3 - Moderate
+ASSIGNED TO: Sam Okafor
+CREATED: 2026-08-17 09:00 UTC
+UPDATED: 2026-08-17 15:00 UTC
+RELATED WORK: (none yet)
+--------------------------------------------------------------------
+DESCRIPTION:
+Push notification opt-in rate for new installs dropped noticeably
+starting a few days ago. Product team suspects a recent change to the
+permission-prompt timing but this hasn't been confirmed by engineering
+yet.
+====================================================================
+
+INCIDENT: INC1264
+TITLE: VPN certificate renewal — routine
+STATUS: Resolved
+PRIORITY: P4 - Low
+ASSIGNED TO: IT Support
+CREATED: 2026-08-10 07:00 UTC
+RESOLVED: 2026-08-10 08:00 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Scheduled routine renewal of the corporate VPN certificate. Completed
+without incident.
+====================================================================
+
+INCIDENT: INC1271
+TITLE: Conference room AV equipment malfunction — Room 4B
+STATUS: Resolved
+PRIORITY: P4 - Low
+ASSIGNED TO: IT Support
+CREATED: 2026-08-13 09:00 UTC
+RESOLVED: 2026-08-13 11:00 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Projector in conference room 4B stopped responding to input switches.
+Replaced HDMI adapter, resolved. Routine facilities ticket.
+====================================================================
+
+INCIDENT: INC1278
+TITLE: Scheduled database maintenance window — routine
+STATUS: Resolved
+PRIORITY: P4 - Low
+ASSIGNED TO: Infrastructure Team
+CREATED: 2026-08-16 02:00 UTC
+RESOLVED: 2026-08-16 03:00 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Routine scheduled maintenance window for database patching, completed
+within the planned window with no customer impact.
+====================================================================
+
+INCIDENT: INC1155
+TITLE: image-processing-service resize worker failing intermittently under burst upload load
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Diego Alvarez (Media Platform)
+CREATED: 2026-08-13 09:40 UTC
+RESOLVED: 2026-08-13 11:15 UTC
+RELATED WORK: (none — resolved via manual restart, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+During a burst of bulk photo uploads from a large seller onboarding
+batch, the image-processing-service resize worker began throwing
+sporadic timeout errors, leaving a percentage of uploaded images
+without generated thumbnails. Not every request failed — only a
+subset caught during the peak of the burst.
+
+RESOLUTION NOTES:
+On-call restarted the resize worker pool, which cleared the backlog
+and resolved the immediate issue. This is not the first time
+image-processing-service has struggled under a sudden burst of
+uploads; the working theory is the worker pool doesn't handle
+transient overload gracefully and just needs a restart when it
+happens. Considered a one-off operational mitigation, no ticket was
+filed at the time.
+====================================================================
+
+INCIDENT: INC1160
+TITLE: Partner webhook deliveries delayed up to 20 minutes during traffic spike
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Layla Haddad (Integrations)
+CREATED: 2026-08-14 15:05 UTC
+RESOLVED: 2026-08-14 16:30 UTC
+RELATED WORK: (none — mitigated by manual scaling, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+A sudden spike in order volume caused webhook-dispatcher-service to
+fall behind on outbound partner webhook deliveries, with some
+partners seeing delays of up to 20 minutes before receiving order
+and shipment update events. No events were lost, only delayed.
+
+RESOLUTION NOTES:
+On-call manually scaled up the webhook-dispatcher-service worker
+pool, which cleared the backlog within about 30 minutes. This is at
+least the second time webhook-dispatcher-service has fallen behind
+during a traffic spike and needed manual scaling -- there is
+currently no automatic backpressure or queuing mechanism to absorb
+bursts on its own.
+====================================================================
+
+INCIDENT: INC1166
+TITLE: Users intermittently logged out unexpectedly
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Aisha Rahman (Platform Reliability)
+CREATED: 2026-08-15 12:20 UTC
+RESOLVED: 2026-08-15 13:50 UTC
+RELATED WORK: (none — resolved via manual cache flush, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+A subset of logged-in users were unexpectedly signed out and asked to
+re-authenticate, even though their session should still have been
+valid. Investigation traced this to session-store (the shared
+redis-backed session cache) evicting active session entries earlier
+than expected under memory pressure from an unrelated spike in
+traffic to another service sharing the same cluster.
+
+RESOLUTION NOTES:
+On-call flushed and rebalanced the session-store cluster, which
+stopped further unexpected evictions. Session-store has hit memory
+pressure before in a similar way, but each time it has been handled
+as a one-off manual mitigation rather than a permanent fix.
+====================================================================
+
+INCIDENT: INC1170
+TITLE: Stale feature-flag cache caused 500 errors for a subset of users
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Omar Farouk (Platform Reliability)
+CREATED: 2026-08-16 08:05 UTC
+RESOLVED: 2026-08-16 08:45 UTC
+RELATED WORK: (none — resolved via manual cache flush, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+Shortly after a feature flag was disabled in feature-flag-service,
+a subset of users began receiving HTTP 500 errors on checkout. Root
+cause was a stale cached copy of the flag value being served by
+feature-flag-service's client cache to some instances, which kept
+executing a code path that assumed the flag was still enabled after
+it had been turned off.
+
+RESOLUTION NOTES:
+On-call manually flushed the feature-flag-service client cache
+cluster-wide, which resolved the errors within minutes. This is not
+the first time a stale cached flag value has caused unexpected
+behavior after a flag change -- there is currently no automatic
+invalidation when a flag value changes, only a cache TTL.
+====================================================================
+
+INCIDENT: INC1175
+TITLE: Transactional emails delayed approximately 30 minutes
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Sam Okafor (Data Platform)
+CREATED: 2026-08-17 19:10 UTC
+RESOLVED: 2026-08-17 20:05 UTC
+RELATED WORK: (none — provider-side issue, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+Password-reset and order-confirmation emails sent via
+email-delivery-service were delayed by approximately 30 minutes.
+Investigation traced the delay to a queue backlog on the third-party
+email provider's side, not an issue in email-delivery-service itself.
+
+RESOLUTION NOTES:
+No action was needed on our end -- the provider's queue backlog
+cleared on its own and delivery times returned to normal. Support
+was notified so they could reassure any customers who asked about
+delayed password-reset emails during the window.
+====================================================================
+
+INCIDENT: INC1180
+TITLE: Legitimate traffic throttled incorrectly after rate-limiter-service config change
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Chen Liu (Platform Reliability)
+CREATED: 2026-08-18 10:30 UTC
+RESOLVED: 2026-08-18 11:05 UTC
+RELATED WORK: (none — resolved via config rollback, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+Following a routine threshold change pushed to rate-limiter-service,
+a percentage of legitimate customer traffic began receiving HTTP 429
+"too many requests" responses despite being well within normal usage
+patterns. The new threshold had been pushed globally to all traffic
+at once rather than to a small percentage first.
+
+RESOLUTION NOTES:
+On-call rolled back the config change, which immediately restored
+normal traffic handling. This incident is a direct consequence of
+rate-limiter-service config changes being pushed globally with no
+canary or gradual-rollout step to catch a bad threshold before it
+affects all traffic.
+====================================================================

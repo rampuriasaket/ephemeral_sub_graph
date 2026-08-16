@@ -1,0 +1,87 @@
+{
+  "case_number": 21,
+  "question": "Are customers stacking discount codes somehow?",
+  "expected_doc_ids": [
+    "INC1201",
+    "PROJ-401",
+    "PR-701",
+    "coupon-discount-validation-rules",
+    "customer-support-eng-2026-08-10"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.2,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-701",
+        "PROJ-401"
+      ],
+      "retrieved_doc_ids": [
+        "INC1201"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 689,
+      "cost_usd": 0.003458,
+      "time_sec": 4.308840990066528,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.8,
+      "precision": 0.8,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1201",
+        "PR-701",
+        "PROJ-401",
+        "coupon-discount-validation-rules",
+        "eng-checkout-2026-08-10"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 1,
+      "tokens": 1642,
+      "cost_usd": 0.006452,
+      "time_sec": 7.067230939865112,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.8333333333333334,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1201",
+        "PR-701",
+        "PROJ-401",
+        "coupon-discount-validation-rules",
+        "customer-support-eng-2026-08-10",
+        "eng-checkout-2026-08-10"
+      ],
+      "retrieval_calls": 90,
+      "llm_calls": 21,
+      "tokens": 64978,
+      "cost_usd": 0.17310799999999998,
+      "time_sec": 108.1014289855957,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Yes \u2014 according to servicenow:INC1201, customers were able to stack discount codes. The incident describes a spike in orders with unusually large discounts, traced to a bug where two distinct coupon codes could be applied to the same order when only one should have been allowed.\n\n**Root cause:** Coupon validation only checked for *duplicate* codes (i.e., the same code used twice) but failed to prevent *multiple distinct* codes from being applied to a single cart, allowing discounts to stack.\n\n**Fix:** A single-coupon-per-order rule was enforced at the validation layer (tracked in PROJ-401, fixed via PR-701).\n\n**Note:** Affected orders were being reviewed separately by finance \u2014 that specific document doesn't include details on the review outcome or which orders/customers were impacted.",
+    "2-hop": "Yes \u2014 this was confirmed as a real issue, not just suspicion.\n\n**What happened:** Under certain conditions, customers were able to apply two distinct coupon codes to a single order, effectively stacking discounts. This was caught after Finance flagged an unusual spike in orders with abnormally large discounts (INC1201, slack:eng-checkout-2026-08-10).\n\n**Root cause:** The coupon validation logic only checked whether the *same* code had already been applied to an order \u2014 it never checked whether *any* code had already been applied. So two different valid codes could both pass validation on the same cart (INC1201, PROJ-401, slack:eng-checkout-2026-08-10 \u2014 Aisha Rahman: \"validation only blocks the *same* code twice, not two different codes\").\n\n**Fix:** A single-coupon-per-order rule was enforced at the validation layer, moved to cart-finalization time rather than code-entry time, closing the gap (PR-701, confluence:coupon-discount-validation-rules).\n\n**Open item:** INC1201 notes that Finance is separately reviewing the affected orders that already had stacked discounts applied \u2014 the documents don't specify how many orders were impacted or the resolution of that review.",
+    "ESG (v2)": "## Short Answer\n\nYes \u2014 this was confirmed. Customers were able to apply two *distinct* coupon codes to a single order, stacking discounts beyond what was intended. This was tracked as **INC1201**, root-caused and fixed in **PROJ-401** / **PR-701**, and has since been closed with a documented validation-rules change. The stacking behavior is no longer possible as of the fix.\n\n## Supporting Evidence\n\n**Incident confirmation (INC1201):**\nFinance flagged an unusual spike in orders with unusually large discounts applied. Investigation confirmed that under specific conditions, two coupon codes could be applied to the same order when only one should have been allowed \u2014 i.e., discount stacking (`servicenow:INC1201:0`). The incident status is Resolved.\n\n**Root cause (PROJ-401, Slack eng-checkout-2026-08-10):**\nThe coupon validation logic only checked \"is this *same* code already applied,\" not \"is *any* code already applied to this order.\" Aisha Rahman confirmed this in both the Jira ticket comments and the engineering Slack thread: *\"validation logic checked 'is this code already applied' not 'is any code already applied'. Easy miss.\"* Diego Alvarez independently framed it in Slack as \"multiple codes on one order somehow?\" \u2014 confirming the mechanism was applying two different valid codes to one cart, not exploiting a single code twice.\n\n**Fix (PR-701):**\nThe pull request changed validation to reject *any* second coupon code on an order that already has one applied, rather than only rejecting duplicates of the same code \u2014 directly closing the stacking gap identified in INC1201. Diego Alvarez reviewed and approved, noting the distinction between \"duplicate\" and \"multiple distinct\" codes was the key catch. Status: Merged.\n\n**Process/documentation change (coupon-discount-validation-rules wiki page):**\nFollowing INC1201, the validation rule was formalized: one coupon per order, validated at cart-finalization time rather than at code-entry time, specifically to close the gap where two distinct valid codes could both be applied before the single-coupon rule was enforced.\n\n**Customer-facing confirmation (Slack customer-support-eng-2026-08-10):**\nSeparately, a support-eng-liaison raised that support tickets mentioned customers using \"two promo codes\" on one order, asking whether that was intentional. This thread corroborates that real customers were seeing/using the stacking behavior, and the liaison flagged it to engineering as a precaution. There's no indication in the graph of the outcome of that specific flag (e.g., whether support macros were updated), but it aligns with the same underlying INC1201 issue.\n\n## Gaps / What's Not Covered\n\n- The graph doesn't show the exact affected order volume, dollar impact, or the outcome of Finance's separate review of affected orders (INC1201 notes this review was happening \"separately\" but no results are captured here).\n- There's no confirmation in the graph that the support-eng-liaison's Slack flag was formally linked back to INC1201/PROJ-401, though the timing and content strongly suggest it's the same issue.\n- No customer communication or credit/refund process for affected orders is documented in this graph."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "All three answers correctly confirm stacking occurred and describe the same root cause and fix. Flat-RAG is the thinnest, missing the \"multiple distinct codes\" nuance's supporting detail and citing only INC1201. 2-hop covers INC1201, PROJ-401, PR-701, coupon-discount-validation-rules, and eng-checkout-2026-08-10, essentially matching the expected set except for customer-support-eng-2026-08-10. ESG retrieves and cites all five expected documents, including customer-support-eng-2026-08-10, which corroborates that real customers were seeing the stacking behavior via support tickets \u2014 a material fact the baselines omit. ESG also appropriately hedges on unresolved gaps (Finance review outcome, whether support flag was linked to the incident) without asserting unsupported facts. This makes ESG more complete than both baselines while maintaining calibrated hedging, so it is better."
+}

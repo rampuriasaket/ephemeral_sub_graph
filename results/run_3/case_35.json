@@ -1,0 +1,87 @@
+{
+  "case_number": 35,
+  "question": "What's the story behind PROJ-445?",
+  "expected_doc_ids": [
+    "PROJ-445",
+    "PR-740"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.5,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "INC1243"
+      ],
+      "retrieved_doc_ids": [
+        "PR-740",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1048,
+      "cost_usd": 0.005056,
+      "time_sec": 4.7879250049591064,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.3333333333333333,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PR-740",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445",
+        "eng-infra-2026-08-15"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 1,
+      "tokens": 1395,
+      "cost_usd": 0.005918,
+      "time_sec": 4.7905049324035645,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.3333333333333333,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PR-740",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445",
+        "eng-infra-2026-08-15"
+      ],
+      "retrieval_calls": 115,
+      "llm_calls": 18,
+      "tokens": 71582,
+      "cost_usd": 0.22344499999999998,
+      "time_sec": 116.6146628856659,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the provided documents, here's the story behind PROJ-445:\n\n**PROJ-445** was a minor, routine maintenance ticket \u2014 a small robustness improvement to the automated SSL certificate renewal script. According to the description, it was explicitly **unrelated to any incident**.\n\nThe work was implemented in **PR-740** (\"Improve robustness of SSL cert renewal automation script\"), which added retry handling to the script. The PR description confirms this was \"proactive maintenance, not tied to an incident.\"\n\nThe single comment on PROJ-445, from **Omar Farouk**, simply notes: \"PR-740, routine. Merged.\" The PR itself shows a single review comment from **Tomas Berg**: \"Approved.\"\n\nIn short: this was a low-stakes, proactive hardening change (adding retry logic to cert renewal automation) that went through review and was merged without any drama or incident linkage.\n\nNothing in the documents connects PROJ-445 to the other tickets present (PROJ-440's CI provider exploration, or PROJ-425's sporadic API gateway 502s/INC1243) \u2014 there's no indication of any relationship between them.",
+    "2-hop": "PROJ-445 is a straightforward, routine maintenance ticket, unrelated to any incident.\n\n- **What it is**: \"Minor tweak to SSL cert renewal automation script\" \u2014 described as a \"small robustness improvement to the automated SSL certificate renewal script, unrelated to any incident\" (jira:PROJ-445).\n- **Implementation**: The work was done via PR-740, \"Improve robustness of SSL cert renewal automation script,\" which added retry handling to the script. The PR description explicitly notes it was \"proactive maintenance, not tied to an incident\" (gitrepo:PR-740).\n- **Review/status**: Tomas Berg approved the PR (gitrepo:PR-740), and Omar Farouk commented on the Jira ticket that it was \"routine. Merged.\" (jira:PROJ-445).\n\nSo the story is simply: a small, proactive hardening change (adding retry logic) to the SSL cert renewal automation, reviewed and merged without controversy, with no connection to any outage or incident (e.g., it's unrelated to the sporadic 502 issue tracked separately in INC1243/PROJ-425/slack:eng-infra-2026-08-15).",
+    "ESG (v2)": "## Direct Answer\n\nPROJ-445 is a small, routine engineering ticket for a robustness improvement to the automated SSL certificate renewal script. It was implemented via PR-740, reviewed and approved by Tomas Berg, and merged. It is explicitly described as proactive maintenance, unrelated to any incident \u2014 including the sporadic API gateway 502 errors being tracked elsewhere (INC1243 / PROJ-425). The ticket is closed out with status \"Done.\"\n\n## Supporting Evidence\n\n**The ticket itself (jira:PROJ-445:0, status: Done)**\nPROJ-445 is titled \"Minor tweak to SSL cert renewal automation script.\" Its description explicitly states this is a \"small robustness improvement to the automated SSL certificate renewal script, unrelated to any incident.\" Omar Farouk commented: \"PR-740, routine. Merged.\" \u2014 indicating this was a low-stakes, uncontroversial change.\n\n**The associated pull request (gitrepo:PR-740:0, status: Merged)**\nPR-740, \"Improve robustness of SSL cert renewal automation script,\" adds retry handling to the renewal script. It's described the same way as the ticket: \"Proactive maintenance, not tied to an incident.\" Tomas Berg reviewed it and simply commented \"Approved,\" and it was merged without further discussion.\n\n**Why this matters (the \"unrelated to incident\" framing)**\nThe graph also contains a separate, active thread about sporadic API gateway 502 errors:\n- INC1243 (servicenow, status: Investigating) \u2014 low-frequency 502s (~0.05% of requests) at the API gateway with no identifiable pattern, unreproducible on demand.\n- PROJ-425 (jira, status: In Progress) \u2014 the tracking ticket for investigating those 502s, also unable to reproduce them under synthetic load.\n- eng-infra-2026-08-15 (Slack thread) \u2014 infra-team members discussing the same sporadic gateway errors informally, agreeing to try to catch one live with more verbose logging.\n\nThese three sources describe an ongoing, unresolved investigation. PROJ-445's description explicitly disclaims any connection to this incident work, which suggests the two threads were surfaced together in this investigation graph specifically to clarify that PROJ-445 is *not* part of the gateway 502 story, despite both appearing in the same engineering context.\n\n**Unrelated/backlog item found but not pertinent**\nPROJ-440 (\"Explore migrating to a new CI provider\") also appeared in the search results but is an unrelated backlog exploration item with no work started and no connection to PROJ-445 \u2014 it does not bear on this question.\n\n## What's Missing\n\nThe graph doesn't include any earlier history for PROJ-445 (e.g., why the SSL renewal script needed hardening in the first place, whether it stemmed from a prior near-miss or failure) \u2014 the ticket description simply states it was a proactive, minor change. No further chunks or leads were found connecting PROJ-445 to any incident, so the \"story\" appears to be exactly what's stated: a routine, low-risk maintenance ticket, fully resolved via PR-740."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers correctly identify the core story: PROJ-445 is a routine maintenance ticket for SSL cert renewal script robustness, implemented via PR-740, unrelated to any incident, approved by Tomas Berg, merged per Omar Farouk's comment. ESG adds extra context (status \"Done\", PROJ-440 backlog item, explicit \"What's Missing\" section noting no prior history is available) but does not introduce any confidently wrong claims beyond what's supported by the retrieved documents. The additional detail about INC1243/PROJ-425/eng-infra thread being a separate unresolved investigation is consistent with the 2-hop baseline's mention as well. ESG's answer is essentially equivalent in factual content to the 2-hop baseline (which is the stronger baseline), with the same hedging about no further connection found. The differences are additional structure/detail but not materially different facts or confidence levels."
+}

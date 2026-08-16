@@ -1,0 +1,77 @@
+{
+  "case_number": 23,
+  "question": "Why are we seeing sporadic 502s from the API gateway?",
+  "expected_doc_ids": [
+    "INC1243",
+    "PROJ-425",
+    "eng-infra-2026-08-15"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.6666666666666666,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PROJ-425"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 865,
+      "cost_usd": 0.004826,
+      "time_sec": 7.539062023162842,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.6666666666666666,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PROJ-425"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 940,
+      "cost_usd": 0.00532,
+      "time_sec": 8.029924869537354,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PROJ-425",
+        "eng-infra-2026-08-15"
+      ],
+      "retrieval_calls": 60,
+      "llm_calls": 11,
+      "tokens": 38451,
+      "cost_usd": 0.100701,
+      "time_sec": 65.02945709228516,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents provided, the root cause of the sporadic 502 errors from the API gateway has **not been identified**.\n\nWhat the documents do tell us (INC1243, PROJ-425):\n- The 502 errors occur at a low frequency (roughly 0.05% of requests)\n- There's no consistent pattern by endpoint, time of day, or upstream service\n- Attempts to reproduce the issue on demand (including under synthetic load, per a PROJ-425 comment) have been unsuccessful\n- The suggested next step in PROJ-425 is to wait for the issue to recur and capture more detail live when it happens\n\n**What's missing:** There is no root cause analysis, no captured request/response logs from an actual occurrence, and no working theory tied to a specific upstream service, timeout setting, connection pool, or infrastructure component. Neither document explains *why* the 502s happen \u2014 only that the investigation is still open and reproduction has failed so far.\n\nIf you need an actual explanation, you'd need additional data not present here \u2014 e.g., gateway/upstream logs captured during a live 502 occurrence, network/connection metrics, or any updates to INC1243/PROJ-425 beyond what's included.",
+    "2-hop": "Based on the retrieved documents, the root cause of the sporadic 502s is **not known**.\n\nWhat we do have:\n- **INC1243** confirms the issue: low-frequency 502 errors (~0.05% of requests) at the API gateway, with no consistent pattern identified by endpoint, time of day, or upstream service. The description explicitly states the cause is \"unknown,\" and attempts to reproduce it on demand have been unsuccessful.\n- **PROJ-425** (the tracking ticket for this investigation) corroborates this \u2014 it references INC1243, notes the team has been unable to reproduce the issue consistently, and has found no pattern by endpoint or time. A comment indicates that synthetic load testing also failed to reproduce it, and suggests the next step is to wait for the issue to recur in production and capture more detailed diagnostics live.\n\n**What's missing:** There is no documented root cause, contributing factor, or fix in these records \u2014 no information on upstream timeouts, connection pool exhaustion, load balancer configuration, TLS/keep-alive issues, or any other technical explanation. Both documents indicate this is an open, unresolved investigation. If you need a root cause, it isn't available in the current ticket data and would require checking for a more recent update to PROJ-425/INC1243 or additional logs/traces not included here.",
+    "ESG (v2)": "## Short Answer\n\n**The root cause is not yet known.** This is an open, unresolved investigation. Incident INC1243 and ticket PROJ-425 confirm the symptom (sporadic 502s from the API gateway, ~0.05% of requests) but no cause has been identified \u2014 the issue has not been reproducible on demand, and no pattern has been found by endpoint, time of day, or upstream service.\n\n## Supporting Evidence\n\n**Confirmed symptom:**\n- **INC1243** (ServiceNow, status: Investigating) describes low-frequency 502 errors at the API gateway occurring at roughly 0.05% of requests, with \"no consistent pattern by endpoint, time of day, or upstream service.\" Reproduction attempts have been unsuccessful.\n- **PROJ-425** (Jira, status: In Progress) is the tracking ticket for this investigation, explicitly linked to INC1243. It notes the team \"tried reproducing under synthetic load, no luck\" and that they \"might need to wait for it to recur and capture more detail live.\"\n- **eng-infra-2026-08-15** (Slack thread) shows infra-team independently noticing the same sporadic 502s (\"seeing occasional 502s at the gateway, can't pin down a pattern\"), with other members confirming they also see \"nothing obvious.\" The team's plan was to try to catch an occurrence live with more verbose logging.\n\n**What's missing:** None of the retrieved chunks contain a diagnosis, root cause, fix, or resolution. All three sources (the incident, the Jira ticket, and the Slack thread) are consistent in stating the cause is unknown and unreproducible \u2014 there is no evidence in the graph of a specific trigger (e.g., connection pool exhaustion, upstream timeout, deploy correlation, resource limits) being identified.\n\n## Conclusion\n\nBased on the current graph, sporadic 502s from the API gateway are a confirmed, actively investigated but **unexplained** issue (INC1243/PROJ-425). The infra-team's plan (per the Slack thread) was to increase logging verbosity and wait to catch a live occurrence, since synthetic load testing failed to reproduce it. No further leads or root-cause data were found in the graph \u2014 the search was stopped because the frontier was exhausted, meaning there is currently no additional evidence available to explain *why* the 502s are happening. Further diagnosis would require new data (e.g., logs captured during a live occurrence) not yet present in this graph."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three systems correctly establish that the root cause of the sporadic 502s is unknown and unresolved, based on INC1243 and PROJ-425. Both flat-RAG and 2-hop retrieve only these two documents and correctly conclude no root cause is identified; both appropriately note the low frequency (~0.05%), lack of reproducibility, and absence of pattern. ESG additionally retrieves eng-infra-2026-08-15 (Slack thread), which materially corroborates and reinforces the same conclusion \u2014 independent team observation of the same symptom, same inability to find a pattern, same plan to await a live occurrence. ESG's integration of this third source adds depth and confidence to the core answer (confirming cross-team awareness and consistent investigation approach) without changing the fundamental claim: the cause remains unknown. All three systems correctly calibrate confidence, appropriately hedge the missing information, and ground their claims in the expected documents. The differences are structural and argumentative, not material to what a reader learns."
+}

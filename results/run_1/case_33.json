@@ -1,0 +1,99 @@
+{
+  "case_number": 33,
+  "question": "What was PROJ-275 about?",
+  "expected_doc_ids": [
+    "PROJ-275",
+    "PR-495"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.2857142857142857,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-495",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-275",
+        "PROJ-420",
+        "PROJ-425",
+        "PROJ-440"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1366,
+      "cost_usd": 0.003932,
+      "time_sec": 2.962484836578369,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.18181818181818182,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1236",
+        "INC1243",
+        "PR-495",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-275",
+        "PROJ-420",
+        "PROJ-425",
+        "PROJ-440",
+        "eng-infra-2026-08-15",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 35,
+      "llm_calls": 1,
+      "tokens": 1955,
+      "cost_usd": 0.005126,
+      "time_sec": 2.7633209228515625,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.16666666666666666,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1236",
+        "INC1243",
+        "PR-495",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-275",
+        "PROJ-420",
+        "PROJ-425",
+        "PROJ-440",
+        "api-rate-limiting-guide",
+        "eng-infra-2026-08-15",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 170,
+      "llm_calls": 39,
+      "tokens": 136655,
+      "cost_usd": 0.395769,
+      "time_sec": 190.74459505081177,
+      "stop_reason": "reached processing cap (20/20)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "PROJ-275 was about a minor cosmetic fix: a typo flagged by customer support in the footer of the order confirmation email template, where \"Thank you for you order\" was missing the word \"your.\"\n\nThe fix was implemented in PR-495 (\"Fix typo in order confirmation email footer\"), which corrected the text to \"Thank you for your order.\" Per the ticket comments from Yuki Tanaka, the PR was merged and deployed with the next scheduled release.",
+    "2-hop": "PROJ-275 was about a typo in the order confirmation email template footer \u2014 the text read \"Thank you for you order\" (missing the word \"your\"). Customer support flagged it as a minor cosmetic fix.\n\nIt was resolved via PR-495, which corrected the text to \"Thank you for your order.\" Yuki Tanaka noted the fix was small, and it was merged and deployed with the next scheduled release; Priya Nair approved the PR with the comment \"lol, approved.\"",
+    "ESG (v2)": "## Direct Answer\n\n**PROJ-275** was a minor cosmetic bug ticket titled **\"Typo in order confirmation email template footer.\"** It tracked fixing a typo customer support flagged in the order confirmation email \u2014 the footer read \"Thank you for you order\" instead of \"Thank you for your order.\" The ticket is marked **Done**.\n\n## Supporting Evidence\n\n- **jira:PROJ-275:0** \u2014 The ticket description states: customer support flagged a typo in the footer of the order confirmation email template (\"Thank you for you order\" missing the word \"your\"), described as a \"minor cosmetic fix.\" Comments from **Yuki Tanaka** note: \"Small fix, PR-495 up.\" and \"Merged and deployed with the next scheduled release.\"\n\n- **gitrepo:PR-495:0** \u2014 The corresponding pull request, \"Fix typo in order confirmation email footer,\" confirms the same fix: correcting \"Thank you for you order\" to \"Thank you for your order.\" It was reviewed and approved by **Priya Nair** (\"lol, approved.\") and its status is Merged.\n\nTogether, these two linked records (PROJ-275 and PR-495) fully account for the ticket's purpose: a small, low-risk copy fix in an email template, reported by support, fixed via PR-495, and shipped in a regular release.\n\nNo other chunks in the graph relate to PROJ-275 \u2014 the other tickets/incidents present (PROJ-255, PROJ-270, PROJ-420, PROJ-425, PROJ-440, INC1236, INC1243) concern unrelated topics (rate-limit docs, reporting-service refactor, support queue times, API gateway 502s, CI provider evaluation) and don't bear on this question."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers correctly identify PROJ-275 as a minor typo fix in the order confirmation email footer, resolved via PR-495. ESG's answer contains the same core facts as flat-RAG and 2-hop, with additional detail (Priya Nair's approval, matching 2-hop) and clear structure. It doesn't add any unsupported claims beyond what's in the expected documents, and explicitly notes the other retrieved docs are unrelated, which is accurate context-setting rather than fabrication. The differences from the baselines are cosmetic/organizational rather than substantive."
+}

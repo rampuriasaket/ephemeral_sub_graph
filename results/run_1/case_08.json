@@ -1,0 +1,73 @@
+{
+  "case_number": 8,
+  "question": "partners have mentioned delayed webhook deliveries during traffic spikes, what's the status?",
+  "expected_doc_ids": [
+    "INC1160",
+    "PROJ-320"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1160"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 867,
+      "cost_usd": 0.004886,
+      "time_sec": 6.367177963256836,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1160"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 922,
+      "cost_usd": 0.00518,
+      "time_sec": 6.337823152542114,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1160",
+        "PROJ-320"
+      ],
+      "retrieval_calls": 50,
+      "llm_calls": 9,
+      "tokens": 31080,
+      "cost_usd": 0.08043600000000001,
+      "time_sec": 48.944571018218994,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on ticket **INC1160**, here's the status:\n\n**What happened:** A sudden spike in order volume caused `webhook-dispatcher-service` to fall behind on outbound partner webhook deliveries, resulting in delays of up to 20 minutes for order and shipment update events. Importantly, no events were lost \u2014 only delayed.\n\n**How it was resolved:** The on-call engineer manually scaled up the `webhook-dispatcher-service` worker pool, which cleared the backlog within about 30 minutes.\n\n**Outstanding concern:** The resolution notes flag that this is at least the **second occurrence** of this same issue \u2014 the service falling behind during traffic spikes and requiring manual scaling. There is currently **no automatic backpressure or queuing mechanism** in place to absorb these bursts on its own.\n\n**Gap in the documents:** This ticket doesn't include any information on whether a follow-up fix (e.g., autoscaling policy, queuing/backpressure implementation) has been scoped, tracked, or completed. If there's a separate change/PR/task addressing the root cause, it isn't included in what I have access to \u2014 so I can't confirm whether a permanent fix is in progress or still pending.",
+    "2-hop": "Based on the available document, here's the status:\n\n**INC1160** \u2014 Partner webhook deliveries delayed up to 20 minutes during a traffic spike\n\n- **What happened:** A sudden spike in order volume caused `webhook-dispatcher-service` to fall behind on outbound partner webhook deliveries (order and shipment update events). Some partners saw delays of up to 20 minutes. Importantly, no events were lost \u2014 only delayed.\n- **Resolution:** On-call manually scaled up the `webhook-dispatcher-service` worker pool, which cleared the backlog within about 30 minutes.\n- **Underlying issue (unresolved):** The notes flag that this is at least the second occurrence of this service falling behind during a traffic spike and requiring manual intervention. There is currently **no automatic backpressure or queuing mechanism** to absorb bursts on its own \u2014 meaning the incident was mitigated but the root capacity/scaling gap has not been permanently fixed.\n\nI don't have any documents showing a follow-up ticket, PR, or engineering task tracking a permanent fix (e.g., autoscaling or queuing implementation) for this recurring issue \u2014 that information isn't in the provided documents, so I can't confirm whether a long-term fix is planned or in progress.",
+    "ESG (v2)": "## Direct Answer\n\nThe specific incident partners reported (webhook deliveries delayed up to 20 minutes during a traffic spike) is **resolved**, but the underlying root cause is **not yet fixed** \u2014 a permanent solution is only a backlog item with no sprint scheduled, meaning future traffic spikes could cause the same delays again.\n\n## Supporting Evidence\n\n**INC1160 (Resolved)** \u2014 This incident matches the reported symptom directly: a sudden spike in order volume caused `webhook-dispatcher-service` to fall behind on outbound partner webhook deliveries, delaying order/shipment update events by up to 20 minutes for some partners. No events were lost. On-call resolved it by manually scaling up the webhook-dispatcher-service worker pool, clearing the backlog in about 30 minutes.\n\nNotably, the resolution notes flag this as **at least the second occurrence** of this same failure mode, and state plainly that there is currently no automatic backpressure or queuing mechanism to absorb bursts \u2014 the system relies on manual intervention every time.\n\n**PROJ-320 (Backlog, not yet scheduled)** \u2014 This Jira issue was opened to address the root cause: building proper backpressure and a dead-letter-queue for `webhook-dispatcher-service` so that traffic spikes don't require manual scaling to clear the backlog. Layla Haddad's comment on the ticket confirms the pattern seen in INC1160 \u2014 \"webhook-dispatcher-service has fallen behind more than once during a traffic spike now, always resolved the same way -- someone notices and manually scales the worker pool\" \u2014 and expresses intent to fix this properly rather than depend on on-call catching it in time. However, the ticket is explicitly **not yet scheduled into a sprint**.\n\n## Summary\n\n- The specific delay event partners noticed has been mitigated (INC1160 closed, no data loss).\n- The recurring root cause (no automatic backpressure/queuing on webhook-dispatcher-service) is tracked in PROJ-320, but that work has not started and has no committed timeline.\n- The graph data does not show any interim mitigation (e.g., permanent autoscaling policy) beyond manual on-call scaling, so partners should expect similar delays are possible during future traffic spikes until PROJ-320 is completed. There's nothing in the retrieved data indicating a target date or sprint assignment for PROJ-320."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "The expected sources are INC1160 and PROJ-320. Both baselines only retrieved INC1160 and explicitly hedge that they cannot confirm whether a follow-up fix is tracked. ESG retrieved both expected documents and correctly surfaces PROJ-320's content: the backlog item to build backpressure/DLQ, quoting Layla Haddad's comment, and correctly notes it's not yet scheduled into a sprint. This directly answers the gap the baselines could not fill, without overstating confidence (it accurately hedges that there's no committed timeline). This is a clear improvement in grounded completeness."
+}

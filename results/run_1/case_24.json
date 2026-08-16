@@ -1,0 +1,75 @@
+{
+  "case_number": 24,
+  "question": "What's causing the intermittent Redis latency spikes?",
+  "expected_doc_ids": [
+    "INC1158",
+    "PROJ-335"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 909,
+      "cost_usd": 0.00493,
+      "time_sec": 6.866708993911743,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 855,
+      "cost_usd": 0.004134,
+      "time_sec": 5.284458160400391,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 8,
+      "tokens": 26532,
+      "cost_usd": 0.068816,
+      "time_sec": 45.08516311645508,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the available documents, **the root cause has not yet been identified**.\n\nHere's what's known from the documents:\n\n- **INC1158** (ServiceNow) confirms multiple, seemingly unrelated services are experiencing Redis latency spiking to 2-3x baseline at irregular intervals, with no clear trigger identified.\n- **PROJ-335** (Jira), which tracks the investigation, notes the same issue and confirms that **connection pool sizing has been ruled out** as a cause.\n- Both documents state that no application-layer cause has been found so far.\n- The issue is currently being **escalated to the infrastructure team** to investigate a potential **network-level cause**, but this investigation has not yet produced results.\n- PROJ-335 is unassigned with no further comments, and INC1158's status explicitly states \"No root cause identified yet... No fix in progress.\"\n\n**In short:** the documents only tell us what's been ruled out (connection pool sizing) and where the investigation is headed (network-level causes via the infra team) \u2014 they do not contain an actual root cause. I don't have information to give you a definitive answer beyond that; it would require the infra team's findings, which aren't captured in these documents yet.",
+    "2-hop": "Based on the available documents, the root cause has **not been identified**.\n\nWhat is known:\n- Multiple, otherwise-unrelated services are experiencing Redis latency spikes of 2-3x baseline at irregular intervals, with no clear trigger (servicenow:INC1158, jira:PROJ-335).\n- Connection pool sizing has been investigated and **ruled out** as a cause (INC1158, PROJ-335).\n- Nothing has been found at the application layer (PROJ-335).\n- The issue has been escalated to the infrastructure team to investigate a possible **network-level cause**, but this investigation had not produced findings at the time of these documents (INC1158, PROJ-335).\n\nIn short: the documents explicitly state no root cause has been identified yet, and there is no fix in progress. Any network-level cause is a hypothesis being investigated, not a confirmed finding \u2014 the documents provided don't contain the actual answer.",
+    "ESG (v2)": "## Short Answer\n\n**The root cause has not yet been identified.** Both the incident ticket (INC1158) and its linked Jira issue (PROJ-335) confirm the problem is real and ongoing, but as of the last update, no cause has been found \u2014 connection pool sizing has been explicitly ruled out, and the investigation has been escalated to the infrastructure team to check for a network-level cause. No fix is in progress.\n\n## Supporting Evidence\n\n**INC1158 (ServiceNow, status: Investigating)** describes the symptom: multiple, otherwise-unrelated services experiencing Redis latency spiking to 2-3x baseline at irregular intervals, with no clear trigger identified. The ticket explicitly states connection pool sizing was checked and ruled out as a cause. Current status is \"No root cause identified yet,\" and it has been escalated to the **infrastructure team** to investigate a potential network-level cause. No fix is in progress.\n\n**PROJ-335 (Jira, status: In Progress)** is the corresponding investigation ticket, directly referencing INC1158. It repeats the same finding \u2014 connection pool sizing has been ruled out \u2014 and its only comment notes: \"Escalating to infra team to check for a network-level cause \u2014 nothing found at the application layer so far.\" The issue is unassigned and has no further updates.\n\n## What's Missing\n\nThe graph does not contain any findings from the infrastructure team's network-level investigation, nor any follow-up updates, root-cause analysis, or resolution. The frontier was exhausted with both tickets still open/in-progress and no additional linked chunks (e.g., infra team notes, monitoring data, or a resolved postmortem) available. To actually answer \"what's causing\" the spikes, further investigation output from the infrastructure team (or a resolution update to INC1158/PROJ-335) would be needed."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three systems retrieved the same two expected documents and correctly conclude that the root cause has not been identified, citing the same facts (connection pool sizing ruled out, escalation to infra team for network-level cause, no application-layer cause found). ESG's answer is essentially identical in content and hedging to both baselines, just with slightly different formatting/organization. No material facts differ, no fabrication, no omission."
+}

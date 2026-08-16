@@ -1,0 +1,73 @@
+{
+  "case_number": 10,
+  "question": "did a recent feature flag change cause errors for customers?",
+  "expected_doc_ids": [
+    "INC1170",
+    "PR-555"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1170"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 715,
+      "cost_usd": 0.003422,
+      "time_sec": 5.132225036621094,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1170"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 840,
+      "cost_usd": 0.004416,
+      "time_sec": 4.855417013168335,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1170",
+        "PR-555"
+      ],
+      "retrieval_calls": 50,
+      "llm_calls": 10,
+      "tokens": 31992,
+      "cost_usd": 0.083994,
+      "time_sec": 54.47441792488098,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Yes. According to **INC1170**, shortly after a feature flag was disabled in feature-flag-service, a subset of users began receiving HTTP 500 errors on checkout.\n\nRoot cause: feature-flag-service's client cache served a **stale cached copy** of the flag value to some instances even after the flag was turned off, so those instances kept executing a code path that assumed the flag was still enabled.\n\nResolution: On-call manually flushed the feature-flag-service client cache cluster-wide, which resolved the errors within minutes.\n\nNote from the ticket: this was **not the first occurrence** of this pattern \u2014 there is currently no automatic cache invalidation when a flag value changes, only a TTL-based expiry, so similar incidents could recur after future flag changes.",
+    "2-hop": "Yes. According to **INC1170** (\"Stale feature-flag cache caused 500 errors for a subset of users\"), a feature flag change did cause customer-facing errors:\n\n- **What happened**: Shortly after a feature flag was disabled in `feature-flag-service`, a subset of users began receiving HTTP 500 errors during checkout.\n- **Root cause**: A stale cached copy of the flag value was still being served by the feature-flag-service's client cache on some instances. Those instances kept executing a code path that assumed the flag was still enabled, even after it had been turned off.\n- **Resolution**: On-call manually flushed the feature-flag-service client cache cluster-wide, which resolved the errors within minutes.\n- **Notable caveat from the ticket**: The incident notes this was not the first time a stale cached flag value caused unexpected behavior after a flag change, and that there is currently no automatic cache invalidation when a flag value changes \u2014 only a TTL-based expiry \u2014 implying this is a recurring risk rather than a one-off issue.",
+    "ESG (v2)": "## Direct Answer\n\n**Yes.** A feature flag change did cause customer-facing errors. Per incident **INC1170**, shortly after a feature flag was disabled in `feature-flag-service`, a subset of users began receiving HTTP 500 errors on **checkout**. The root cause was not the flag change itself but a **stale cached copy of the flag value** served by the client cache \u2014 some instances kept executing the old code path (assuming the flag was still enabled) after it had been turned off.\n\n## Supporting Evidence\n\n- **INC1170** (servicenow, status: Resolved): Documents the incident directly \u2014 a flag was disabled in `feature-flag-service`, and a stale cached flag value caused a subset of users to hit 500 errors on checkout. The resolution notes explicitly state on-call had to manually flush the feature-flag-service client cache cluster-wide to resolve it, and that \"this is not the first time\" this class of issue has occurred, since there was no automatic invalidation \u2014 only a cache TTL.\n\n- **PR-555** (gitrepo, status: Merged): A follow-up hardening change to `feature-flag-service`, adding an explicit cache-invalidation hook so flag changes propagate immediately instead of relying solely on the TTL. The PR description corroborates the incident's finding \u2014 that stale cached flag values have caused unexpected behavior after flag changes, previously requiring manual cluster-wide cache flushes. Reviewer **Fatima Al-Sayed** approved with the comment \"Good catch that TTL alone wasn't enough here.\" Notably, this PR was **not formally linked to INC1170** in the ticketing system \u2014 it was opened directly as a proactive fix after the gap was noticed.\n\n## Summary\n\nThe graph confirms the causal chain: feature flag disabled \u2192 stale cache served old flag state \u2192 checkout errors (INC1170) \u2192 fix merged in PR-555 to add explicit cache invalidation. The graph does not show a formal ticket-to-PR link (e.g., PR-555 \"fixes\" INC1170), so while the two are clearly related in substance, that linkage is inferred from matching descriptions rather than an explicit tracked reference."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "All three answers correctly confirm the incident and root cause from INC1170. ESG additionally surfaces PR-555, the expected second document, which the baselines omit entirely. ESG accurately describes PR-555 as a follow-up hardening fix adding explicit cache-invalidation, and appropriately hedges that the ticket-to-PR link is inferred rather than explicit, avoiding overclaiming. This gives ESG more complete, correctly grounded coverage of the expected documents without introducing unsupported claims."
+}

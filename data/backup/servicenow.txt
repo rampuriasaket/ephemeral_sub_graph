@@ -1,0 +1,414 @@
+SERVICE NOW — INCIDENT EXPORT
+System: ServiceNow (ITSM)
+Export scope: Production incidents, last 90 days
+====================================================================
+
+INCIDENT: INC1042
+TITLE: Users unable to log in — auth-service returning 401 on valid credentials
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Priya Nair (Platform Reliability)
+CREATED: 2026-08-01 03:12 UTC
+RESOLVED: 2026-08-01 05:47 UTC
+RELATED WORK: PROJ-201
+--------------------------------------------------------------------
+DESCRIPTION:
+Starting around 03:00 UTC, customer support began receiving a spike in
+tickets from users reporting they could not log in despite entering
+correct credentials. The authentication service (auth-service) was
+returning HTTP 401 for a large percentage of login attempts. Initial
+triage confirmed this was not a customer-side issue — internal test
+accounts were also failing. Traffic to auth-service was otherwise
+healthy, ruling out a capacity issue.
+
+RESOLUTION NOTES:
+Root cause was traced to an expired JWT signing key that had not been
+rotated ahead of its expiry window. Once the key was rotated, login
+success rates returned to baseline within minutes. A follow-up story
+was opened (PROJ-201) to add automated alerting before key expiry.
+Engineering confirmed the fix via a hotfix pull request. A postmortem
+document has been drafted by the Platform team.
+====================================================================
+
+INCIDENT: INC1055
+TITLE: Intermittent timeouts on payment-gateway during checkout
+STATUS: In Progress
+PRIORITY: P2 - High
+ASSIGNED TO: Marcus Webb (Payments Team)
+CREATED: 2026-08-05 14:20 UTC
+UPDATED: 2026-08-06 09:10 UTC
+RELATED WORK: PROJ-215
+--------------------------------------------------------------------
+DESCRIPTION:
+Multiple customers have reported checkout failures with a generic
+"something went wrong, please try again" error. Logs show the
+payment-gateway service is timing out on roughly 3-4% of requests
+during peak traffic windows (12:00-14:00 UTC and 18:00-20:00 UTC).
+No single upstream dependency has been conclusively identified yet.
+The team suspects connection pool exhaustion under load but this has
+not been confirmed.
+
+CURRENT STATUS:
+Payments team is running a load test to reproduce the timeout pattern
+in staging. A Jira story has been opened to track the investigation.
+No fix has been merged yet. Incident remains open pending root cause.
+====================================================================
+
+INCIDENT: INC1061
+TITLE: Elevated 500 errors on checkout-service
+STATUS: New
+PRIORITY: P3 - Moderate
+ASSIGNED TO: Unassigned
+CREATED: 2026-08-07 22:05 UTC
+UPDATED: 2026-08-07 22:05 UTC
+RELATED WORK: (none yet)
+--------------------------------------------------------------------
+DESCRIPTION:
+Monitoring dashboards show a step increase in HTTP 500 responses from
+checkout-service beginning at approximately 21:50 UTC. Error rate is
+currently around 1.8%, up from a baseline of 0.1%. No customer reports
+have come in yet. This incident was auto-created from an alerting
+threshold breach and has not yet been triaged by an engineer. No
+related Jira story, pull request, or documentation exists at this
+time.
+====================================================================
+
+INCIDENT: INC0980
+TITLE: order-service unresponsive — database connection pool exhausted
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Diego Alvarez (Order Platform)
+CREATED: 2026-05-14 11:02 UTC
+RESOLVED: 2026-05-14 13:40 UTC
+RELATED WORK: (none — resolved via config change, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+order-service became fully unresponsive for approximately 18 minutes.
+Investigation showed the database connection pool had been fully
+exhausted, with connections held open by a slow query pattern
+introduced during a batch reconciliation job.
+
+RESOLUTION NOTES:
+On-call engineer manually increased the connection pool ceiling as an
+immediate mitigation and killed the long-running batch job. No
+permanent code fix was tracked in a ticket at the time; the on-call
+runbook was updated afterward with these mitigation steps for future
+recurrences. This incident is referenced in the Order Service On-Call
+Runbook as a known failure pattern.
+====================================================================
+
+INCIDENT: INC1070
+TITLE: Push notifications delayed by 10+ minutes for a subset of users
+STATUS: Investigating
+PRIORITY: P2 - High
+ASSIGNED TO: Chen Liu (Messaging Team)
+CREATED: 2026-08-06 08:15 UTC
+UPDATED: 2026-08-07 16:30 UTC
+RELATED WORK: PROJ-244
+--------------------------------------------------------------------
+DESCRIPTION:
+Users have reported push notifications (order confirmations, shipping
+updates) arriving 10-20 minutes late instead of near-instantly. The
+notification-worker queue depth has been steadily climbing since
+yesterday evening, suggesting the consumer side cannot keep pace with
+incoming messages. No message loss has been observed, only delay.
+
+CURRENT STATUS:
+Messaging team has opened a Jira story to investigate queue backlog
+causes and is prototyping a fix to increase worker concurrency. Fix is
+still in a draft pull request and has not been merged or deployed.
+====================================================================
+
+INCIDENT: INC1082
+TITLE: Checkout latency spike during flash sale event
+STATUS: In Progress
+PRIORITY: P1 - Critical
+ASSIGNED TO: Aisha Rahman (Performance Team)
+CREATED: 2026-08-08 17:45 UTC
+UPDATED: 2026-08-08 19:20 UTC
+RELATED WORK: PROJ-260
+--------------------------------------------------------------------
+DESCRIPTION:
+During today's flash sale, checkout p95 latency rose from a baseline
+of ~400ms to over 6 seconds under peak concurrent load. Customers
+report the checkout button "spinning" for extended periods before
+either succeeding or timing out.
+
+CURRENT STATUS:
+Profiling in progress. Early findings point toward lock contention in
+inventory-service during concurrent stock-decrement operations, though
+this has not been confirmed as the sole cause. A Jira story is open to
+track the investigation. Business has been notified of the ongoing
+customer impact.
+====================================================================
+
+INCIDENT: INC1090
+TITLE: TLS certificate for api.internal-billing expiring in 14 days
+STATUS: New
+PRIORITY: P4 - Low
+ASSIGNED TO: Unassigned
+CREATED: 2026-08-08 06:00 UTC
+UPDATED: 2026-08-08 06:00 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Automated certificate-expiry monitoring flagged that the TLS
+certificate used by the internal billing API is due to expire in 14
+days. This is a routine, low-urgency alert with ample lead time. No
+customer impact at this time. No related tickets or documentation
+exist yet; this will likely be handled directly by the on-call
+engineer without further tracking.
+====================================================================
+
+INCIDENT: INC1099
+TITLE: Nightly reporting batch job failed — reporting-service
+STATUS: Resolved
+PRIORITY: P3 - Moderate
+ASSIGNED TO: Sam Okafor (Data Platform)
+CREATED: 2026-08-04 02:10 UTC
+RESOLVED: 2026-08-04 04:55 UTC
+RELATED WORK: (none tracked)
+--------------------------------------------------------------------
+DESCRIPTION:
+The nightly reporting batch job for reporting-service failed with an
+out-of-memory error partway through execution, leaving the previous
+day's report stale.
+
+RESOLUTION NOTES:
+On-call engineer re-ran the job manually with an increased memory
+allocation and it completed successfully. Considered a one-off
+resource sizing issue rather than a code defect; no Jira story, pull
+request, or documentation update was created.
+====================================================================
+
+INCIDENT: INC1105
+TITLE: recommendation-engine returning stale results for logged-in users
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Sofia Marchetti (Personalization Team)
+CREATED: 2026-08-09 10:05 UTC
+RESOLVED: 2026-08-09 13:40 UTC
+RELATED WORK: PROJ-288
+--------------------------------------------------------------------
+DESCRIPTION:
+Logged-in users began seeing stale, non-personalized recommendations
+on the homepage and product pages starting mid-morning. The
+recommendation-engine was serving results from a cache layer that had
+not been invalidated after a backend model refresh, so users saw
+recommendations computed from yesterday's model instead of today's.
+
+RESOLUTION NOTES:
+Root cause was a cache invalidation bug in the recommendation-engine's
+result cache — the RecEngine service (as the on-call runbook calls it
+internally) was not clearing cached entries when a new model version
+was published. Cache was flushed manually to restore fresh results,
+and a follow-up story (PROJ-288) was opened to fix the invalidation
+logic so this doesn't require manual intervention next time.
+====================================================================
+
+INCIDENT: INC1110
+TITLE: cache-service latency regression after Tuesday deploy
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Fatima Al-Sayed (Platform Reliability)
+CREATED: 2026-08-03 09:15 UTC
+RESOLVED: 2026-08-03 10:50 UTC
+RELATED WORK: PROJ-295
+--------------------------------------------------------------------
+DESCRIPTION:
+p99 latency on cache-service roughly tripled shortly after Tuesday's
+scheduled deploy went out. No errors were thrown — reads and writes
+both succeeded, just noticeably slower — which pointed away from a
+capacity issue and toward something changed in the deploy itself.
+
+RESOLUTION NOTES:
+The deploy had changed a serialization setting on cache-service that
+increased CPU cost per request under real traffic patterns, even
+though it looked fine in the pre-deploy benchmark. Rolled back the
+deploy to restore normal latency. A follow-up story (PROJ-295) was
+opened to add a canary/rollback check so a regression like this gets
+caught automatically before full rollout next time.
+====================================================================
+
+INCIDENT: INC1120
+TITLE: cache-service evicting entries too aggressively under memory pressure
+STATUS: Resolved
+PRIORITY: P3 - Moderate
+ASSIGNED TO: Fatima Al-Sayed (Platform Reliability)
+CREATED: 2026-07-05 15:30 UTC
+RESOLVED: 2026-07-05 17:10 UTC
+RELATED WORK: (none tracked at the time — fixed via config change)
+--------------------------------------------------------------------
+DESCRIPTION:
+cache-service began evicting entries well before its configured memory
+ceiling was reached, causing a spike in cache-miss rate and elevated
+load on downstream services during a period of higher-than-usual
+traffic.
+
+RESOLUTION NOTES:
+On-call engineer increased the eviction threshold as an immediate
+mitigation, which restored the normal cache-hit rate. Considered a
+config-tuning issue at the time rather than something requiring a
+tracked fix, so no Jira story or pull request was opened.
+====================================================================
+
+INCIDENT: INC1130
+TITLE: Disk space warning on log-aggregator — auto-resolved
+STATUS: Resolved
+PRIORITY: P4 - Low
+ASSIGNED TO: Unassigned
+CREATED: 2026-07-25 04:20 UTC
+RESOLVED: 2026-07-25 06:00 UTC
+RELATED WORK: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Automated monitoring flagged log-aggregator disk usage crossing 85%
+of capacity. Scheduled log-rotation ran shortly after and brought
+usage back under the threshold on its own. No engineer action was
+required and no customer impact occurred.
+====================================================================
+
+INCIDENT: INC1155
+TITLE: image-processing-service resize worker failing intermittently under burst upload load
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Diego Alvarez (Media Platform)
+CREATED: 2026-08-13 09:40 UTC
+RESOLVED: 2026-08-13 11:15 UTC
+RELATED WORK: (none — resolved via manual restart, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+During a burst of bulk photo uploads from a large seller onboarding
+batch, the image-processing-service resize worker began throwing
+sporadic timeout errors, leaving a percentage of uploaded images
+without generated thumbnails. Not every request failed — only a
+subset caught during the peak of the burst.
+
+RESOLUTION NOTES:
+On-call restarted the resize worker pool, which cleared the backlog
+and resolved the immediate issue. This is not the first time
+image-processing-service has struggled under a sudden burst of
+uploads; the working theory is the worker pool doesn't handle
+transient overload gracefully and just needs a restart when it
+happens. Considered a one-off operational mitigation, no ticket was
+filed at the time.
+====================================================================
+
+INCIDENT: INC1160
+TITLE: Partner webhook deliveries delayed up to 20 minutes during traffic spike
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Layla Haddad (Integrations)
+CREATED: 2026-08-14 15:05 UTC
+RESOLVED: 2026-08-14 16:30 UTC
+RELATED WORK: (none — mitigated by manual scaling, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+A sudden spike in order volume caused webhook-dispatcher-service to
+fall behind on outbound partner webhook deliveries, with some
+partners seeing delays of up to 20 minutes before receiving order
+and shipment update events. No events were lost, only delayed.
+
+RESOLUTION NOTES:
+On-call manually scaled up the webhook-dispatcher-service worker
+pool, which cleared the backlog within about 30 minutes. This is at
+least the second time webhook-dispatcher-service has fallen behind
+during a traffic spike and needed manual scaling -- there is
+currently no automatic backpressure or queuing mechanism to absorb
+bursts on its own.
+====================================================================
+
+INCIDENT: INC1165
+TITLE: Users intermittently logged out unexpectedly
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Aisha Rahman (Platform Reliability)
+CREATED: 2026-08-15 12:20 UTC
+RESOLVED: 2026-08-15 13:50 UTC
+RELATED WORK: (none — resolved via manual cache flush, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+A subset of logged-in users were unexpectedly signed out and asked to
+re-authenticate, even though their session should still have been
+valid. Investigation traced this to session-store (the shared
+redis-backed session cache) evicting active session entries earlier
+than expected under memory pressure from an unrelated spike in
+traffic to another service sharing the same cluster.
+
+RESOLUTION NOTES:
+On-call flushed and rebalanced the session-store cluster, which
+stopped further unexpected evictions. Session-store has hit memory
+pressure before in a similar way, but each time it has been handled
+as a one-off manual mitigation rather than a permanent fix.
+====================================================================
+
+INCIDENT: INC1170
+TITLE: Stale feature-flag cache caused 500 errors for a subset of users
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Omar Farouk (Platform Reliability)
+CREATED: 2026-08-16 08:05 UTC
+RESOLVED: 2026-08-16 08:45 UTC
+RELATED WORK: (none — resolved via manual cache flush, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+Shortly after a feature flag was disabled in feature-flag-service,
+a subset of users began receiving HTTP 500 errors on checkout. Root
+cause was a stale cached copy of the flag value being served by
+feature-flag-service's client cache to some instances, which kept
+executing a code path that assumed the flag was still enabled after
+it had been turned off.
+
+RESOLUTION NOTES:
+On-call manually flushed the feature-flag-service client cache
+cluster-wide, which resolved the errors within minutes. This is not
+the first time a stale cached flag value has caused unexpected
+behavior after a flag change -- there is currently no automatic
+invalidation when a flag value changes, only a cache TTL.
+====================================================================
+
+INCIDENT: INC1175
+TITLE: Transactional emails delayed approximately 30 minutes
+STATUS: Resolved
+PRIORITY: P2 - High
+ASSIGNED TO: Sam Okafor (Data Platform)
+CREATED: 2026-08-17 19:10 UTC
+RESOLVED: 2026-08-17 20:05 UTC
+RELATED WORK: (none — provider-side issue, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+Password-reset and order-confirmation emails sent via
+email-delivery-service were delayed by approximately 30 minutes.
+Investigation traced the delay to a queue backlog on the third-party
+email provider's side, not an issue in email-delivery-service itself.
+
+RESOLUTION NOTES:
+No action was needed on our end -- the provider's queue backlog
+cleared on its own and delivery times returned to normal. Support
+was notified so they could reassure any customers who asked about
+delayed password-reset emails during the window.
+====================================================================
+
+INCIDENT: INC1180
+TITLE: Legitimate traffic throttled incorrectly after rate-limiter-service config change
+STATUS: Resolved
+PRIORITY: P1 - Critical
+ASSIGNED TO: Chen Liu (Platform Reliability)
+CREATED: 2026-08-18 10:30 UTC
+RESOLVED: 2026-08-18 11:05 UTC
+RELATED WORK: (none — resolved via config rollback, no tracked ticket)
+--------------------------------------------------------------------
+DESCRIPTION:
+Following a routine threshold change pushed to rate-limiter-service,
+a percentage of legitimate customer traffic began receiving HTTP 429
+"too many requests" responses despite being well within normal usage
+patterns. The new threshold had been pushed globally to all traffic
+at once rather than to a small percentage first.
+
+RESOLUTION NOTES:
+On-call rolled back the config change, which immediately restored
+normal traffic handling. This incident is a direct consequence of
+rate-limiter-service config changes being pushed globally with no
+canary or gradual-rollout step to catch a bad threshold before it
+affects all traffic.
+====================================================================

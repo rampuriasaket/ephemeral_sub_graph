@@ -1,0 +1,73 @@
+{
+  "case_number": 19,
+  "question": "Why don't the warehouse inventory counts match the system?",
+  "expected_doc_ids": [
+    "INC1137",
+    "ops-warehouse-2026-08-02"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 564,
+      "cost_usd": 0.003112,
+      "time_sec": 5.613110065460205,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 547,
+      "cost_usd": 0.002686,
+      "time_sec": 5.954110145568848,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137",
+        "ops-warehouse-2026-08-02"
+      ],
+      "retrieval_calls": 30,
+      "llm_calls": 6,
+      "tokens": 23117,
+      "cost_usd": 0.074481,
+      "time_sec": 41.254594802856445,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the single document provided (INC1137), the root cause has not yet been determined. The ticket explicitly states:\n\n- A routine warehouse audit uncovered discrepancies between system-recorded inventory counts and physical counts for several SKUs.\n- It is **not yet clear** whether this is caused by a sync-job bug or a physical process issue.\n- The incident has **not yet been triaged**, and no related ticket exists to provide further diagnostic detail.\n\n**What's missing:** There is no root-cause analysis, no diagnostic findings, and no linked incident/PR in the provided documents that would explain the actual cause of the mismatch. I don't have enough information to say definitively why the counts don't match \u2014 only that the discrepancy was observed and is still under investigation.",
+    "2-hop": "Based on the available documentation, this cannot be fully answered. INC1137 confirms that a discrepancy exists between system-recorded inventory counts and physical warehouse counts for several SKUs, but the ticket explicitly states the root cause is unknown: it's \"not yet clear whether this is a sync-job bug or a physical process issue,\" and the incident has \"not yet [been] triaged\" with \"no related ticket exists.\"\n\nNo other documents were retrieved that identify a sync-job bug, process failure, or related incident that would explain the cause. To answer definitively, further investigation/triage of INC1137 would be needed.",
+    "ESG (v2)": "## Direct Answer\n\n**The root cause has not yet been determined.** The investigation found only an unconfirmed hypothesis \u2014 a possible sync-job bug that skips items during the nightly run \u2014 but no ticket, log, or engineering analysis in the graph confirms this or identifies any other cause. The incident (INC1137) is still open and untriaged, with no linked diagnostic ticket.\n\n## Supporting Evidence\n\n**INC1137** (ServiceNow, status: New) is the formal incident record describing the problem: a routine warehouse audit found that system-recorded inventory counts don't match physical counts for several SKUs. Critically, the ticket itself states: *\"Not yet clear whether this is a sync-job bug or a physical process issue. Not yet triaged; no related ticket exists.\"* This means no root-cause investigation has been completed or documented yet.\n\n**slack:ops-warehouse-2026-08-02** provides earlier, informal context from the **warehouse-ops-team**, who reported the discrepancy recurring for the third time that month, on different SKUs each time (recurrence noted on aisle 12). One team member speculated, *\"could just be the sync job skipping items during the nightly run,\"* but explicitly flagged this as a guess, noting they \"haven't dug in.\" The team decided to flag it for the next day's audit and get a second opinion before opening a formal ticket \u2014 which appears to be the origin of INC1137.\n\n## What's Missing\n\nThe graph does not contain:\n- Any confirmation or refutation of the \"sync job skipping items\" theory (e.g., logs, code review, or engineering follow-up).\n- Any related ticket, PR, or root-cause analysis linked to INC1137 (the ticket explicitly notes none exists).\n- Any information ruling in or out a \"physical process issue\" as the alternate explanation mentioned in the incident.\n\n**Bottom line:** Based on available data, the cause is unconfirmed. The leading working theory from the ops team is a nightly sync-job bug that skips items, but this is speculative and INC1137 remains untriaged with no supporting investigation yet on record."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "Both baselines only retrieved INC1137 and correctly hedge that root cause is unknown, but they miss the additional context available in ops-warehouse-2026-08-02 (the expected second document), which contains the ops team's speculation about a sync-job bug, the recurrence pattern, and the origin story of the ticket. ESG retrieved both expected documents and surfaces this additional grounded context while still correctly hedging that the root cause is unconfirmed and speculative. ESG does not overstate confidence - it clearly labels the sync-job theory as speculative/unconfirmed, matching the source material. This gives the reader materially more useful, correctly-hedged information than either baseline."
+}

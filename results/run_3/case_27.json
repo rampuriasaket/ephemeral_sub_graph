@@ -1,0 +1,73 @@
+{
+  "case_number": 27,
+  "question": "Why did the third-party analytics script slow the page down?",
+  "expected_doc_ids": [
+    "INC1229",
+    "PROJ-415"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 688,
+      "cost_usd": 0.0046,
+      "time_sec": 6.247196197509766,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 624,
+      "cost_usd": 0.003704,
+      "time_sec": 5.579127073287964,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229",
+        "PROJ-415"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 8,
+      "tokens": 23508,
+      "cost_usd": 0.06323300000000001,
+      "time_sec": 38.87176203727722,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the single document provided (INC1229), the available information is limited. Here's what it says:\n\n**What the ticket confirms:**\n- Page load time metrics regressed, and this regression correlates with the rollout of a new third-party analytics script on product pages (servicenow:INC1229).\n- The script \"appears to block rendering longer than expected under slow network conditions\" (servicenow:INC1229).\n\n**What's missing:**\nThe document does not explain the underlying technical reason *why* the script blocks rendering \u2014 for example, it doesn't specify whether the script was loaded synchronously (blocking the DOM parser), placed in the `<head>` without `async`/`defer` attributes, hosted on a slow third-party server, large in file size, or making blocking network calls before allowing the page to continue rendering. It also doesn't detail what \"under slow network conditions\" specifically means (e.g., high latency, low bandwidth, timeout behavior).\n\nTo give a complete root-cause explanation, I'd need additional details such as a root-cause analysis, engineering postmortem, or related change/PR ticket that isn't included in the retrieved documents.",
+    "2-hop": "Based on the single document available (**INC1229**), the incident report states that page load time metrics regressed after a new third-party analytics script was rolled out on product pages, and that **the script appears to block rendering longer than expected under slow network conditions.**\n\nThat's the extent of the root-cause detail provided \u2014 the ticket doesn't elaborate on *why* the script blocks rendering (e.g., synchronous loading, lack of async/defer attributes, large payload size, blocking DOM parsing, etc.), nor does it reference any related PR, follow-up investigation ticket, or fix that would explain the underlying technical mechanism. Since no other documents or linked tickets/PRs were retrieved, I can't provide more specifics beyond what INC1229 states.",
+    "ESG (v2)": "## Direct Answer\n\nThe third-party analytics script slowed the page down because it was **loaded in a render-blocking way** \u2014 under slow network conditions, the browser had to wait on the script before it could continue rendering the page, delaying page load. This was confirmed by engineering as a render-blocking loading issue, with a proposed fix of deferring or async-loading the script.\n\n## Supporting Evidence\n\n**INC1229** (ServiceNow, \"Third-party analytics script slowing page load\") reported that page load time metrics showed a regression correlating with the rollout of a new third-party analytics script on product pages, and noted that \"the script appears to block rendering longer than expected under slow network conditions.\"\n\n**PROJ-415** (Jira, \"Investigate third-party analytics script blocking page render\") was opened to investigate this, explicitly linking back to INC1229 and restating the same finding: the new analytics script correlates with the page-load regression and appears to block rendering under slow network conditions.\n\nIn a comment on PROJ-415, **Layla Haddad** confirmed the mechanism: *\"Confirmed it's render-blocking as loaded. Looking at whether we can defer or async-load it without breaking their tracking requirements.\"* This confirms the root cause was the script's synchronous/render-blocking loading method, and the team was exploring deferred or asynchronous loading as a remedy.\n\n## Gaps\n\nThe graph does not contain further detail on:\n- The specific technical implementation (e.g., whether the script tag lacked `async`/`defer` attributes)\n- The outcome of Layla Haddad's investigation into deferring/async-loading the script\n- Any resolution or fix confirmation for either INC1229 or PROJ-415\n\nThe available evidence supports that the slowdown was due to render-blocking script loading under slow network conditions, but the deeper technical root cause and final resolution are not documented in the retrieved data."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "ESG retrieved both expected documents (INC1229 and PROJ-415), while both baselines only retrieved INC1229 and explicitly hedged that they couldn't determine why the script blocked rendering. ESG surfaces the additional confirmed detail from PROJ-415 (Layla Haddad's comment confirming render-blocking loading as the mechanism and the proposed defer/async fix), which is grounded in the expected document set and directly answers the \"why\" that the baselines said was missing. ESG still appropriately hedges on remaining gaps (exact technical implementation, resolution outcome). This is a clear case of ESG surfacing material facts from the expected documents that both baselines missed."
+}

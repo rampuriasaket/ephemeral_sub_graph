@@ -1,0 +1,86 @@
+{
+  "case_number": 12,
+  "question": "why did legitimate customers get rate-limited recently?",
+  "expected_doc_ids": [
+    "INC1180",
+    "PR-560"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.5,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PROJ-255"
+      ],
+      "retrieved_doc_ids": [
+        "INC1180",
+        "PR-560",
+        "api-rate-limiting-guide",
+        "partner-eng-2026-08-09"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 2073,
+      "cost_usd": 0.011698,
+      "time_sec": 128.3382089138031,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.4,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1180",
+        "PR-560",
+        "PROJ-255",
+        "api-rate-limiting-guide",
+        "partner-eng-2026-08-09"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 2409,
+      "cost_usd": 0.012978,
+      "time_sec": 13.388636827468872,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.5,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PROJ-255"
+      ],
+      "retrieved_doc_ids": [
+        "INC1180",
+        "PR-560",
+        "api-rate-limiting-guide",
+        "partner-eng-2026-08-09"
+      ],
+      "retrieval_calls": 75,
+      "llm_calls": 15,
+      "tokens": 53914,
+      "cost_usd": 0.14227,
+      "time_sec": 3644.907226085663,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents, there appear to be **two distinct recent causes** of legitimate customers getting rate-limited \u2014 they are separate incidents and shouldn't be conflated:\n\n**1. Global config rollout without canary (INC1180 / PR-560)**\nA routine threshold change was pushed to `rate-limiter-service`, but it was deployed **globally to all traffic at once** rather than to a small percentage first. The new threshold was apparently miscalibrated, so legitimate customer traffic that was well within normal usage patterns started getting HTTP 429 \"too many requests\" responses. On-call rolled back the config change, which immediately fixed the issue (INC1180).\n\nThe stated root cause was the lack of a canary/gradual-rollout step for rate-limiter config changes \u2014 PR-560 was subsequently created to add exactly that safeguard, so a new threshold would apply to a small percentage of traffic first instead of everyone simultaneously.\n\n**2. Incorrect tier provisioning (slack:partner-eng-2026-08-09)**\nSeparately, a partner integration team reported getting 429s well below their documented partner-tier limit. Investigation (Yuki Tanaka, Omar Farouk) found the limiter itself wasn't broken \u2014 the account had been **defaulted to standard tier instead of partner tier**, so it was correctly enforcing standard-tier limits against a customer who should have had the higher partner-tier allowance. Yuki noted this was \"the second time that's happened,\" and Omar suggested a provisioning checklist as a follow-up (tracked as a separate ticket, not detailed in these documents).\n\nNote: the `api-rate-limiting-guide` page (confluence:api-rate-limiting-guide) is related context \u2014 it documents the standard (100 req/min) and partner (500 req/min) tier limits, and mentions the documented figures were themselves corrected in PROJ-255 because they didn't match actual enforced values \u2014 but this correction isn't described as a direct cause of customers being rate-limited, just a documentation fix.\n\nIf you meant a specific one of these two incidents, let me know \u2014 the documents don't indicate which is \"the\" recent one you're asking about, or whether they're related beyond both surfacing around the same time.",
+    "2-hop": "Legitimate customers were rate-limited for **two distinct reasons** recently, per the documents:\n\n**1. A bad global config rollout (the main incident) \u2014 INC1180**\nA routine threshold change was pushed to `rate-limiter-service`, but it was applied **globally to all traffic at once instead of being rolled out gradually/canaried**. As a result, a percentage of legitimate customer traffic started getting HTTP 429 \"too many requests\" errors even though they were within normal usage patterns. On-call rolled back the config change, which immediately fixed it.\n\nThe root cause, per the resolution notes, was that threshold changes to `rate-limiter-service` had **no canary or gradual-rollout step** to catch a bad threshold before it hit all traffic. This was fixed by [gitrepo:PR-560], which added a canary stage so new thresholds are applied to a small percentage of traffic first, explicitly citing this incident as the motivation.\n\n**2. A separate, unrelated account-provisioning issue \u2014 [slack:partner-eng-2026-08-09]**\nA partner integration account was hitting 429s well below the documented partner-tier limit. Investigation showed this wasn't a limiter bug \u2014 the account had **defaulted to standard tier instead of being provisioned as partner tier**. Yuki Tanaka noted this was \"the second time that's happened,\" suggesting a recurring provisioning gap (a follow-up ticket for a provisioning checklist was mentioned but not detailed in the retrieved documents).\n\n**Related but not a cause of incorrect throttling:** [confluence:api-rate-limiting-guide] and [jira:PROJ-255] show that the documented rate limits had drifted from the actual code defaults, causing confusion for a partner team \u2014 but this was a **documentation-only issue** (\"No code change needed\" per PROJ-255 comments), not an actual enforcement bug.\n\n**Gap:** The documents don't specify whether INC1180's config change and the partner mis-provisioning issue are connected, nor do they give details on the promised \"provisioning checklist\" ticket beyond it being mentioned as a to-do in the Slack thread.",
+    "ESG (v2)": "## Short Answer\n\nLegitimate customers were rate-limited due to **at least two distinct, unrelated issues**: (1) a bad global config rollout to `rate-limiter-service` that throttled traffic across the board (INC1180), and (2) a separate, later incident where a partner integration team's account was incorrectly provisioned as \"standard tier\" instead of \"partner tier,\" causing it to hit a much lower limit than expected. There was also a documentation error (PROJ-255) that may have contributed to confusion about what the \"correct\" limits even were.\n\n## Supporting Evidence\n\n**1. Global config push with no gradual rollout (INC1180 / PR-560)**\n\n- **INC1180** (\"Legitimate traffic throttled incorrectly after rate-limiter-service config change\") describes a routine threshold change pushed to `rate-limiter-service` that was applied **globally to all traffic at once**, rather than being rolled out gradually. This caused legitimate customer traffic well within normal usage to receive HTTP 429 errors. On-call resolved it by rolling back the config change.\n- The incident's resolution notes explicitly state this was \"a direct consequence of rate-limiter-service config changes being pushed globally with no canary or gradual-rollout step to catch a bad threshold before it affects all traffic.\"\n- **PR-560** (\"Add canary stage to rate-limiter-service config rollout\") is the fix that followed: it adds a canary/gradual-rollout stage for threshold config changes so new thresholds apply to a small percentage of traffic first. The PR description directly references the incident that prompted it (\"a config change that was pushed to all traffic simultaneously and ended up throttling legitimate customer requests before it was caught and rolled back\"). **Yuki Tanaka** reviewed and approved it, commenting that the canary stage \"should have had this from the start given how global these config pushes are.\"\n\n**2. Partner account misprovisioned as standard tier (Slack thread partner-eng-2026-08-09)**\n\n- In a separate Slack thread, **Yuki Tanaka** reported that the **partner integration team** was getting 429s well below the documented partner-tier limit.\n- **Omar Farouk** suggested checking whether the account was actually provisioned as partner tier \u2014 and it turned out it was not; it had defaulted to standard tier.\n- Omar Farouk noted this was \"the second time that's happened,\" suggesting a recurring provisioning bug/gap, and proposed a provisioning checklist as a follow-up (tracked as a separate ticket, not detailed further in this graph).\n\n**3. Documentation mismatch (PROJ-255 / api-rate-limiting-guide)**\n\n- The **api-rate-limiting-guide** wiki page notes that the documented rate limits (100 req/min standard, 500 req/min partner tier, +20% burst) were corrected on 2026-08-03 under **PROJ-255**, after the partner integration team reported that the previously documented limits didn't match what was actually enforced in code. This indicates that, at least for a period, the published limits were inaccurate \u2014 which could itself explain confusion (customers/integrators expecting one limit while the code enforced another).\n\n## What's Not Fully Resolved in the Graph\n\n- The graph doesn't specify the exact timeline/ordering of these three issues relative to each other, so it's unclear whether they're all part of \"recently\" or represent separate, unrelated periods of rate-limiting complaints.\n- The root cause of the provisioning defaulting to \"standard tier\" (mentioned as happening at least twice) is not detailed \u2014 no ticket/PR describing that bug is present in the graph.\n- No data confirms whether PROJ-255's documentation fix was itself a *cause* of rate-limiting or merely a correction of stale docs unrelated to actual enforcement behavior.\n\nIf you need a single definitive cause, the graph doesn't support picking one \u2014 it points to multiple contributing incidents (bad global rollout, tier misprovisioning, and outdated documentation) rather than one root cause."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers correctly identify the two main causes from INC1180/PR-560 (bad global config rollout without canary) and the partner tier misprovisioning issue from partner-eng-2026-08-09. ESG's answer is materially equivalent to flat-RAG and 2-hop in content, correctly grounded in the expected documents, and includes the same appropriate hedging about ambiguity/timeline. ESG attributes a comment to \"Omar Farouk\" noting \"second time that's happened\" whereas the other two attribute this line to Yuki Tanaka \u2014 a minor misattribution, but it doesn't change the substantive facts conveyed. ESG also incorporates PROJ-255 details similar to 2-hop's answer, correctly framing it as a documentation-only issue, not a direct cause. No fabrication is present since PROJ-255 appears to be part of the broader retrieved context (2-hop's list explicitly includes it, suggesting it's a legitimately connected document). Overall, ESG's answer is essentially SAME in substance and confidence-calibration to the best baseline (2-hop), with only cosmetic differences."
+}

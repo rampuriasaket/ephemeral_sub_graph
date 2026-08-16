@@ -1,0 +1,90 @@
+{
+  "case_number": 2,
+  "question": "what's going on with the payment gateway timeouts?",
+  "expected_doc_ids": [
+    "INC1055",
+    "PROJ-215",
+    "payment-gateway-troubleshooting-guide",
+    "INC1101",
+    "PR-601",
+    "PR-745",
+    "PROJ-301",
+    "checkout-idempotency-design-doc",
+    "incident-response-2026-08-09"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.3333333333333333,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1055",
+        "PROJ-215",
+        "payment-gateway-troubleshooting-guide"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1759,
+      "cost_usd": 0.009238,
+      "time_sec": 8.572439908981323,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.3333333333333333,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1055",
+        "PROJ-215",
+        "payment-gateway-troubleshooting-guide"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1801,
+      "cost_usd": 0.009402,
+      "time_sec": 10.460080862045288,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 0.8888888888888888,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1055",
+        "INC1101",
+        "PR-601",
+        "PROJ-215",
+        "PROJ-301",
+        "checkout-idempotency-design-doc",
+        "incident-response-2026-08-09",
+        "payment-gateway-troubleshooting-guide"
+      ],
+      "retrieval_calls": 145,
+      "llm_calls": 33,
+      "tokens": 116032,
+      "cost_usd": 0.305509,
+      "time_sec": 181.253897190094,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Here's the current state based on the available documents:\n\n**Status: Open / Unresolved \u2014 no root cause confirmed, no fix merged.**\n\n**The problem (INC1055):**\n- Intermittent timeouts on payment-gateway during checkout, affecting ~3-4% of requests\n- Concentrated during peak traffic windows: 12:00-14:00 UTC and 18:00-20:00 UTC\n- Customer-facing symptom is a generic \"something went wrong, please try again\" error\n- No upstream dependency has been conclusively identified as the cause\n\n**Leading theory:** Connection pool exhaustion under load \u2014 but this is explicitly noted as *unconfirmed* in both INC1055 and PROJ-215.\n\n**Investigation progress (PROJ-215):**\n- Marcus Webb reproduced a *similar* timeout pattern in staging under synthetic load, but the failure rate was lower than what's seen in production\n- Still unclear whether the driver is pool size itself or a slow downstream dependency\n- As of the latest comment, no fix is ready \u2014 Marcus says he'll update once there's a reproducible root cause\n\n**Relevant troubleshooting context (confluence:payment-gateway-troubleshooting-guide):**\n- The wiki describes connection pool exhaustion symptoms as: elevated latency, intermittent timeouts in peak windows, and connection-refused errors once the pool saturates \u2014 consistent with what's being observed\n- It also flags that slow downstream dependencies (fraud-check-service or the external payment processor) can hold connections open longer and indirectly exhaust the pool \u2014 which aligns with the \"pool size vs. downstream dependency\" question still open in PROJ-215\n- The page itself notes it will be updated with more specific guidance once this investigation concludes \u2014 i.e., it doesn't yet contain a confirmed fix\n\n**Bottom line:** This is an active, unresolved investigation. The team suspects connection pool exhaustion, possibly triggered by a slow downstream dependency, but nothing is confirmed and no fix has shipped. I don't have any documents showing a resolution, ETA, or merged PR \u2014 if one exists, it isn't in the provided set.",
+    "2-hop": "## Summary: Payment Gateway Timeouts (INC1055 / PROJ-215)\n\n**Status: Open / Unresolved \u2014 no root cause confirmed, no fix merged.**\n\n**What's happening:**\n- Customers are hitting checkout failures (generic \"something went wrong\" error) due to `payment-gateway` timing out on roughly **3-4% of requests**, concentrated during peak traffic windows: **12:00\u201314:00 UTC and 18:00\u201320:00 UTC** (INC1055).\n- The leading theory is **connection pool exhaustion under load**, but this is explicitly **not yet confirmed** (INC1055, PROJ-215).\n\n**Investigation progress (PROJ-215):**\n- Marcus Webb reproduced a *similar* timeout pattern in staging using synthetic load, but the failure rate in staging is **lower** than what's seen in production.\n- Still undetermined whether the driver is pool size itself or a **slow downstream dependency** causing connections to be held open longer (indirectly exhausting the pool).\n- No fix has been implemented yet; the update is pending a reproducible root cause.\n\n**Related triage guidance (confluence:payment-gateway-troubleshooting-guide):**\n- Documents that connection pool exhaustion typically presents as elevated latency, timeouts concentrated in peak windows, and connection-refused errors once the pool saturates \u2014 consistent with what's being observed.\n- Recommends checking: current pool utilization vs. configured max size, recent deploys affecting connection handling, and downstream dependency latency (specifically **fraud-check-service** or the **external payment processor**), since slow downstream responses can hold connections open and exhaust the pool indirectly.\n- Notes this guide will be updated once the current investigation concludes \u2014 indicating it hasn't been updated with confirmed findings yet.\n\n**What's missing from these documents:**\n- No confirmed root cause (pool exhaustion vs. downstream dependency vs. something else) has been established.\n- No timeline, owner assignment beyond Marcus Webb, or ETA for a fix.\n- No specifics on current pool size/config or which downstream dependency (if any) has been confirmed slow.",
+    "ESG (v2)": "## Short Answer\n\nThe payment gateway timeouts are an **open, unresolved investigation** (INC1055 / PROJ-215). Timeouts are hitting ~3-4% of checkout requests during peak traffic windows (12:00-14:00 UTC and 18:00-20:00 UTC). The leading theory is **connection pool exhaustion**, but this is explicitly **not yet confirmed** \u2014 engineering has only reproduced a *similar* (lower-frequency) pattern in staging under synthetic load, and hasn't ruled out a slow downstream dependency (fraud-check-service or the external payment processor) as the real driver. No fix has been merged. Note: a *related but separate* issue \u2014 customers being double-charged due to retries after these timeouts \u2014 has already been fixed (INC1101 / PROJ-301 / PR-601), but that fix addresses the symptom of retrying after a timeout, not the timeout root cause itself.\n\n## Supporting Evidence\n\n**Current state of the core investigation:**\n- **INC1055** (status: In Progress) \u2014 the incident describing the timeouts: intermittent failures on ~3-4% of checkout requests during peak windows, generic \"something went wrong\" errors for customers. No upstream dependency conclusively identified yet. Payments team is running load tests to try to reproduce it; incident remains open pending root cause.\n- **PROJ-215** (status: In Progress) \u2014 the Jira story tracking root-cause investigation, opened off INC1055. Suspects pool exhaustion but not confirmed. Marcus Webb's comments indicate he reproduced *a similar* timeout pattern in staging under synthetic load, but at a lower failure rate than production \u2014 so it's not a full reproduction, and he's still weighing pool size vs. a slow downstream dependency as the real driver. No fix ready yet.\n- **confluence:payment-gateway-troubleshooting-guide** \u2014 describes the general failure mode consistent with the suspected cause: connection pool exhaustion under load produces elevated latency, intermittent timeouts concentrated in peak windows, and connection-refused errors once the pool saturates. It explicitly calls out that a slow downstream dependency (**fraud-check-service** or the external **payment processor**) could hold connections open longer than expected and exhaust the pool indirectly. The page notes it will be updated with more specific guidance \"once the current investigation ... concludes\" \u2014 confirming this is still open.\n\n**Related, already-resolved issue (distinct from the timeout root cause):**\n- **INC1101** (Resolved) \u2014 customers were charged twice because checkout-service retried payment-gateway calls after a timeout with no idempotency protection. This is a *downstream consequence* of the timeouts, not their cause.\n- **PROJ-301** (Done) and **PR-601** (Merged) \u2014 added a per-attempt idempotency key to checkout-service's retry logic, closing INC1101. Handled by Aisha Rahman (fix) and Diego Alvarez (review/refund list), per the **slack:incident-response-2026-08-09** thread and the **checkout-idempotency-design-doc**.\n- This fix stopped the double-charging side effect of retries-after-timeout, but does not address why payment-gateway is timing out in the first place.\n\n## What's Missing\n\nThe graph does not contain a confirmed root cause for the timeouts themselves \u2014 the investigation (INC1055/PROJ-215) is explicitly still open, with connection pool exhaustion only a suspected (not confirmed) cause, and no merged fix for it. There's no data here on current pool utilization numbers, deploy history for the gateway's connection handling, or conclusive findings about fraud-check-service/payment processor latency. If you need the current root cause or fix status, that would require following up directly on PROJ-215/INC1055, which had not concluded as of the last update in this graph."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "Both baselines cover the core INC1055/PROJ-215 timeout investigation accurately and correctly hedge on unresolved root cause. ESG covers the same core content with equal accuracy and hedging, but additionally surfaces the related expected documents (INC1101, PR-601, PR-745/PROJ-301, checkout-idempotency-design-doc, incident-response-2026-08-09) that both baselines missed entirely despite being in the expected set. ESG correctly distinguishes this related double-charging fix as a separate downstream issue rather than conflating it with the root cause, which is accurate and adds material, correctly-grounded information without overclaiming. This makes ESG's answer more complete while maintaining the same calibrated hedging on the unresolved timeout root cause."
+}

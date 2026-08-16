@@ -1,0 +1,75 @@
+{
+  "case_number": 24,
+  "question": "What's causing the intermittent Redis latency spikes?",
+  "expected_doc_ids": [
+    "INC1158",
+    "PROJ-335"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 862,
+      "cost_usd": 0.00446,
+      "time_sec": 6.352231740951538,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 900,
+      "cost_usd": 0.004584,
+      "time_sec": 9.632442235946655,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 8,
+      "tokens": 26594,
+      "cost_usd": 0.069436,
+      "time_sec": 42.59837007522583,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the available documents, **the root cause has not yet been identified**.\n\nHere's what the documents do confirm:\n\n- **INC1158** describes intermittent Redis latency spikes (2-3x baseline) at irregular intervals across multiple, otherwise-unrelated services, with no clear trigger identified.\n- **Connection pool sizing has been checked and explicitly ruled out** as a cause.\n- The issue has been **escalated to the infrastructure team** to investigate a possible **network-level cause**, but no findings have been reported yet.\n- **PROJ-335** (the corresponding Jira ticket) mirrors this: no comments beyond the escalation note, confirming nothing has been found at the application layer so far.\n- Status on both tickets: **no root cause identified, no fix in progress.**\n\n**What's missing:** Neither document provides an actual root cause \u2014 network-level investigation is only proposed, not completed. If you need a definitive cause, that information isn't available in these documents yet; it would require checking for updates from the infrastructure team's investigation.",
+    "2-hop": "Based on the documents provided, **no root cause has been identified** for the intermittent Redis latency spikes.\n\nWhat is known:\n- **INC1158** confirms multiple, otherwise-unrelated services are experiencing Redis latency spiking to 2-3x baseline at irregular intervals, with no clear trigger identified. Connection pool sizing was investigated and ruled out as a cause. The application layer has also been checked with nothing found. The incident is currently being escalated to the infrastructure team to investigate a possible network-level cause, but there is no fix in progress and no root cause identified yet.\n- **PROJ-335** (the tracking ticket for this investigation) corroborates the same details \u2014 connection pool sizing ruled out, and the issue escalated to infra to check for a network-level cause. The ticket is unassigned with no further investigative comments yet.\n\n**What's missing:** Neither document contains a confirmed root cause, findings from the infrastructure team's network-level investigation, or any fix/mitigation. The investigation appears to still be open/in-progress as of these records.",
+    "ESG (v2)": "## Direct Answer\n\n**Root cause not yet identified.** Based on the available records (INC1158, PROJ-335), the investigation into intermittent Redis latency spikes is still open, with connection pool sizing ruled out and the issue escalated to the infrastructure team to check for a network-level cause. No fix or confirmed root cause exists in the graph yet.\n\n## Supporting Evidence\n\n- **INC1158** (ServiceNow incident, status: *Investigating*): Describes multiple, otherwise-unrelated services seeing Redis latency spike to 2-3x baseline at irregular intervals, with no clear trigger. It explicitly states:\n  - Connection pool sizing was checked and **ruled out** as a cause.\n  - **No root cause identified yet.**\n  - The incident has been escalated to the **infrastructure team** to check for a **network-level cause**.\n  - **No fix in progress.**\n\n- **PROJ-335** (Jira issue, status: *In Progress*): Tracks the investigation corresponding to INC1158. It corroborates the incident details:\n  - Multiple services affected, no clear trigger.\n  - Connection pool sizing ruled out.\n  - The only comment on the ticket notes: *\"Escalating to infra team to check for a network-level cause \u2014 nothing found at the application layer so far.\"*\n  - The ticket is unassigned and has no further comments, indicating the investigation had not progressed beyond this escalation point at last update.\n\n## Gaps\n\nThe graph does not contain any findings from the infrastructure team's network-level investigation, nor any other tickets, chunks, or entities that identify an actual root cause (e.g., network hardware issues, noisy neighbor problems, Redis configuration, or hardware/VM-level contention). The search frontier is exhausted, meaning no further leads were found linking to a resolution. **A definitive cause cannot be stated** \u2014 only that application-layer and connection-pool causes have been excluded, and the investigation was last pointed toward network-level factors without confirmed results."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers correctly identify that no root cause has been confirmed in the expected documents, correctly note connection pool sizing was ruled out, and escalation to infra for network-level investigation. ESG's answer is materially the same as the baselines in facts and hedging, just with more formatting/detail (e.g., status labels, \"search frontier exhausted\"). No fabrications noted - all citations are within the expected set. Differences are cosmetic/structural, not substantive."
+}

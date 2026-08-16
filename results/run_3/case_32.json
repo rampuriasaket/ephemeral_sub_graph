@@ -1,0 +1,100 @@
+{
+  "case_number": 32,
+  "question": "Is there any update on PROJ-318?",
+  "expected_doc_ids": [
+    "PROJ-318",
+    "INC1130"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.2857142857142857,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1130",
+        "PROJ-270",
+        "PROJ-318",
+        "PROJ-420",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1520,
+      "cost_usd": 0.00532,
+      "time_sec": 4.246555328369141,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.16666666666666666,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1130",
+        "INC1236",
+        "INC1243",
+        "PR-740",
+        "PROJ-270",
+        "PROJ-318",
+        "PROJ-420",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445",
+        "eng-infra-2026-08-15",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 1,
+      "tokens": 2308,
+      "cost_usd": 0.007488,
+      "time_sec": 5.564185857772827,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.16666666666666666,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1130",
+        "INC1236",
+        "INC1243",
+        "PR-740",
+        "PROJ-270",
+        "PROJ-318",
+        "PROJ-420",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445",
+        "eng-infra-2026-08-15",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 180,
+      "llm_calls": 37,
+      "tokens": 132810,
+      "cost_usd": 0.39044399999999996,
+      "time_sec": 189.1186420917511,
+      "stop_reason": "reached processing cap (20/20)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Yes \u2014 there's an update on PROJ-318 (Investigate carrier API rate limiting on shipping label generation), tied to INC1130.\n\nPer the ticket comments from Diego Alvarez:\n- The 429 rate-limit errors track tightly with peak-hour order volume.\n- The team is weighing two options: implementing client-side backoff vs. requesting a higher rate limit from the carrier \u2014 the latter has a longer lead time.\n- No fix has been merged yet; the approach is still being decided.\n\nThis matches the linked incident INC1130, whose current status confirms the same: 429s correlate with peak order volume, and the team is still deciding between client-side backoff and requesting a higher carrier limit, with no fix merged yet.\n\nSo the update is: root cause understood (carrier rate limiting during peak volume), but resolution approach is still undecided and no fix has shipped.",
+    "2-hop": "Yes \u2014 PROJ-318 (Investigate carrier API rate limiting on shipping label generation) has updates, though no resolution yet:\n\n- **Root cause identified**: shipping-label-service intermittently fails during peak order volume due to the external carrier API returning HTTP 429 (rate limit exceeded) responses. This is tied to incident **INC1130**.\n- **Latest comments from Diego Alvarez**:\n  - The 429s track tightly with peak-hour order volume.\n  - The team is weighing two options: implementing client-side backoff vs. requesting a higher rate limit from the carrier \u2014 noting the latter option has a longer lead time.\n  - As of the most recent comment, **no fix has been merged yet**, and the approach is still being decided.\n- This is corroborated by **INC1130**'s current status, which states the same: confirmed correlation with peak-hour volume, team weighing backoff vs. higher limit request, no fix merged yet.\n\nIn short: investigation is complete and a root cause is confirmed, but a decision on remediation approach is still pending, and no fix has shipped.",
+    "ESG (v2)": "## Direct Answer\n\nYes \u2014 PROJ-318 is **In Progress**, and the latest update is that the team has confirmed the root cause pattern but has **not yet merged a fix**; they are still deciding between two possible remediation approaches.\n\n## Supporting Evidence\n\n**Ticket status (jira:PROJ-318:0):**\nPROJ-318 \u2014 \"Investigate carrier API rate limiting on shipping label generation\" \u2014 is linked to incident INC1130. The `shipping-label-service` is intermittently failing during peak order volume, with logs showing HTTP 429 (rate-limit) responses from the external carrier API during those windows.\n\n**Latest comments from Diego Alvarez on PROJ-318:**\n- \"429s track tightly with peak-hour order volume. Weighing client-side backoff vs. asking the carrier for a higher limit \u2014 the latter has a longer lead time.\"\n- \"No fix merged yet, still deciding the approach.\"\n\n**Corroborating incident record (servicenow:INC1130:0):**\nINC1130 (\"Shipping label generation failing intermittently\") confirms the same status: the 429s correlate closely with peak-hour order volume, and the team is weighing client-side backoff versus requesting a higher rate limit from the carrier. Explicitly states: \"No fix merged yet.\"\n\n## Summary\n\nThe update is consistent across both the Jira ticket and the linked ServiceNow incident: the cause (carrier API rate limiting during peak load) has been identified and confirmed, but no fix has shipped. The team (per Diego Alvarez) is still deciding between a faster client-side backoff implementation or pursuing a higher rate limit from the carrier, which would take longer to arrange. There is no indication in the graph of any more recent activity, PR, or resolution beyond these two comments \u2014 so this is the most current status available."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers convey the same core facts: PROJ-318 root cause identified (429 rate limiting during peak volume), tied to INC1130, no fix merged yet, team deciding between client-side backoff vs requesting higher carrier limit. ESG's answer is essentially the same content as flat-RAG and 2-hop, just with different formatting (headers, bolded status \"In Progress\"). No new material facts are added, and no incorrect claims are introduced. The extra retrieved documents (INC1236, INC1243, PR-740, etc.) are not used to add any unsupported claims. This is a cosmetic difference in presentation only."
+}

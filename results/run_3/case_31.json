@@ -1,0 +1,120 @@
+{
+  "case_number": 31,
+  "question": "What's the latest on PROJ-305?",
+  "expected_doc_ids": [
+    "PROJ-305",
+    "eng-search-2026-08-05",
+    "PR-605"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-470",
+        "PROJ-230"
+      ],
+      "retrieved_doc_ids": [
+        "INC1108",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 2741,
+      "cost_usd": 0.00917,
+      "time_sec": 6.499537229537964,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.16666666666666666,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1070",
+        "INC1108",
+        "INC1236",
+        "PR-470",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-230",
+        "PROJ-244",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 65,
+      "llm_calls": 1,
+      "tokens": 4007,
+      "cost_usd": 0.011854,
+      "time_sec": 6.467811822891235,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.21428571428571427,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-470",
+        "PROJ-230"
+      ],
+      "retrieved_doc_ids": [
+        "INC1108",
+        "INC1236",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 150,
+      "llm_calls": 44,
+      "tokens": 115263,
+      "cost_usd": 0.303678,
+      "time_sec": 142.84005403518677,
+      "stop_reason": "reached processing cap (20/20)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "**PROJ-305** \u2014 Autocomplete index uses stale cache separate from main search index \u2014 **Resolved/Merged**\n\nLatest status per Layla Haddad's final comment on the ticket: *\"PR-605 points autocomplete at the primary index directly. Merged, verified in staging.\"*\n\nSupporting context:\n- **Root cause** (per [jira:PROJ-305] and [servicenow:INC1108]): Autocomplete was pulling from its own separate, slower-refreshing cache instead of the primary search index \u2014 a similar staleness category to PROJ-230, but a distinct cache that was never repointed when PROJ-230 was fixed.\n- **Fix**: [gitrepo:PR-605] \u2014 \"Point autocomplete at primary search index,\" repoints autocomplete-service at the same primary index fixed in PROJ-230/PR-470. Reviewer Omar Farouk approved, noting \"Makes sense that this got missed the first time since it's a different service.\"\n- **Incident**: [servicenow:INC1108] confirms the fix was tracked in PROJ-305 and shipped via PR-605.\n- **Origin**: [slack:eng-search-2026-08-05] shows the initial triage thread where Layla and Omar identified the separate-cache issue and decided to repoint it.\n\nSo the ticket is closed out \u2014 merged and verified in staging, with no open follow-ups mentioned in these documents.",
+    "2-hop": "**PROJ-305 \u2014 Autocomplete index uses stale cache separate from main search index: Resolved/Merged**\n\n- **Root cause:** Autocomplete suggestions were showing outdated product names (tracked as incident INC1108) because autocomplete pulled from its own separate, slower-refreshing cache instead of the primary search index \u2014 a similar category of issue to PROJ-230, but a distinct cache that was never repointed when the main index was fixed.\n- **Fix:** PR-605 repoints autocomplete-service at the primary search index instead of its separate cache.\n- **Status per Layla Haddad's comments on PROJ-305:** \"PR-605 points autocomplete at the primary index directly. Merged, verified in staging.\"\n- **Corroborating sources:** The Slack thread `eng-search-2026-08-05` shows the diagnosis and planning discussion (Layla Haddad and Omar Farouk), and INC1108's resolution notes confirm the same root cause and fix, explicitly tying it back to PROJ-305/PR-605.\n\nSo the latest status is that this issue is closed out \u2014 the fix has been merged and verified in staging, with no further open comments or follow-up work indicated in the documents provided.",
+    "ESG (v2)": "## Direct Answer\n\n**PROJ-305 is Done.** It tracked a bug where autocomplete suggestions showed outdated/discontinued product names (INC1108) because autocomplete pulled from a separate, slower-refreshing cache instead of the primary search index. The fix \u2014 repointing autocomplete-service at the primary search index \u2014 was implemented in **PR-605**, merged, and verified in staging.\n\n## Supporting Evidence\n\n**Ticket status (jira:PROJ-305:0):**\n- Title: \"Autocomplete index uses stale cache separate from main search index\"\n- Status: **Done**\n- Root cause per description: autocomplete pulled from a separate cache rather than the primary search index, causing stale suggestions even though main search results were current.\n- Comments from **Layla Haddad**:\n  - Noted it's \"the same category of staleness issue as PROJ-230, but a completely separate cache \u2014 autocomplete was never repointed when we fixed the main index.\"\n  - Confirmed: \"PR-605 points autocomplete at the primary index directly. Merged, verified in staging.\"\n\n**Related incident (servicenow:INC1108:0):**\n- Status: **Resolved**\n- Confirms the same root cause and resolution: autocomplete was repointed at the primary, already-fresh index, \"Tracked in PROJ-305, fixed via PR-605.\"\n\n**The fix itself (gitrepo:PR-605:0):**\n- Status: **Merged**\n- Description: \"Repoints autocomplete-service at the primary search index (the one fixed for staleness in PROJ-230/PR-470) instead of its own separate, slower-refreshing cache. Fixes autocomplete showing outdated product names.\"\n- Reviewed and approved by **Omar Farouk**: \"Makes sense that this got missed the first time since it's a different service. Approved.\"\n\n**Related prior work (context only):**\n- PROJ-230 / PR-470 previously fixed a similar staleness issue on the *main* search index, but that fix didn't extend to autocomplete's separate cache \u2014 which is exactly what PROJ-305 later addressed.\n- A Slack thread (slack:eng-search-2026-08-05:0) between Layla Haddad and Omar Farouk shows the discovery and planning discussion that preceded PROJ-305/PR-605, confirming the same narrative: main index was fixed before, autocomplete's separate cache never got touched, and the plan was to repoint it.\n\n## Summary\n\nAll evidence in the graph is consistent: PROJ-305 is closed out as **Done**, with the fix merged and verified via PR-605, and the corresponding incident (INC1108) marked Resolved. There is no indication of any follow-up work, regressions, or reopened status for PROJ-305 in the current graph."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers converge on the same core facts: PROJ-305 addressed autocomplete's stale separate cache, fixed via PR-605 (repointing to primary index), status resolved/done/merged and verified in staging, corroborated by INC1108 and the eng-search-2026-08-05 Slack thread. ESG's answer is essentially the same content as flat-RAG and 2-hop, just reorganized with more headers and slightly more detail on PROJ-230/PR-470 context (which 2-hop also includes). No new material facts are added beyond what 2-hop already covers, and no confident errors are introduced. Differences are cosmetic/structural only."
+}

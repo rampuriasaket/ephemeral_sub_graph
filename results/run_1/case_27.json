@@ -1,0 +1,73 @@
+{
+  "case_number": 27,
+  "question": "Why did the third-party analytics script slow the page down?",
+  "expected_doc_ids": [
+    "INC1229",
+    "PROJ-415"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 680,
+      "cost_usd": 0.00452,
+      "time_sec": 7.267596006393433,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 689,
+      "cost_usd": 0.004354,
+      "time_sec": 6.960160970687866,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229",
+        "PROJ-415"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 8,
+      "tokens": 23754,
+      "cost_usd": 0.065638,
+      "time_sec": 47.667497873306274,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "The available document (servicenow:INC1229) confirms the general issue but doesn't fully answer the \"why.\"\n\n**What the document tells us:**\n- Page load time metrics regressed, correlating with the rollout of a new third-party analytics script on product pages\n- The script \"appears to block rendering longer than expected under slow network conditions\"\n\n**What's missing:**\nThe document doesn't specify the actual technical root cause \u2014 for example, it doesn't state whether the script:\n- Was loaded synchronously (blocking) vs. asynchronously\n- Was placed in the `<head>` without `async`/`defer` attributes\n- Made blocking network calls before allowing render to continue\n- Had a large file size or slow third-party server response time\n- Was waiting on additional resources/redirects before executing\n\nThe ticket only notes the *symptom* (render-blocking behavior worsened under slow network conditions) and the *correlation* (timing with the script's rollout), not a confirmed diagnosis of the mechanism causing the blocking.\n\nIf you need the specific technical explanation, that detail isn't present in INC1229 as provided \u2014 it would require additional ticket notes, a root cause analysis, or related PR/change records that aren't included in the retrieved documents.",
+    "2-hop": "Based on the only document retrieved, **INC1229** (\"Third-party analytics script slowing page load\"), the description states:\n\n> \"Page load time metrics show a regression correlating with the rollout of a new third-party analytics script on product pages. The script appears to block rendering longer than expected under slow network conditions.\"\n\nSo the document indicates the script **blocks page rendering**, and this effect is more pronounced under **slow network conditions**. However, it does not provide further root-cause detail \u2014 for example, it doesn't specify *why* the script blocks rendering (e.g., synchronous loading, lack of async/defer attributes, large payload size, third-party server latency, etc.). No PR, additional ticket, or follow-up investigation document was included in the retrieved set to explain the underlying technical cause further.\n\n**What's missing:** Any deeper technical root cause (script loading method, payload size, server response time of the third-party vendor, etc.) is not present in the available documents.",
+    "ESG (v2)": "## Short Answer\n\nThe script slowed the page down because it was loaded in a **render-blocking** manner \u2014 it was inserted into the page in a way that blocked rendering while it loaded, and this effect became especially pronounced **under slow network conditions**, which is when the page-load regression was observed. Investigation is still open as of the last update; a permanent fix (deferring or async-loading the script) had not yet been implemented.\n\n## Supporting Evidence\n\n**INC1229** (ServiceNow incident, status: In Progress) documents the original observation: page load time metrics showed a regression that correlated with the rollout of a new third-party analytics script on product pages. The incident notes that \"the script appears to block rendering longer than expected under slow network conditions.\"\n\n**PROJ-415** (Jira issue, status: In Progress), opened to investigate this incident, confirms and narrows down the cause. The issue description repeats that the new analytics script \"correlates with a page-load regression (INC1229)\" and \"appears to block rendering under slow network conditions.\" Critically, a comment from **Layla Haddad** confirms this diagnosis directly: *\"Confirmed it's render-blocking as loaded. Looking at whether we can defer or async-load it without breaking their tracking requirements.\"*\n\n## What This Tells Us\n\nPutting the two tickets together, the mechanism is:\n1. A new third-party analytics script was rolled out on product pages.\n2. As loaded, the script is render-blocking \u2014 meaning the browser must wait for it before continuing to render the page.\n3. This blocking behavior is more noticeable/severe under slow network conditions, since a slower connection means the script takes longer to download/execute, extending the render-blocking window and increasing overall page load time.\n4. This was confirmed by Layla Haddad, who was exploring a fix (deferring or async-loading the script) while preserving the third party's tracking requirements.\n\n## Gaps / What's Missing\n\nThe graph does not include:\n- The specific root cause of *why* the script was implemented in a render-blocking way (e.g., synchronous `<script>` tag placement, missing `async`/`defer` attributes, or a specific code change/PR).\n- Any resolution details \u2014 whether the deferred/async-loading fix was actually implemented, tested, or deployed, or whether it resolved the issue.\n- Quantitative data (e.g., exact load time metrics, thresholds, or before/after comparisons).\n\nBased on the available data, the answer is that it was loaded as a **render-blocking resource**, with the effect amplified on slow networks \u2014 but the underlying technical reason it was implemented this way, and the final fix status, are not present in the graph."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "Both baselines only retrieved INC1229 and correctly hedged that the root cause/confirmation isn't fully specified. ESG retrieved both expected documents (INC1229 and PROJ-415) and surfaced the additional confirming detail from PROJ-415 (Layla Haddad's comment confirming \"render-blocking as loaded\" and exploring defer/async fix), which is a material fact present in the expected documents that both baselines missed. ESG still appropriately hedges on what it doesn't know (exact technical implementation reason, resolution status), matching the confidence level warranted by the documents. This is a clear case of ESG surfacing material grounded facts the baselines missed without overclaiming."
+}

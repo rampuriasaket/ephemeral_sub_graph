@@ -1,0 +1,73 @@
+{
+  "case_number": 27,
+  "question": "Why did the third-party analytics script slow the page down?",
+  "expected_doc_ids": [
+    "INC1229",
+    "PROJ-415"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 660,
+      "cost_usd": 0.00432,
+      "time_sec": 6.32171106338501,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 528,
+      "cost_usd": 0.002744,
+      "time_sec": 4.496573209762573,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1229",
+        "PROJ-415"
+      ],
+      "retrieval_calls": 40,
+      "llm_calls": 7,
+      "tokens": 21773,
+      "cost_usd": 0.05923199999999999,
+      "time_sec": 38.09066390991211,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the single document available (**servicenow:INC1229**), the reported explanation is limited to the following facts:\n\n- Page load time metrics showed a **regression that correlates with the rollout of a new third-party analytics script** on product pages.\n- The script **appears to block rendering longer than expected under slow network conditions**.\n\nThat's the full extent of the root-cause information provided in the ticket. It does not specify *why* the script blocks rendering longer than expected (e.g., synchronous loading, large payload size, lack of async/defer attributes, a slow third-party endpoint, etc.) \u2014 those details are not included in the document.\n\n**What's missing:** Any technical root-cause analysis, script implementation details, network waterfall data, or the vendor/script name that would explain the specific mechanism causing the slowdown. If you need that level of detail, it isn't present in INC1229 as provided, and no other documents were retrieved to supplement it.",
+    "2-hop": "Based on the provided document, INC1229 states that page load time regressed following the rollout of the new third-party analytics script on product pages, and that \"the script appears to block rendering longer than expected under slow network conditions.\"\n\nThat's the extent of the detail available \u2014 the document doesn't explain *why* the script blocks rendering (e.g., whether it's synchronous loading, lack of async/defer attributes, script size, server response time from the third-party host, etc.), nor does it identify a specific root cause. No other tickets, incidents, or PRs are cited in this document that could be fetched for further detail, so I can't provide more specifics on the underlying mechanism without speculating.",
+    "ESG (v2)": "## Direct Answer\n\nThe third-party analytics script slowed the page down because it was **render-blocking** \u2014 it loaded synchronously and blocked the page from rendering, with the delay becoming especially pronounced under slow network conditions.\n\n## Supporting Evidence\n\n**INC1229** (ServiceNow incident, status: In Progress) first flagged the issue: page load time metrics showed a regression that correlated with the rollout of a new third-party analytics script on product pages. The incident description notes that \"the script appears to block rendering longer than expected under slow network conditions.\"\n\n**PROJ-415** (Jira issue, status: In Progress), opened to investigate this incident, confirms the same finding. The issue description states the analytics script \"correlates with a page-load regression (INC1229)\" and \"appears to block rendering under slow network conditions.\"\n\nCritically, **Layla Haddad** confirmed the root mechanism in a comment on PROJ-415: *\"Confirmed it's render-blocking as loaded. Looking at whether we can defer or async-load it without breaking their tracking requirements.\"* This indicates the script was being loaded in a blocking manner (i.e., not deferred or asynchronous), which forced the browser to wait on it before rendering the page \u2014 and this effect was amplified on slow networks, since the script's load time itself increased.\n\n## Gaps\n\nThe graph confirms the *mechanism* (synchronous/render-blocking script load, worsened by slow network conditions) but does not include further detail on:\n- The specific technical fix implemented (the investigation was still in progress, evaluating defer/async-loading options)\n- Any resolution ticket or follow-up confirming the fix was deployed\n- Quantitative data on the performance impact (e.g., exact load time delta)\n\nBoth source tickets (INC1229 and PROJ-415) are still marked \"In Progress,\" so this reflects the state of the investigation at the time it was captured, not a final resolution."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "The expected sources are INC1229 and PROJ-415. Both baselines only retrieved INC1229 and explicitly note they lack the root-cause mechanism, correctly hedging but missing the actual answer. ESG retrieved both expected documents and surfaced the key fact (confirmed by Layla Haddad's comment in PROJ-415) that the script was loaded synchronously/render-blocking, which explains the \"why\" the question asks. This is a material fact grounded in the expected documents that both baselines missed. ESG also appropriately notes remaining gaps (no confirmed fix, no quantitative data) without overstating confidence. No fabrication is evident since PROJ-415 is in the expected set and ESG's claims align with it."
+}

@@ -1,0 +1,73 @@
+{
+  "case_number": 18,
+  "question": "Why is the iOS app crashing on the checkout screen?",
+  "expected_doc_ids": [
+    "INC1122",
+    "mobile-eng-2026-08-05"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1122"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 702,
+      "cost_usd": 0.004372,
+      "time_sec": 7.0944719314575195,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1122"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 718,
+      "cost_usd": 0.004276,
+      "time_sec": 7.063587665557861,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1122",
+        "mobile-eng-2026-08-05"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 11,
+      "tokens": 30290,
+      "cost_usd": 0.080001,
+      "time_sec": 55.64844632148743,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the document provided, I can give you a partial answer, but the root cause is not fully determined yet.\n\n**What INC1122 tells us:**\n- The iOS app is crashing on the checkout screen for a **subset of users** (not all users)\n- Crash logs suggest the cause is **memory pressure building up over the course of a session**, rather than a single bad input triggering the crash\n\n**What's missing:**\n- No specific root cause has been identified (e.g., a memory leak in a particular component, an image/asset caching issue, retained objects, etc.)\n- No Jira story has been opened yet \u2014 the mobile team is still investigating informally\n- There's no information on which subset of users is affected (device type, iOS version, session length, specific checkout flow, etc.)\n- No fix or mitigation is documented\n\nIn short, the available document (INC1122) only tells us the crash is *associated with* accumulating memory pressure during a session, not the underlying reason for that memory pressure. A definitive root cause isn't in the retrieved documents \u2014 this would need to come from the mobile team's ongoing investigation or a follow-up Jira ticket, which don't appear in the provided set.",
+    "2-hop": "Based on the available documentation, I can only provide a partial answer.\n\n**What the document says (INC1122):**\nThe incident report notes that a cluster of crash reports on the iOS checkout screen affects a subset of users, and that crash logs suggest the cause is **memory pressure building up over the course of a session, rather than a single bad input** (e.g., not triggered by one specific malformed request or user action).\n\n**What's missing:**\nThe document explicitly states that **no Jira story has been opened yet** and that the mobile team is still investigating informally. This means there is no confirmed root cause, no linked PR/fix, and no further ticket to follow up on \u2014 INC1122 is the only document provided, and it doesn't identify the specific source of the memory pressure (e.g., a particular leak, retained view controller, image cache issue, etc.).\n\n**Answer:** The crashes appear to stem from cumulative memory pressure during a session rather than a single triggering event, but the specific technical root cause has not yet been determined or documented \u2014 the investigation is still informal and no ticket/PR exists yet to cite for a definitive answer.",
+    "ESG (v2)": "## Short Answer\n\nThe crashes appear to be caused by a **memory leak building up while users linger on the checkout screen**, likely tied to an **image cache in the SDK not releasing thumbnails properly**. This is still an unconfirmed working theory, not a root-caused fix \u2014 the mobile team is investigating informally (INC1122) and hasn't yet confirmed whether the leak is actually in the third-party SDK or in the app's own code.\n\n## Supporting Evidence\n\n**INC1122 (ServiceNow, status: Investigating)** \u2014 This is the formal incident record for the issue: \"iOS app crashing on checkout screen for subset of users.\" It notes that crash logs suggest **memory pressure building up over the course of a session rather than a single bad input**, pointing away from a simple crash-on-input bug and toward a resource leak. As of this record, no Jira story had been opened yet, since the mobile team was still investigating informally.\n\n**slack:mobile-eng-2026-08-05 (Slack thread, \"iOS memory profiling \u2014 checkout screen\")** \u2014 Sam Okafor did hands-on profiling of the iOS app around checkout and found that **memory climbs steadily the longer a user stays on that screen**, consistent with the memory-pressure pattern described in INC1122. Sam's working hypothesis is that the **image cache in the SDK is not releasing thumbnails properly**, which would explain gradual memory growth leading to a crash. The thread also raises a possible connection to a separate \"app freezing\" issue other users reported, though Sam only characterizes this as \"could be related... same shape of problem\" \u2014 not confirmed.\n\nSam explicitly asked for **another day to confirm the leak is actually in the SDK's cache and not something the app team is doing wrong on their own end**, and the thread ends there \u2014 no confirmation, fix, or follow-up ticket is present in the graph.\n\n## What's Missing\n\nThe graph does not contain:\n- Confirmation of whether the leak is in the SDK's image cache or in the app's own code\n- Any linked Jira ticket, PR, or fix addressing the leak\n- Resolution status for INC1122 beyond \"Investigating\"\n- Details on whether the suspected connection to the \"app freezing\" reports was substantiated\n\nBased on available evidence, the crash is best explained as a **memory-leak-driven crash on the checkout screen, suspected to originate from SDK image-cache thumbnail handling**, but this remains an open investigation rather than a confirmed root cause."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "ESG retrieved both expected documents (INC1122 and mobile-eng-2026-08-05), while both baselines only retrieved INC1122 and missed the Slack thread. This gave ESG access to material facts the baselines lacked: Sam Okafor's profiling finding that memory climbs the longer a user stays on checkout, and the working hypothesis that an SDK image cache is not releasing thumbnails properly. ESG correctly hedges that this is an unconfirmed working theory, not a root-caused fix, and clearly lists what's missing (confirmation, ticket/PR, resolution). This is well-calibrated - it surfaces the additional lead without overstating it as settled fact. The baselines, lacking the second document, could only say the root cause is undetermined, which is now known to be incomplete given the expected document set includes the Slack thread with the leak hypothesis. ESG's answer therefore captures material additional facts grounded in the expected documents that both baselines miss, without asserting anything as confirmed that isn't supported."
+}

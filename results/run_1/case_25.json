@@ -1,0 +1,86 @@
+{
+  "case_number": 25,
+  "question": "Is partner API traffic being rate-limited correctly?",
+  "expected_doc_ids": [
+    "INC1151",
+    "PROJ-330",
+    "PR-625",
+    "api-rate-limiting-guide",
+    "partner-eng-2026-08-09",
+    "PROJ-255",
+    "partner-integration-best-practices"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.14285714285714285,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PROJ-255"
+      ],
+      "retrieved_doc_ids": [
+        "api-rate-limiting-guide"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 950,
+      "cost_usd": 0.006404,
+      "time_sec": 10.037567138671875,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.2857142857142857,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PROJ-255",
+        "api-rate-limiting-guide"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 988,
+      "cost_usd": 0.004704,
+      "time_sec": 7.058307886123657,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1151",
+        "PR-625",
+        "PROJ-255",
+        "PROJ-330",
+        "api-rate-limiting-guide",
+        "partner-eng-2026-08-09",
+        "partner-integration-best-practices"
+      ],
+      "retrieval_calls": 120,
+      "llm_calls": 29,
+      "tokens": 96251,
+      "cost_usd": 0.24967500000000006,
+      "time_sec": 163.81933903694153,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the single document available (confluence:api-rate-limiting-guide), I can tell you what the *intended* rate\u2011limiting policy is, but not whether it is currently being enforced correctly for partner traffic.\n\nWhat the document says:\n- Partner tier is documented as 500 requests/minute, with a 20% burst allowance above that sustained limit (confluence:api-rate-limiting-guide).\n- These figures were corrected on 2026-08-03 under PROJ-255, after a partner integration team reported that the previously documented limits didn't match what they actually observed in enforcement. The guide states the current numbers \"now reflect the actual values enforced in code\" (confluence:api-rate-limiting-guide).\n\nWhat's missing to answer your question directly:\n- There is no ticket, incident, or monitoring data in the provided documents showing current partner API traffic metrics, recent rate-limit violations, or confirmation that enforcement matches the documented 500 req/min + 20% burst policy today.\n- I don't have visibility into whether the PROJ-255 fix was verified in production, or whether any regressions have occurred since.\n\nSo: I can confirm the *policy* partners should be rate-limited under, but I cannot confirm from these documents whether traffic is *actually* being rate-limited correctly right now \u2014 that would require current metrics/incident data not present in the retrieved set.",
+    "2-hop": "Based on the retrieved documents, I cannot fully answer this question.\n\nWhat the documents show: The [confluence:api-rate-limiting-guide] page documents the intended limits (100 req/min standard tier, 500 req/min partner tier, with a 20% burst allowance), and [jira:PROJ-255] confirms that a partner integration team previously observed enforced limits that didn't match the documentation \u2014 which turned out to be a documentation error, not a code/enforcement issue. The doc was corrected to match actual code defaults, and per Yuki Tanaka's comments, the partner team confirmed the corrected doc now matches what they observe in practice.\n\nWhat's missing: There is no monitoring data, metrics, or current incident ticket in these documents showing real-time or recent partner API traffic against these limits, so I cannot confirm whether partner traffic is *currently* being rate-limited correctly. The available evidence only supports that, as of PROJ-255's resolution, the documented limits and actual enforcement were reconciled and validated by the partner team at that time.",
+    "ESG (v2)": "## Short Answer\n\nMostly yes \u2014 but with a recurring provisioning bug that has caused incorrect rate-limiting for partner accounts on at least two occasions. The most recent known instance (INC1151/PROJ-330) has been fixed via PR-625, and the rate-limit documentation itself (PROJ-255) has been corrected to match code defaults. However, the underlying root cause \u2014 new partner accounts silently defaulting to standard tier instead of partner tier \u2014 has not been systemically prevented, only patched reactively each time it's noticed. No provisioning-checklist fix has been confirmed as implemented.\n\n## Supporting Evidence\n\n**Rate limits as documented (and now accurate):**\nThe API Rate Limiting Guide (confluence:api-rate-limiting-guide:0) states partner-tier accounts get 500 req/min vs. 100 req/min for standard tier, with a 20% burst allowance. This guide was corrected under **PROJ-255** on 2026-08-03 after a partner integration team reported the documented limits didn't match actual enforced behavior. Yuki Tanaka confirmed the real defaults with the platform team and updated Confluence directly \u2014 no code change was needed, and the partner team confirmed the doc now matches practice. So the *documented* rate-limiting logic is accurate as of that fix.\n\n**But an actual incident of incorrect rate-limiting occurred:**\n**INC1151** (\"Partner integration traffic being rate-limited incorrectly\") describes a newly onboarded partner being throttled at the standard-tier threshold (100 req/min) instead of partner tier (500 req/min), causing significant request failures. Root cause: new partner accounts were defaulting to standard tier at provisioning time instead of partner tier. This was tracked in **PROJ-330** and fixed via **PR-625**, which corrected the default assignment and re-provisioned the affected account. Both PROJ-330 and INC1151 are marked Done/Resolved.\n\n**This was not a one-off \u2014 it's a repeat problem:**\nIn the Slack thread (slack:partner-eng-2026-08-09:0), Yuki Tanaka reports the partner integration team getting 429s well below the documented partner-tier limit. Omar Farouk asks whether the account is actually provisioned as partner tier \u2014 it wasn't. Omar notes: \"that's the second time that's happened\" and suggests a provisioning checklist so it stops recurring. Yuki agrees a separate ticket should be filed for that, but the graph contains no evidence that such a checklist ticket was created or completed. The same \"second time\" observation is echoed in Yuki Tanaka's comment on PROJ-330 and in Omar Farouk's review comment on PR-625, both flagging it for a follow-up provisioning-checklist fix that isn't tracked here.\n\n**Related guidance:**\nThe Partner Integration Best Practices page (confluence:partner-integration-best-practices:0) explicitly warns that \"tier assignment has occasionally defaulted incorrectly during onboarding\" and recommends new integrations verify their account is provisioned at partner tier before load testing \u2014 reinforcing that this is a known, recurring risk rather than a fully resolved systemic issue.\n\n## Gap\n\nThe graph shows the specific PROJ-330/INC1151 incident was fixed (PR-625, merged), and the documentation is accurate (PROJ-255). But there's no ticket or evidence confirming the proposed provisioning-checklist safeguard was ever created or implemented to prevent a third occurrence. So while current partner traffic *should* be rate-limited correctly per the fixed defaults, there's no confirmation that the systemic onboarding defect has been eliminated going forward."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "Both baselines only retrieved a subset (api-rate-limiting-guide and PROJ-255) and concluded they lacked the data to answer whether partner traffic is currently rate-limited correctly, missing the actual incident history entirely. ESG retrieved the full expected set (INC1151, PROJ-330, PR-625, api-rate-limiting-guide, partner-eng-2026-08-09, PROJ-255, partner-integration-best-practices) and used it to give a much more complete and accurate picture: documented limits are correct, but there was a recurring provisioning bug causing incorrect rate-limiting (INC1151/PROJ-330, fixed via PR-625), a repeat occurrence noted in Slack, and no confirmed systemic fix (provisioning checklist) \u2014 all grounded in the expected documents. This is materially more informative and correctly hedges only on the remaining unresolved gap (checklist not confirmed), without asserting anything unsupported. This is a clear improvement over both baselines' \"not enough information\" hedge, since the expected documents did contain much more actionable information that ESG correctly surfaced."
+}

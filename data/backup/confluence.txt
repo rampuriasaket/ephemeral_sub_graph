@@ -1,0 +1,294 @@
+CONFLUENCE — PAGE EXPORT
+System: Confluence (Space: Engineering Wiki)
+Export scope: Pages created or updated in last 90 days
+====================================================================
+
+PAGE: Auth Service Outage Postmortem — August 2026
+SPACE: Engineering / Postmortems
+AUTHOR: Priya Nair
+LAST UPDATED: 2026-08-02
+LABELS: postmortem, auth-service, incident-review
+RELATED: INC1042, PROJ-201, PR-455
+--------------------------------------------------------------------
+BODY:
+On 2026-08-01, auth-service experienced a ~2.5 hour period of
+degraded login availability due to an expired JWT signing key that
+was not rotated ahead of its expiry window (INC1042). Impact: an
+estimated 60% of login attempts failed during the affected window.
+
+Root cause: the signing key rotation process was manual and relied on
+a calendar reminder that was missed. Resolution: the key was rotated
+manually, restoring service within minutes, and a follow-up story
+(PROJ-201) added automated expiry alerting, shipped in PR-455.
+
+Action items:
+1. (Done) Add automated expiry alerting for all signing keys used by
+   auth-service, not just this one.
+2. (Open, unassigned) Audit other services for similarly manual key
+   rotation processes that could fail the same way.
+3. (Done) Update on-call runbook with signing-key rotation steps.
+====================================================================
+
+PAGE: Payment Gateway Troubleshooting Guide
+SPACE: Engineering / Runbooks
+AUTHOR: Marcus Webb
+LAST UPDATED: 2026-07-20
+LABELS: runbook, payment-gateway, troubleshooting
+RELATED: (general guide — not tied to a specific incident number)
+--------------------------------------------------------------------
+BODY:
+This page covers common failure modes for payment-gateway and how to
+triage them. Symptoms of connection pool exhaustion under load include
+elevated request latency, intermittent timeouts concentrated during
+peak traffic windows, and connection-refused errors in the
+payment-gateway logs once the pool is fully saturated.
+
+Standard triage steps: check current pool utilization against
+configured max size, check for any recent deploys that changed
+connection handling, and check whether a downstream dependency
+(fraud-check-service or the external payment processor) is
+responding slowly, which can cause connections to be held open
+longer than expected and exhaust the pool indirectly.
+
+Note: this guide will be updated with more specific guidance once the
+current investigation into intermittent payment-gateway timeouts
+concludes.
+====================================================================
+
+PAGE: Order Service On-Call Runbook
+SPACE: Engineering / Runbooks
+AUTHOR: Diego Alvarez
+LAST UPDATED: 2026-05-15
+LABELS: runbook, order-service, on-call
+RELATED: INC0980
+--------------------------------------------------------------------
+BODY:
+Known failure pattern: order-service database connection pool
+exhaustion. This has occurred previously (see INC0980, May 2026) when
+a long-running batch reconciliation job held connections open for an
+extended period, starving the pool for regular request traffic.
+
+Immediate mitigation steps if this recurs:
+1. Check for any currently running batch jobs against order-service's
+   database and kill them if they are holding connections abnormally
+   long.
+2. If pool exhaustion persists, manually increase the connection pool
+   ceiling as a temporary measure and page the Order Platform team.
+3. File a ticket to investigate a permanent fix — as of this writing,
+   no permanent code fix has been merged; the pool ceiling increase
+   from the May incident was a manual, undocumented mitigation only.
+====================================================================
+
+PAGE: Notification Service Architecture
+SPACE: Engineering / Design Docs
+AUTHOR: Chen Liu
+LAST UPDATED: 2026-06-10
+LABELS: architecture, notification-service, design-doc
+RELATED: (general design reference)
+--------------------------------------------------------------------
+BODY:
+This document describes the architecture of the notification
+delivery pipeline. Messages are produced onto a queue by upstream
+services (order-service, shipping-service) and consumed by a pool of
+notification-worker processes, which format and dispatch the actual
+push notification via the external push-notification-provider
+integration.
+
+Consumer concurrency is currently fixed at a static pool size,
+configured in notification-queue-config. This was set based on
+expected traffic at initial launch and has not been revisited since,
+which may become a scaling bottleneck as message volume grows. Worth
+revisiting if queue depth or delivery latency ever trends upward over
+time.
+====================================================================
+
+PAGE: API Rate Limiting Guide
+SPACE: Engineering / Public API Docs
+AUTHOR: Yuki Tanaka
+LAST UPDATED: 2026-08-03
+LABELS: api-docs, rate-limiting, partner-integrations
+RELATED: PROJ-255
+--------------------------------------------------------------------
+BODY:
+This guide documents the default rate limits applied to public API
+consumers: 100 requests/minute for standard tier, 500 requests/minute
+for partner tier, with a burst allowance of 20% above the sustained
+limit for short spikes.
+
+Note: these figures were corrected on 2026-08-03 (PROJ-255) after a
+partner integration team reported the previously documented limits did
+not match what they observed in practice. The defaults above now
+reflect the actual values enforced in code.
+====================================================================
+
+PAGE: New Hire Onboarding — Engineering Wiki Home
+SPACE: Engineering / Onboarding
+AUTHOR: People Team
+LAST UPDATED: 2026-04-01
+LABELS: onboarding, general
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Welcome to the Engineering wiki! This page collects general onboarding
+resources: how to request repository access, how to set up your local
+development environment, where to find the team directory, and links
+to the company code-of-conduct and expense policy. For
+service-specific documentation, see the individual space sections
+(Runbooks, Design Docs, Postmortems).
+====================================================================
+
+PAGE: Q3 2026 Infra Cost Review — Meeting Notes
+SPACE: Engineering / Meeting Notes
+AUTHOR: Finance & Infra Working Group
+LAST UPDATED: 2026-07-28
+LABELS: meeting-notes, cost-review, infra
+RELATED: (general — mentions multiple services in passing)
+--------------------------------------------------------------------
+BODY:
+Notes from the quarterly infra cost review. Checkout-service and
+inventory-service were flagged as having the largest month-over-month
+compute cost increase, attributed mainly to increased traffic ahead of
+upcoming promotional events rather than any known inefficiency.
+Database costs for order-service were also up slightly, tentatively
+attributed to connection pool sizing changes made after a past
+incident. No action items assigned; flagged for follow-up if the trend
+continues next quarter.
+====================================================================
+
+PAGE: Incident Response Process — Standard Operating Procedure
+SPACE: Engineering / Process
+AUTHOR: Reliability Engineering
+LAST UPDATED: 2026-03-12
+LABELS: process, sop, incident-response
+RELATED: (none — general process document)
+--------------------------------------------------------------------
+BODY:
+This document describes the standard incident response process: how
+to declare an incident, severity level definitions (P1-P4), on-call
+escalation paths, communication expectations during an active
+incident, and the postmortem template to use once an incident is
+resolved. All engineers are expected to be familiar with this process
+regardless of team.
+====================================================================
+
+PAGE: Recommendation Engine Architecture
+SPACE: Engineering / Design Docs
+AUTHOR: Sofia Marchetti
+LAST UPDATED: 2026-08-10
+LABELS: architecture, recommendation-engine, design-doc
+RELATED: INC1105, PROJ-288, PR-520
+--------------------------------------------------------------------
+BODY:
+This document describes the architecture of recommendation-engine
+(internally also called RecEngine, and referred to in casual
+conversation as "the recommendations system"). It fetches candidate
+items from a retrieval layer, scores them with a personalization
+model, and caches the scored results per-user to keep response times
+low.
+
+Following the cache-invalidation bug fixed in PR-520 (see INC1105 and
+PROJ-288), the result cache key now includes the personalization
+model version, ensuring a model refresh cannot serve stale
+recommendations computed under an old model.
+====================================================================
+
+PAGE: Search Analytics Dashboard Overview
+SPACE: Engineering / Design Docs
+AUTHOR: Priya Nair
+LAST UPDATED: 2026-07-22
+LABELS: analytics, dashboard, search-service
+RELATED: (general reference — not tied to any incident or ticket)
+--------------------------------------------------------------------
+BODY:
+This page describes the internal analytics dashboard that tracks
+query volume, latency, and result-click-through rate across several
+services, including search-service, recommendation-engine, and
+checkout-service. It is a general usage-metrics reference for
+engineers who want to see traffic trends and is not tied to any
+specific bug or incident investigation.
+====================================================================
+
+PAGE: Platform Reliability Quarterly Review — Deep Dive
+SPACE: Engineering / Meeting Notes
+AUTHOR: Reliability Engineering
+LAST UPDATED: 2026-08-11
+LABELS: quarterly-review, reliability, deep-dive
+RELATED: INC1042, PROJ-201, INC1110, INC1120, PROJ-305
+--------------------------------------------------------------------
+BODY:
+SECTION 1 — Key rotation and credential hygiene across services.
+
+This quarter's reliability review took a close look at how signing-key
+and credential rotation is handled across services, prompted by the
+auth-service outage in early August (INC1042) where an expired JWT
+signing key caused a ~2.5 hour login degradation. The fix shipped in
+PROJ-201 (PR-455) added automated expiry alerting for auth-service
+specifically, but the working group's broader finding is that several
+other services still rely on manual, calendar-based rotation reminders
+with no automated backstop — the same failure mode that caused
+INC1042 in the first place, just not yet triggered elsewhere. The
+group recommends auditing every service with a hand-rotated credential
+or key and prioritizing automated expiry alerting for any of them
+still relying on a human to remember.
+
+Open follow-up: no owner has yet been assigned to run this audit
+across teams; it is being proposed as a company-wide reliability
+initiative for next quarter rather than a single ticket.
+
+SECTION 2 — Cache tuning and eviction behavior.
+
+Separately, the working group reviewed recent cache-related incidents
+on cache-service. Two issues surfaced within a roughly month-long
+window: a latency regression traced to a deploy-time serialization
+change (INC1110, fixed via a canary check in PROJ-295 / PR-525), and
+an earlier aggressive-eviction problem under memory pressure (INC1120)
+that was only patched with a manual config change at the time and has
+since been given a proper fix with an LRU-based eviction policy
+(PROJ-305 / PR-535). The group noted this as a good example of a
+component that kept recurring in slightly different failure modes
+until it got a structural fix rather than repeated point patches, and
+suggested watching cache-service closely for the rest of the quarter
+before declaring the issue closed for good.
+====================================================================
+
+PAGE: Engineering All-Hands Notes — July 2026
+SPACE: Engineering / Meeting Notes
+AUTHOR: Engineering Leadership
+LAST UPDATED: 2026-07-30
+LABELS: meeting-notes, all-hands
+RELATED: (none — general company updates)
+--------------------------------------------------------------------
+BODY:
+Notes from the July all-hands: headcount updates, a reminder about the
+upcoming benefits enrollment deadline, a shoutout to the team that
+shipped the new onboarding flow, and a preview of Q3 roadmap themes at
+a high level. No technical incident or project details were discussed
+in depth; teams were directed to their own team meetings for specifics.
+====================================================================
+
+PAGE: Email Delivery Service — Operational Runbook
+SPACE: Engineering / Runbooks
+AUTHOR: Sam Okafor
+LAST UPDATED: 2026-08-17
+LABELS: runbook, email-delivery-service, operations
+RELATED: (none — general operational reference, not tied to a specific incident)
+--------------------------------------------------------------------
+BODY:
+This page is the on-call reference for email-delivery-service, which
+handles all outbound transactional email (password resets, order
+confirmations, shipping updates) via a third-party email provider.
+
+WHAT TO CHECK FIRST:
+If delivery times look elevated, check the provider-side queue depth
+dashboard before assuming the problem is in our own service --
+several past delays have turned out to be a backlog on the provider's
+side rather than anything wrong with email-delivery-service itself.
+In those cases there is usually nothing to fix on our end; the queue
+clears on its own once the provider catches up, and the only action
+needed is keeping support informed so they can reassure customers
+asking about delayed password-reset emails.
+
+If the provider-side dashboard looks normal but delivery is still
+slow, escalate to the Data Platform on-call to check
+email-delivery-service's own outbound queue instead.
+====================================================================

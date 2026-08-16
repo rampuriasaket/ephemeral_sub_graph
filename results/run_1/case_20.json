@@ -1,0 +1,105 @@
+{
+  "case_number": 20,
+  "question": "What happened with the login outage?",
+  "expected_doc_ids": [
+    "INC1042",
+    "PROJ-201",
+    "PR-455",
+    "auth-service-outage-postmortem-august-2026",
+    "eng-platform-2026-08-08",
+    "INC1115",
+    "PR-611",
+    "PROJ-312",
+    "session-management-runbook"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.3333333333333333,
+      "precision": 0.75,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-611",
+        "PROJ-201",
+        "PROJ-312"
+      ],
+      "retrieved_doc_ids": [
+        "INC1042",
+        "INC1115",
+        "INC1166",
+        "eng-platform-2026-08-08"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 2068,
+      "cost_usd": 0.011024,
+      "time_sec": 11.574574708938599,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.9,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1042",
+        "INC1115",
+        "INC1166",
+        "PR-455",
+        "PR-611",
+        "PROJ-201",
+        "PROJ-312",
+        "auth-service-outage-postmortem-august-2026",
+        "eng-platform-2026-08-08",
+        "session-management-runbook"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 1,
+      "tokens": 3863,
+      "cost_usd": 0.01655,
+      "time_sec": 13.107490062713623,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.8181818181818182,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1042",
+        "INC1115",
+        "INC1166",
+        "PR-455",
+        "PR-550",
+        "PR-611",
+        "PROJ-201",
+        "PROJ-312",
+        "auth-service-outage-postmortem-august-2026",
+        "eng-platform-2026-08-08",
+        "session-management-runbook"
+      ],
+      "retrieval_calls": 175,
+      "llm_calls": 36,
+      "tokens": 120061,
+      "cost_usd": 0.321751,
+      "time_sec": 208.0883047580719,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "There isn't a single, unambiguous \"login outage\" in these documents \u2014 there are actually three separate incidents involving login/session problems. Based on the Slack thread's reference to \"the login outage\" and its mention of alerting before signing keys expire, the incident being discussed is almost certainly **INC1042**:\n\n**INC1042 \u2014 Users unable to log in (auth-service returning 401)**\n- Starting ~03:00 UTC, users (including internal test accounts) couldn't log in; auth-service returned HTTP 401 on valid credentials.\n- Traffic was healthy, ruling out a capacity issue.\n- **Root cause:** an expired JWT signing key that hadn't been rotated ahead of its expiry window.\n- **Fix:** the key was rotated, and login success rates returned to baseline within minutes. A hotfix PR resolved it, a postmortem was drafted, and a follow-up story (PROJ-201) was opened to add automated alerting before key expiry.\n\nThe Slack thread (`eng-platform-2026-08-08`) confirms this is the incident people still reference: Tomas Berg explains why on-call now gets paged before signing keys expire, referring back to \"the login outage\" from earlier that month, and Priya Nair notes she's glad \"the alerting actually shipped instead of just living in a postmortem doc\" \u2014 matching PROJ-201 from INC1042's resolution notes.\n\n**Worth flagging \u2014 two other, distinct login-related incidents exist in the record**, which might be what you meant instead (or in addition):\n- **INC1115**: Users logged out after only 5 minutes instead of 30, caused by an unrelated auth-service deploy that regressed the session TTL config (not related to the JWT key work). Fixed via PROJ-312 / PR-611.\n- **INC1166**: Users intermittently and unexpectedly logged out, caused by the shared Redis-backed session-store evicting active sessions under memory pressure from traffic to another service on the same cluster. Mitigated by flushing/rebalancing the cluster, but the notes state this has happened before and was only ever handled as a one-off manual fix, not a permanent one.\n\nIf you meant one of these instead of the JWT key incident, let me know and I can detail that one specifically.",
+    "2-hop": "The \"login outage\" referenced in the Slack thread refers to **INC1042** (2026\u201108\u201101), documented in the postmortem `auth-service-outage-postmortem-august-2026`:\n\n- **What happened:** Starting ~03:00 UTC, `auth-service` began returning HTTP 401 on valid credentials for a large share of login attempts (~60% of login attempts failed) for about 2.5 hours. Internal test accounts failed too, ruling out a customer-side issue, and traffic/capacity was normal.\n- **Root cause:** An expired JWT signing key that hadn't been rotated ahead of its expiry window. The rotation process was manual and depended on a calendar reminder, which was missed.\n- **Resolution:** The key was rotated manually, and login success rates returned to baseline within minutes.\n- **Follow-up:** `PROJ-201` was opened to add automated alerting; `PR-455` implemented a scheduled job that checks key expiry daily and pages on-call 14 days before any signing key in auth-service expires. Postmortem action items: automated alerting (done), on-call runbook updated with rotation steps (done), and auditing other services for similar manual rotation risk (still open/unassigned).\n\nThis matches the Slack conversation in `eng-platform-2026-08-08`, where Tomas Berg explains that on-call is now paged before signing keys expire specifically because of this incident, and Priya Nair notes the alerting \"shipped instead of just living in a postmortem doc.\"\n\nNote: there were two other, unrelated login/session incidents around the same service \u2014 INC1115 (session TTL misconfigured to 5 minutes due to a deploy regression, fixed via PROJ-312/PR-611) and INC1166 (intermittent unexpected logouts due to session-store/Redis eviction under memory pressure) \u2014 but the documents explicitly distinguish these from the JWT key-expiry outage (INC1042/PROJ-201/PR-455), and the Slack thread's context (paging before key expiry, calendar reminders) ties specifically to INC1042.",
+    "ESG (v2)": "# What happened with the login outage?\n\nThere isn't a single \"login outage\" \u2014 the graph shows **three separate incidents** involving login/session problems in auth-service and session-store, and it's worth distinguishing them since they were explicitly confirmed as unrelated to each other.\n\n## 1. INC1042 \u2014 The core \"login outage\" (users could not log in at all)\n\nThis is the incident referenced by name in the Slack thread (`slack:eng-platform-2026-08-08:0`) as \"the login outage.\"\n\n- **What happened:** Starting ~03:00 UTC, auth-service began returning HTTP 401 on valid credentials for a large share of login attempts. Internal test accounts failed too, ruling out a customer-side issue, and traffic was healthy, ruling out capacity problems.\n- **Root cause:** An expired JWT signing key that had not been rotated ahead of its expiry window. The rotation process was manual and relied on a calendar reminder that was missed (per `confluence:auth-service-outage-postmortem-august-2026:0`).\n- **Impact:** ~2.5 hours of degraded login availability, with an estimated 60% of login attempts failing during that window.\n- **Resolution:** The key was rotated manually, restoring service within minutes (`servicenow:INC1042:0`).\n- **Follow-up:** PROJ-201 was opened to add automated expiry alerting; PR-455 implemented a scheduled job that pages on-call 14 days before any auth-service signing key expires. Both are marked Done/Merged. The Slack thread confirms this alerting actually shipped and is now the reason on-call gets paged before keys expire.\n- **Open item:** The postmortem lists one still-open action item \u2014 auditing other services for similarly manual key rotation processes \u2014 unassigned as of the postmortem doc.\n\n## 2. INC1115 \u2014 A separate, later issue: sessions expiring too early (5 min instead of 30)\n\n- **What happened:** Users were being logged out after ~5 minutes of inactivity instead of the documented 30 minutes.\n- **Root cause:** A session TTL config regression shipped with an unrelated auth-service deploy \u2014 explicitly **not** connected to the JWT key rotation work from INC1042/PROJ-201/PR-455 (confirmed by Priya Nair in `jira:PROJ-312:0` comments and Tomas Berg in `gitrepo:PR-611:0` review).\n- **Resolution:** Tracked in PROJ-312, fixed by reverting the TTL to 30 minutes in PR-611 (merged).\n- **Documentation:** The session-management-runbook (`confluence:session-management-runbook:0`) now instructs on-call to check the TTL config directly rather than assume a code bug, citing INC1115 as precedent.\n\n## 3. INC1166 \u2014 A third, distinct issue: intermittent unexpected logouts\n\n- **What happened:** A subset of logged-in users were unexpectedly signed out even though their sessions should still have been valid.\n- **Root cause:** session-store (the shared Redis-backed session cache) evicted active session entries early under memory pressure, caused by an unrelated traffic spike to another service sharing the same cluster.\n- **Resolution:** On-call flushed and rebalanced the session-store cluster as a one-off mitigation. The chunk notes this type of memory-pressure eviction had happened before and was always handled as a manual one-off rather than a permanent fix.\n- **Follow-up:** PR-550 added memory-pressure alerting and eviction tuning to session-store specifically to catch this proactively before users are affected, rather than after (merged, reviewed by Chen Liu).\n\n## Summary\n\nIf \"the login outage\" refers to the incident where users **couldn't log in at all**, that's INC1042 \u2014 expired JWT signing key, fixed by manual rotation plus automated alerting (PROJ-201/PR-455). If it refers to users being **logged out unexpectedly**, the graph shows two distinct causes handled separately: a session-TTL config regression (INC1115/PROJ-312/PR-611) and session-store memory-pressure evictions (INC1166/PR-550). All three are explicitly documented as unrelated to one another, with each getting its own root cause and fix. The graph does not indicate any single unifying cause connecting all three, nor does it specify exact dates for INC1115 or INC1166 beyond their relative sequencing in the auth-service history."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "Both 2-hop and ESG correctly identify INC1042 as \"the login outage\" referenced in the Slack thread, with root cause (expired JWT signing key), resolution, and follow-up (PROJ-201/PR-455). Both also mention INC1115 and INC1166 as distinct incidents. ESG additionally retrieves and cites session-management-runbook (part of expected docs) with a specific detail about on-call checking TTL config, and adds PR-550 (not in expected set, but appears in ESG's own retrieved list, so not fabrication - it's a real retrieved doc providing additional grounded detail about INC1166 follow-up). ESG covers all 9 expected documents (INC1042, PROJ-201, PR-455, auth-service-outage-postmortem-august-2026, eng-platform-2026-08-08, INC1115, PR-611, PROJ-312, session-management-runbook) explicitly, while 2-hop also covers all of these except it doesn't explicitly cite session-management-runbook content in detail (2-hop retrieved it but the answer doesn't reference it). Checking 2-hop's answer text - it doesn't mention the session-management-runbook detail at all, whereas ESG explicitly cites it with the specific runbook guidance. This makes ESG's answer slightly more complete against the expected document set. Both are well-hedged and not confidently wrong. ESG's structure is more thorough and grounds claims to specific documents, matching or slightly exceeding 2-hop's completeness without introducing fabrication (PR-550 is a real retrieved doc, transparently used per instructions)."
+}

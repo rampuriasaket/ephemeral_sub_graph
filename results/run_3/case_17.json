@@ -1,0 +1,85 @@
+{
+  "case_number": 17,
+  "question": "Why is bulk export timing out for large accounts?",
+  "expected_doc_ids": [
+    "INC1250",
+    "PROJ-430",
+    "PR-715",
+    "bulk-export-architecture",
+    "eng-platform-2026-08-16"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.4,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-715"
+      ],
+      "retrieved_doc_ids": [
+        "INC1250",
+        "PROJ-430"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 819,
+      "cost_usd": 0.00359,
+      "time_sec": 3.4773850440979004,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.8,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1250",
+        "PR-715",
+        "PROJ-430",
+        "bulk-export-architecture"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1231,
+      "cost_usd": 0.004726,
+      "time_sec": 5.430647134780884,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1250",
+        "PR-715",
+        "PROJ-430",
+        "bulk-export-architecture",
+        "eng-platform-2026-08-16"
+      ],
+      "retrieval_calls": 75,
+      "llm_calls": 17,
+      "tokens": 57033,
+      "cost_usd": 0.15243700000000002,
+      "time_sec": 92.78028225898743,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on PROJ-430 and INC1250, bulk export was timing out for large accounts because the export ran as a **single synchronous request with no pagination or streaming**. Instead of building the export in memory as one large operation and returning it all at once, this approach caused accounts with very large order histories to exceed the request timeout entirely \u2014 resulting in a hard failure rather than just a slow response.\n\n**Fix:** The export logic was reworked (PR-715, per Sam Okafor's comments on PROJ-430) to **stream results in chunks** rather than building the whole export in memory first. This was tested against the largest enterprise account's data volume and reportedly completes in under a minute now.\n\n**Sources:** jira:PROJ-430, servicenow:INC1250",
+    "2-hop": "Bulk export was timing out for large accounts because it ran as a single synchronous request that built the entire export in memory with no pagination or streaming \u2014 so accounts with very large order histories (e.g., large order histories in enterprise accounts) exceeded the request timeout outright rather than just completing slowly (INC1250, PROJ-430).\n\nThe fix (PR-715) reworked the export to stream results in bounded-size chunks instead of constructing the whole export synchronously in memory, and was tested against the largest enterprise account's data volume, completing in under a minute (PROJ-430, PR-715). The broader architectural guidance from this incident is captured in confluence:bulk-export-architecture, which recommends that any export-like feature reading a full account's history default to a streaming/paginated approach, since large-account timeouts are easy to miss when testing only against typical-sized test accounts.",
+    "ESG (v2)": "## Direct Answer\n\nBulk export was timing out for large accounts because it ran as a **single synchronous request that built the entire export in memory before returning a response**, with no pagination or streaming. For accounts with very large order histories, this process exceeded the request timeout outright \u2014 the export didn't just run slowly, it failed to complete at all. This was fixed by reworking the feature to stream results in bounded-size chunks instead of assembling the whole export in memory first.\n\n## Supporting Evidence\n\n**Incident (INC1250):** The incident report confirms accounts with very large order histories saw bulk export time out entirely, blocking enterprise customers from retrieving their data. Its resolution notes state the root cause explicitly: *\"the export ran as a single synchronous request with no pagination or streaming, so large accounts exceeded the request timeout outright.\"* The fix was to rework the export to stream results in chunks (servicenow:INC1250:0).\n\n**Ticket (PROJ-430):** The Jira ticket tracking this work describes the same root cause \u2014 bulk export \"ran as a single synchronous request with no pagination, timing out entirely for large accounts (INC1250) instead of just being slow.\" Sam Okafor's comments confirm the fix: reworking it to \"stream results in chunks instead of building the whole export in memory first\" (via PR-715), and that it was tested against the largest enterprise account's data volume, completing in under a minute afterward (jira:PROJ-430:0).\n\n**Pull Request (PR-715):** The PR implementing the fix reworks bulk export \"to stream results in chunks rather than constructing the entire export synchronously in memory,\" explicitly fixing timeouts for accounts with very large order histories. Diego Alvarez reviewed and approved it, noting it was \"tested against our largest account\" (gitrepo:PR-715:0).\n\n**Architecture doc (bulk-export-architecture):** This wiki page, written after INC1250, describes the redesigned pipeline that streams results in bounded-size chunks instead of building the full export synchronously in memory. It also notes a broader lesson: any feature reading a full account's history should default to streaming/pagination rather than assuming account size stays small, since \"large-account timeouts are easy to miss in testing against typical-sized test accounts\" (confluence:bulk-export-architecture:0).\n\n**Slack thread (eng-platform-2026-08-16):** Informal discussion between Sam Okafor and Diego Alvarez corroborates the same diagnosis in real time \u2014 Sam reports the biggest enterprise account \"can't export their data at all, just times out every time,\" Diego guesses it's \"trying to build the whole thing in memory first,\" Sam confirms \"exactly that,\" and describes reworking it to stream in chunks (slack:eng-platform-2026-08-16:0).\n\n## Summary\n\nAll sources \u2014 the incident, the ticket, the PR, the architecture doc, and the Slack discussion \u2014 consistently converge on one root cause: **bulk export attempted to build the entire result set in memory in one synchronous pass, with no pagination**, so large accounts (with large order histories) exceeded the request timeout rather than just running slowly. The fix (PR-715, tracked in PROJ-430, closing INC1250) replaced this with a streaming, chunked approach, which was verified against the largest enterprise account and completed in under a minute. No information in the graph contradicts or adds nuance beyond this consistent account, so this can be treated as a well-supported conclusion."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "All three answers correctly identify the root cause (synchronous, in-memory, non-streaming export exceeding timeout) and fix (PR-715 streaming chunks). Flat-RAG misses PR-715, bulk-export-architecture, and eng-platform-2026-08-16, giving the shallowest account. 2-hop adds PR-715 and bulk-export-architecture, giving a more complete picture including the broader architectural lesson. ESG retrieves all five expected documents and accurately summarizes each, including the Slack thread corroboration and the architecture doc's broader guidance, without introducing unsupported claims. This is the most complete and fully grounded answer, matching all expected documents with no fabrication."
+}

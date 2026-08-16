@@ -1,0 +1,75 @@
+{
+  "case_number": 24,
+  "question": "What's causing the intermittent Redis latency spikes?",
+  "expected_doc_ids": [
+    "INC1158",
+    "PROJ-335"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 822,
+      "cost_usd": 0.00406,
+      "time_sec": 5.6034698486328125,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 815,
+      "cost_usd": 0.003734,
+      "time_sec": 5.529517889022827,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1158",
+        "PROJ-335"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 7,
+      "tokens": 24881,
+      "cost_usd": 0.065709,
+      "time_sec": 36.962103843688965,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the available documents, the root cause has not been identified.\n\nWhat we know from JIRA PROJ-335 and ServiceNow INC1158:\n- Multiple, otherwise-unrelated services are experiencing Redis latency spikes of 2-3x baseline at irregular intervals\n- Connection pool sizing has been investigated and ruled out as a cause\n- No trigger has been identified at the application layer\n- The issue has been escalated to the infrastructure team to investigate a potential network-level cause\n- Current status explicitly states: \"No root cause identified yet... No fix in progress\"\n\n**What's missing:** The documents don't contain findings from the infrastructure team's investigation, so there's no confirmed root cause (network-level or otherwise) to report. If you need the actual cause, that information isn't in these two tickets \u2014 you'd need updated comments/status from PROJ-335 or INC1158 once the infra team completes their investigation.",
+    "2-hop": "Based on the available documents, no root cause has been identified for the intermittent Redis latency spikes.\n\nWhat is known (from INC1158 and PROJ-335, which describe the same issue):\n- Multiple, otherwise-unrelated services are affected, with latency spiking to 2-3x baseline at irregular intervals\n- Connection pool sizing was investigated and ruled out as a cause\n- Nothing has been found at the application layer\n- The issue has been escalated to the infrastructure team to investigate a possible network-level cause\n\nMissing information: There is no documented root cause, and no fix is in progress. The infrastructure team's investigation into a network-level cause has not yet produced results in these documents, so I can't say what is actually causing the spikes \u2014 only that application-layer causes (like connection pooling) have been ruled out.",
+    "ESG (v2)": "## Short Answer\n\n**Root cause not yet identified.** Based on the available records (INC1158, PROJ-335), the intermittent Redis latency spikes remain unexplained. Investigators have ruled out connection pool sizing as a cause, and the issue has been escalated to the infrastructure team to check for a network-level cause \u2014 but no findings, fix, or confirmed root cause exist in the graph at this time.\n\n## Supporting Evidence\n\n**INC1158** (ServiceNow incident, status: Investigating) describes multiple, otherwise-unrelated services experiencing Redis latency spiking to 2-3x baseline at irregular intervals, with no clear trigger identified. The incident record explicitly states:\n- Connection pool sizing has been checked and **ruled out** as a cause.\n- **No root cause identified yet.**\n- The incident has been escalated to the **infra team** to investigate a possible network-level cause.\n- No fix is currently in progress.\n\n**PROJ-335** (Jira issue, status: In Progress) mirrors INC1158 \u2014 it's the tracking ticket for investigating the same intermittent Redis latency spikes. Its only comment reiterates:\n- Connection pool sizing ruled out.\n- Nothing found at the application layer so far.\n- Escalating to the infra team to check for a network-level cause.\n\n## What's Missing\n\nThe graph contains no further chunks showing the outcome of the infra team's network-level investigation \u2014 no findings, no identified root cause (e.g., network congestion, hardware issue, noisy-neighbor problem, a specific host or link), and no resolution or fix. The search frontier was exhausted without turning up any follow-on updates to either INC1158 or PROJ-335, an infra-team-authored ticket/report, or any other linked incidents (e.g., network monitoring alerts, related service tickets) that might explain the spikes.\n\n**Bottom line:** the available data confirms the symptom (Redis latency spikes, cause unknown, app-layer ruled out) and the escalation path (to infra team), but does not yet contain an actual root cause. Any further conclusion would be speculative beyond what's documented here."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers correctly convey the same core facts: root cause not identified, connection pooling ruled out, application layer cleared, escalated to infra team for network-level investigation, no fix in progress. All three hedge appropriately given the expected documents don't contain a resolution. ESG's answer is more verbose with extra structure but doesn't add new factual content beyond what flat-RAG and 2-hop already state, nor does it fabricate anything. Differences are cosmetic/formatting only."
+}

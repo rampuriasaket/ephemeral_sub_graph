@@ -1,0 +1,403 @@
+SLACK — WORKSPACE EXPORT
+System: Slack
+Export scope: Threads from engineering-adjacent channels, last 90 days
+Format note: THREAD metadata followed by MESSAGES (speaker: text). No
+message-level IDs are exposed to other systems — any cross-references
+to tickets/incidents are only as explicitly typed by participants.
+====================================================================
+
+THREAD: #incident-response
+TOPIC: INC1101 — customers charged twice on checkout
+PARTICIPANTS: Aisha Rahman, Diego Alvarez, oncall-bot
+DATE: 2026-08-09
+RELATED: INC1101, PROJ-301
+--------------------------------------------------------------------
+MESSAGES:
+oncall-bot: P1 auto-paged — support ticket volume spike mentioning
+  "charged twice" on checkout. 6 reports in the last 20 minutes.
+Aisha Rahman: looking now. confirmed — checkout-service is retrying
+  payment-gateway calls after timeout with zero idempotency protection.
+Diego Alvarez: ouch. want me to help pull the list of affected orders
+  for manual refund while you get the hotfix out?
+Aisha Rahman: yes please. disabling auto-retry entirely as a stopgap
+  first, opening PROJ-301 for the real fix.
+Diego Alvarez: on it for the refund list.
+Aisha Rahman: real fix is an idempotency key per attempt, PR going up
+  shortly.
+====================================================================
+
+THREAD: #eng-search
+TOPIC: autocomplete showing old product names
+PARTICIPANTS: Layla Haddad, Omar Farouk
+DATE: 2026-08-05
+RELATED: INC1108, PROJ-305
+--------------------------------------------------------------------
+MESSAGES:
+Layla Haddad: getting reports that autocomplete is suggesting products
+  we renamed weeks ago. main search results look fine though, weird.
+Omar Farouk: different cache maybe? didn't we already fix staleness on
+  the main index a while back
+Layla Haddad: yeah PROJ-230 fixed the *main* index. autocomplete has
+  its own separate cache that never got touched. classic.
+Omar Farouk: makes sense. just repoint it at the primary index?
+Layla Haddad: that's the plan, PR going up today.
+====================================================================
+
+THREAD: #mobile-eng
+TOPIC: iOS memory profiling — checkout screen
+PARTICIPANTS: Sam Okafor, mobile-team
+DATE: 2026-08-05
+RELATED: (none referenced)
+--------------------------------------------------------------------
+MESSAGES:
+Sam Okafor: spent the afternoon profiling the iOS app near checkout,
+  memory climbs steadily the longer someone sits on that screen.
+mobile-team: is this the app freezing thing a few users mentioned?
+Sam Okafor: could be related, feels like the same shape of problem.
+  seeing the image cache in the SDK not releasing thumbnails properly.
+mobile-team: worth filing something formally or still poking at it?
+Sam Okafor: give me another day to confirm the leak is actually in the
+  SDK's cache and not something we're doing wrong on our end first.
+====================================================================
+
+THREAD: #ops-warehouse
+TOPIC: counts look off again this week
+PARTICIPANTS: warehouse-ops-team
+DATE: 2026-08-02
+RELATED: (none referenced)
+--------------------------------------------------------------------
+MESSAGES:
+warehouse-ops-team: physical count on aisle 12 doesn't match what the
+  system says again, third time this month on different SKUs.
+warehouse-ops-team: could just be the sync job skipping items during
+  the nightly run? that's my guess but haven't dug in.
+warehouse-ops-team: flagging for the audit tomorrow, want a second set
+  of eyes before we open anything formally.
+====================================================================
+
+THREAD: #partner-eng
+TOPIC: partner getting rate limited, shouldn't be
+PARTICIPANTS: Yuki Tanaka, Omar Farouk
+DATE: 2026-08-09
+RELATED: INC1151, PROJ-330
+--------------------------------------------------------------------
+MESSAGES:
+Yuki Tanaka: partner integration team says they're getting 429s way
+  below the documented partner-tier limit.
+Omar Farouk: are they actually provisioned as partner tier? worth
+  double-checking before assuming the limiter's broken.
+Yuki Tanaka: ...they're not. defaulted to standard tier somehow.
+Omar Farouk: that's the second time that's happened, might be worth a
+  provisioning checklist so it stops being a surprise.
+Yuki Tanaka: agreed, separate ticket for that. fixing this account now.
+====================================================================
+
+THREAD: #eng-notifications
+TOPIC: email delivery rate dropped, still digging
+PARTICIPANTS: Chen Liu
+DATE: 2026-08-08
+RELATED: INC1165, PROJ-340
+--------------------------------------------------------------------
+MESSAGES:
+Chen Liu: transactional email delivery down ~15% this week, no change
+  on our side that I can find yet.
+Chen Liu: reaching out to the provider about sender reputation, might
+  be on their end. no fix to report, still open.
+====================================================================
+
+THREAD: #eng-platform
+TOPIC: remember the login outage a while back
+PARTICIPANTS: Tomas Berg, Priya Nair
+DATE: 2026-08-08
+RELATED: (none referenced by ID)
+--------------------------------------------------------------------
+MESSAGES:
+Tomas Berg: someone asked me today why we page on-call before signing
+  keys expire now — had to explain the whole login outage thing from
+  earlier this month.
+Priya Nair: ha, yeah. that one was a rough morning. glad the alerting
+  actually shipped instead of just living in a postmortem doc.
+Tomas Berg: same. calendar reminders are how we got there in the
+  first place, so.
+====================================================================
+
+THREAD: #order-platform
+TOPIC: pool issues again? same as before
+PARTICIPANTS: Diego Alvarez, Aisha Rahman
+DATE: 2026-08-07
+RELATED: (none referenced by ID)
+--------------------------------------------------------------------
+MESSAGES:
+Diego Alvarez: seeing elevated wait times on order-service again,
+  feels like the same pool exhaustion pattern from a few months back.
+Aisha Rahman: the batch job thing? did that ever get a real fix or was
+  it just the manual pool bump?
+Diego Alvarez: just the manual bump as far as I know. I've got a draft
+  PR exploring proper pool tuning but it's not gone anywhere yet.
+Aisha Rahman: might be worth reviving given it's happening again.
+====================================================================
+
+THREAD: #random
+TOPIC: lunch spot recs
+PARTICIPANTS: various
+DATE: 2026-08-06
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: anyone tried the new sandwich place near the office?
+various: yes it's great, get there before noon though, line gets long.
+various: noted, thanks!
+====================================================================
+
+THREAD: #eng-general
+TOPIC: tabs vs spaces (again)
+PARTICIPANTS: various
+DATE: 2026-08-04
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: can we please just settle this in the style guide already
+various: it is settled, the style guide says spaces
+various: correct answer, thread closed
+====================================================================
+
+THREAD: #standup-notes
+TOPIC: daily async standup — 2026-08-06
+PARTICIPANTS: various
+DATE: 2026-08-06
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: yesterday: code review backlog, today: same, blockers: none
+various: yesterday: onboarding new teammate, today: continuing that
+various: yesterday: sprint planning prep, today: sprint planning
+====================================================================
+
+THREAD: #social-committee
+TOPIC: holiday party planning kickoff
+PARTICIPANTS: various
+DATE: 2026-08-01
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: starting to think about the holiday party, need venue ideas
+various: same spot as last year worked well imo
+various: agreed, let's check availability
+====================================================================
+
+THREAD: #eng-checkout
+TOPIC: finance flagging weird discount amounts
+PARTICIPANTS: Aisha Rahman, Diego Alvarez
+DATE: 2026-08-10
+RELATED: INC1201, PROJ-401
+--------------------------------------------------------------------
+MESSAGES:
+Aisha Rahman: finance pinged about orders with way bigger discounts
+  than any single coupon should give. digging in.
+Diego Alvarez: multiple codes on one order somehow?
+Aisha Rahman: yep. validation only blocks the *same* code twice, not
+  two different codes. never considered that combo.
+Diego Alvarez: classic gap. fix is just enforcing one code period?
+Aisha Rahman: yeah, simplest correct behavior. PR going up.
+====================================================================
+
+THREAD: #eng-data
+TOPIC: revenue dashboard doesn't match processor numbers
+PARTICIPANTS: Sam Okafor, Layla Haddad
+DATE: 2026-08-11
+RELATED: INC1208, PROJ-405
+--------------------------------------------------------------------
+MESSAGES:
+Sam Okafor: finance says our dashboard revenue is ~20% under what the
+  processor reports for the same days. that's a big gap.
+Layla Haddad: any recent changes to the aggregation query?
+Sam Okafor: not recently, but found the bug — join drops any order
+  that used a coupon. no idea how long that's been wrong honestly.
+Layla Haddad: yikes. at least it's a clean fix once found.
+====================================================================
+
+THREAD: #eng-database
+TOPIC: query patterns worth a second look
+PARTICIPANTS: Diego Alvarez, database-team
+DATE: 2026-08-13
+RELATED: (none referenced)
+--------------------------------------------------------------------
+MESSAGES:
+Diego Alvarez: anyone else noticing endpoints getting gradually slower
+  this week? nothing dramatic, just creeping up.
+database-team: not seeing anything obvious on our end, no schema
+  changes recently. what endpoints specifically?
+Diego Alvarez: honestly kind of scattered, that's what's odd. not
+  isolated to one service.
+database-team: worth a broader look at query plans across services
+  then, rather than assuming it's one team's change.
+====================================================================
+
+THREAD: #customer-support-eng
+TOPIC: customers somehow stacking discount codes
+PARTICIPANTS: support-eng-liaison
+DATE: 2026-08-10
+RELATED: (none referenced by ID)
+--------------------------------------------------------------------
+MESSAGES:
+support-eng-liaison: getting a handful of support tickets where
+  customers mention using "two promo codes" on one order. is that
+  supposed to work?
+support-eng-liaison: asking because if it's intentional I need to
+  update our support macros, if not, might want to flag to eng.
+support-eng-liaison: flagging to eng just in case, better safe.
+====================================================================
+
+THREAD: #support-eng
+TOPIC: response times creeping up, tooling or volume?
+PARTICIPANTS: support-eng-liaison
+DATE: 2026-08-14
+RELATED: INC1236, PROJ-420
+--------------------------------------------------------------------
+MESSAGES:
+support-eng-liaison: response times have been climbing all week,
+  volume looks normal though. wondering if it's the routing tool.
+support-eng-liaison: opened a ticket with eng to check the
+  integration, no answer yet on cause.
+====================================================================
+
+THREAD: #eng-platform
+TOPIC: large accounts timing out on export
+PARTICIPANTS: Sam Okafor, Diego Alvarez
+DATE: 2026-08-16
+RELATED: INC1250, PROJ-430
+--------------------------------------------------------------------
+MESSAGES:
+Sam Okafor: our biggest enterprise account can't export their data at
+  all, just times out every time.
+Diego Alvarez: guessing it's trying to build the whole thing in memory
+  first?
+Sam Okafor: exactly that. reworking it to stream in chunks instead.
+Diego Alvarez: makes sense, should've been that way from the start
+  honestly.
+====================================================================
+
+THREAD: #eng-platform
+TOPIC: routine deploy — Tuesday release
+PARTICIPANTS: various
+DATE: 2026-08-11
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: Tuesday release going out in 30 min, usual set of minor fixes
+various: nothing flagged as risky in the changelist, should be routine
+various: deployed, no alerts firing, looks clean
+====================================================================
+
+THREAD: #mobile-eng
+TOPIC: opt-in rate dropped, prompt timing?
+PARTICIPANTS: Sam Okafor, mobile-team
+DATE: 2026-08-17
+RELATED: (none referenced by ID)
+--------------------------------------------------------------------
+MESSAGES:
+Sam Okafor: push opt-in rate for new installs is down noticeably the
+  last few days.
+mobile-team: didn't we change when we show the permission prompt
+  recently? moved it later in the flow I thought.
+Sam Okafor: might be related, timing really does affect opt-in rates a
+  lot. not confirmed yet though, could be something else entirely.
+mobile-team: worth an A/B test to actually confirm before we revert
+  anything.
+====================================================================
+
+THREAD: #random
+TOPIC: coffee machine is broken again
+PARTICIPANTS: various
+DATE: 2026-08-12
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: 3rd floor coffee machine down again, anyone know who to ping
+various: facilities knows, ticket's in
+various: bless you whoever filed it
+====================================================================
+
+THREAD: #eng-general
+TOPIC: new laptop rollout timeline
+PARTICIPANTS: various
+DATE: 2026-08-14
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: when's the new laptop refresh happening for the team?
+various: IT said rolling out by team over the next month
+various: cool, no rush on my end
+====================================================================
+
+THREAD: #standup-notes
+TOPIC: daily async standup — 2026-08-13
+PARTICIPANTS: various
+DATE: 2026-08-13
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: yesterday: bug triage, today: continuing triage, blockers: none
+various: yesterday: design review prep, today: design review
+various: yesterday: pairing on export fix, today: same
+====================================================================
+
+THREAD: #social-committee
+TOPIC: birthday shoutout
+PARTICIPANTS: various
+DATE: 2026-08-15
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: happy birthday!! cake in the kitchen at 3
+various: on my way
+various: this cake is excellent, good pick
+====================================================================
+
+THREAD: #book-club
+TOPIC: next pick
+PARTICIPANTS: various
+DATE: 2026-08-09
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: voting closes friday for next month's book
+various: just voted, good options this round
+various: same, tough choice honestly
+====================================================================
+
+THREAD: #pet-photos
+TOPIC: new office visitor
+PARTICIPANTS: various
+DATE: 2026-08-11
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: someone brought their dog in today, 10/10
+various: need photos immediately
+various: posted in the thread, very good boy
+====================================================================
+
+THREAD: #eng-onboarding
+TOPIC: welcome to the team!
+PARTICIPANTS: various
+DATE: 2026-08-16
+RELATED: (none)
+--------------------------------------------------------------------
+MESSAGES:
+various: everyone welcome our newest engineer, starting today!
+various: welcome!! let us know if you need anything
+various: excited to be here, thanks all
+====================================================================
+
+THREAD: #eng-infra
+TOPIC: sporadic gateway errors, anyone else?
+PARTICIPANTS: infra-team
+DATE: 2026-08-15
+RELATED: INC1243, PROJ-425
+--------------------------------------------------------------------
+MESSAGES:
+infra-team: seeing occasional 502s at the gateway, can't pin down a
+  pattern. anyone else noticing this on their dashboards?
+infra-team: nothing obvious here either. going to try to catch one
+  live with more verbose logging next time it happens.

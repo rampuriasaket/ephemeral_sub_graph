@@ -1,0 +1,77 @@
+{
+  "case_number": 26,
+  "question": "Why is customer support queue time increasing?",
+  "expected_doc_ids": [
+    "INC1236",
+    "PROJ-420",
+    "support-eng-2026-08-14"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.3333333333333333,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1236"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 561,
+      "cost_usd": 0.003274,
+      "time_sec": 4.517185688018799,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.3333333333333333,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1236"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 750,
+      "cost_usd": 0.004908,
+      "time_sec": 5.482685089111328,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.6,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1222",
+        "INC1236",
+        "PROJ-420",
+        "eng-database-2026-08-13",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 75,
+      "llm_calls": 16,
+      "tokens": 66278,
+      "cost_usd": 0.20716299999999999,
+      "time_sec": 108.16565299034119,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "I don't have enough information to answer this question definitively.\n\nThe only document provided (**servicenow:INC1236**) describes the *symptom* \u2014 average time-to-first-response has been climbing over the past week \u2014 but explicitly states there is **no clear staffing or volume explanation** identified yet, and that engineering was only just asked to investigate whether a tooling issue could be contributing.\n\nThere is no root cause, diagnostic finding, or engineering response documented here. To answer \"why,\" I would need additional documents such as:\n- An engineering investigation ticket/incident with findings\n- Change/deployment logs for support tooling around the time queue times began rising\n- Metrics or monitoring data tied to the support queue system\n\nBased solely on INC1236, all that can be said is that queue times are increasing and a tooling-related cause is suspected but not yet confirmed.",
+    "2-hop": "Based on the single document provided (**INC1236**), I cannot give a definitive root cause for the increasing customer support queue times.\n\nWhat INC1236 tells us:\n- Average time-to-first-response in the support queue has been climbing steadily over the past week.\n- There is no clear staffing or volume explanation identified.\n- Support leadership has asked engineering to investigate whether a **tooling issue** could be contributing to the increase.\n\nWhat's missing:\nThe document does not contain any findings from that engineering investigation \u2014 no root cause analysis, no identified tooling defect, no related incident/PR/ticket that confirms what's actually causing the slowdown. Since my access is limited to the documents retrieved (and no other ticket/incident/PR IDs are cited in INC1236 to follow up on), I don't have enough information to explain *why* the queue time is increasing \u2014 only that it is increasing and that a tooling-related cause is suspected but unconfirmed.",
+    "ESG (v2)": "# Why is customer support queue time increasing?\n\n## Short answer\n**This is not yet fully determined.** The investigation (INC1236 / PROJ-420) confirms the queue time increase is real and ongoing, and the leading hypothesis is a slowdown in the support tool's ticket-routing integration \u2014 but this has not been confirmed as the root cause. There is a suggestive but unconfirmed connection to a broader, unexplained API latency degradation (INC1222) affecting multiple services, which could plausibly be an underlying contributor if the routing tool depends on any of the affected endpoints. No team has identified a definitive root cause for either issue.\n\n## Walkthrough of evidence\n\n**The core problem (INC1236 / PROJ-420):**\n- INC1236 (ServiceNow, status: Investigating) reports that average time-to-first-response in the customer support queue has climbed steadily over the past week, with no clear staffing or volume explanation. Support leadership asked engineering to check for a tooling issue.\n- PROJ-420 (Jira, status: In Progress) is the engineering-side tracking ticket for this investigation. A comment notes the team is \"checking whether the support tool's ticket-routing integration has slowed down \u2014 no conclusion yet.\"\n- In Slack (support-eng-2026-08-14), support-eng-liaison corroborates this: response times have been climbing all week, volume looks normal, and they suspect the routing tool. They opened a ticket with engineering but \"no answer yet on cause.\"\n\n**A possibly related but separate signal (INC1222):**\n- INC1222 (ServiceNow, status: Investigating) describes a gradual increase in p95 response time across several unrelated API endpoints, without a corresponding traffic increase. No single service has been identified as the cause.\n- In Slack (eng-database-2026-08-13), Diego Alvarez independently flags that endpoints seem to be \"gradually slower\" this week, scattered across services rather than isolated to one. The database-team responds that they see nothing unusual on their end (no recent schema changes) and suggests a broader look at query plans across services, rather than assuming it's any single team's change.\n\n**Note on the connection:** The graph does not contain a direct, explicit link tying INC1222's cross-service API latency degradation to the support tool's routing integration referenced in INC1236/PROJ-420. Both describe similar symptoms (gradual, unexplained slowdowns without a traffic/volume cause), but no ticket, comment, or message in the retrieved data confirms that the routing tool is among the affected endpoints, or that INC1222 is the cause of INC1236.\n\n## What's missing\n- No root cause has been confirmed for either INC1236 or INC1222 \u2014 both remain in \"Investigating\"/\"In Progress\" status.\n- There is no evidence in the graph confirming or ruling out that INC1222's broad API slowdown is causing the support routing tool delays described in INC1236/PROJ-420.\n- No further engineering diagnosis (e.g., query plan analysis results, routing integration logs, or a resolution/postmortem) was found before the search frontier was exhausted.\n\nIf a definitive answer is needed, the next step would be to determine whether the support ticket-routing integration is one of the \"several unrelated API endpoints\" degrading under INC1222, which would tie the two incidents together."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "The expected sources (INC1236, PROJ-420, support-eng-2026-08-14) together reveal that support leadership/engineering suspect the ticket-routing integration tool is slowing down, though root cause is unconfirmed. Both baselines only retrieved INC1236 and thus missed PROJ-420 and the Slack thread, so they hedge maximally and never surface the \"ticket-routing integration\" hypothesis, incorrectly stating no further info exists. ESG retrieved all three expected documents and correctly surfaces the leading hypothesis (routing-tool slowdown) while still appropriately hedging that root cause is unconfirmed, matching the actual confirmed status in the expected docs. ESG also brings in INC1222/eng-database-2026-08-13 as a possibly-related but explicitly unconfirmed signal, clearly labeling it as speculative and not conflating it with confirmed fact. This is a case where the expected documents did contain more info (the routing-tool hypothesis) that the baselines failed to surface but ESG did, without asserting unsupported claims as fact."
+}

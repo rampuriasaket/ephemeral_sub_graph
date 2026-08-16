@@ -1,0 +1,476 @@
+CONFLUENCE — PAGE EXPORT
+System: Confluence (Space: Engineering Wiki)
+Export scope: Pages created or updated in last 90 days
+====================================================================
+
+PAGE: Auth Service Outage Postmortem — August 2026
+SPACE: Engineering / Postmortems
+AUTHOR: Priya Nair
+LAST UPDATED: 2026-08-02
+LABELS: postmortem, auth-service, incident-review
+RELATED: INC1042, PROJ-201, PR-455
+--------------------------------------------------------------------
+BODY:
+On 2026-08-01, auth-service experienced a ~2.5 hour period of
+degraded login availability due to an expired JWT signing key that
+was not rotated ahead of its expiry window (INC1042). Impact: an
+estimated 60% of login attempts failed during the affected window.
+
+Root cause: the signing key rotation process was manual and relied on
+a calendar reminder that was missed. Resolution: the key was rotated
+manually, restoring service within minutes, and a follow-up story
+(PROJ-201) added automated expiry alerting, shipped in PR-455.
+
+Action items:
+1. (Done) Add automated expiry alerting for all signing keys used by
+   auth-service, not just this one.
+2. (Open, unassigned) Audit other services for similarly manual key
+   rotation processes that could fail the same way.
+3. (Done) Update on-call runbook with signing-key rotation steps.
+====================================================================
+
+PAGE: Payment Gateway Troubleshooting Guide
+SPACE: Engineering / Runbooks
+AUTHOR: Marcus Webb
+LAST UPDATED: 2026-07-20
+LABELS: runbook, payment-gateway, troubleshooting
+RELATED: (general guide — not tied to a specific incident number)
+--------------------------------------------------------------------
+BODY:
+This page covers common failure modes for payment-gateway and how to
+triage them. Symptoms of connection pool exhaustion under load include
+elevated request latency, intermittent timeouts concentrated during
+peak traffic windows, and connection-refused errors in the
+payment-gateway logs once the pool is fully saturated.
+
+Standard triage steps: check current pool utilization against
+configured max size, check for any recent deploys that changed
+connection handling, and check whether a downstream dependency
+(fraud-check-service or the external payment processor) is
+responding slowly, which can cause connections to be held open
+longer than expected and exhaust the pool indirectly.
+
+Note: this guide will be updated with more specific guidance once the
+current investigation into intermittent payment-gateway timeouts
+concludes.
+====================================================================
+
+PAGE: Order Service On-Call Runbook
+SPACE: Engineering / Runbooks
+AUTHOR: Diego Alvarez
+LAST UPDATED: 2026-05-15
+LABELS: runbook, order-service, on-call
+RELATED: INC0980
+--------------------------------------------------------------------
+BODY:
+Known failure pattern: order-service database connection pool
+exhaustion. This has occurred previously (see INC0980, May 2026) when
+a long-running batch reconciliation job held connections open for an
+extended period, starving the pool for regular request traffic.
+
+Immediate mitigation steps if this recurs:
+1. Check for any currently running batch jobs against order-service's
+   database and kill them if they are holding connections abnormally
+   long.
+2. If pool exhaustion persists, manually increase the connection pool
+   ceiling as a temporary measure and page the Order Platform team.
+3. File a ticket to investigate a permanent fix — as of this writing,
+   no permanent code fix has been merged; the pool ceiling increase
+   from the May incident was a manual, undocumented mitigation only.
+====================================================================
+
+PAGE: Notification Service Architecture
+SPACE: Engineering / Design Docs
+AUTHOR: Chen Liu
+LAST UPDATED: 2026-06-10
+LABELS: architecture, notification-service, design-doc
+RELATED: (general design reference)
+--------------------------------------------------------------------
+BODY:
+This document describes the architecture of the notification
+delivery pipeline. Messages are produced onto a queue by upstream
+services (order-service, shipping-service) and consumed by a pool of
+notification-worker processes, which format and dispatch the actual
+push notification via the external push-notification-provider
+integration.
+
+Consumer concurrency is currently fixed at a static pool size,
+configured in notification-queue-config. This was set based on
+expected traffic at initial launch and has not been revisited since,
+which may become a scaling bottleneck as message volume grows. Worth
+revisiting if queue depth or delivery latency ever trends upward over
+time.
+====================================================================
+
+PAGE: API Rate Limiting Guide
+SPACE: Engineering / Public API Docs
+AUTHOR: Yuki Tanaka
+LAST UPDATED: 2026-08-03
+LABELS: api-docs, rate-limiting, partner-integrations
+RELATED: PROJ-255
+--------------------------------------------------------------------
+BODY:
+This guide documents the default rate limits applied to public API
+consumers: 100 requests/minute for standard tier, 500 requests/minute
+for partner tier, with a burst allowance of 20% above the sustained
+limit for short spikes.
+
+Note: these figures were corrected on 2026-08-03 (PROJ-255) after a
+partner integration team reported the previously documented limits did
+not match what they observed in practice. The defaults above now
+reflect the actual values enforced in code.
+====================================================================
+
+PAGE: New Hire Onboarding — Engineering Wiki Home
+SPACE: Engineering / Onboarding
+AUTHOR: People Team
+LAST UPDATED: 2026-04-01
+LABELS: onboarding, general
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Welcome to the Engineering wiki! This page collects general onboarding
+resources: how to request repository access, how to set up your local
+development environment, where to find the team directory, and links
+to the company code-of-conduct and expense policy. For
+service-specific documentation, see the individual space sections
+(Runbooks, Design Docs, Postmortems).
+====================================================================
+
+PAGE: Q3 2026 Infra Cost Review — Meeting Notes
+SPACE: Engineering / Meeting Notes
+AUTHOR: Finance & Infra Working Group
+LAST UPDATED: 2026-07-28
+LABELS: meeting-notes, cost-review, infra
+RELATED: (general — mentions multiple services in passing)
+--------------------------------------------------------------------
+BODY:
+Notes from the quarterly infra cost review. Checkout-service and
+inventory-service were flagged as having the largest month-over-month
+compute cost increase, attributed mainly to increased traffic ahead of
+upcoming promotional events rather than any known inefficiency.
+Database costs for order-service were also up slightly, tentatively
+attributed to connection pool sizing changes made after a past
+incident. No action items assigned; flagged for follow-up if the trend
+continues next quarter.
+====================================================================
+
+PAGE: Incident Response Process — Standard Operating Procedure
+SPACE: Engineering / Process
+AUTHOR: Reliability Engineering
+LAST UPDATED: 2026-03-12
+LABELS: process, sop, incident-response
+RELATED: (none — general process document)
+--------------------------------------------------------------------
+BODY:
+This document describes the standard incident response process: how
+to declare an incident, severity level definitions (P1-P4), on-call
+escalation paths, communication expectations during an active
+incident, and the postmortem template to use once an incident is
+resolved. All engineers are expected to be familiar with this process
+regardless of team.
+====================================================================
+
+PAGE: Checkout Idempotency Design Doc
+SPACE: Engineering / Design Docs
+AUTHOR: Aisha Rahman
+LAST UPDATED: 2026-08-09
+LABELS: design-doc, checkout-service, idempotency
+RELATED: PROJ-301, PR-601
+--------------------------------------------------------------------
+BODY:
+Following INC1101 (customers double-charged during a checkout retry),
+this document describes the idempotency-key pattern adopted for
+checkout-service's payment retry logic. Each checkout attempt
+generates a unique key stored alongside the checkout session; if a
+retried request arrives with the same key, payment-gateway is
+instructed to treat it as a duplicate rather than a new charge.
+
+Keys are retained for 24 hours after checkout completion, long enough
+to cover any reasonable retry window without indefinitely growing
+storage. Other services making retryable payment-adjacent calls
+(refunds, subscription renewals) should adopt the same pattern; this
+is not yet enforced automatically.
+====================================================================
+
+PAGE: Session Management Runbook
+SPACE: Engineering / Runbooks
+AUTHOR: Priya Nair
+LAST UPDATED: 2026-08-07
+LABELS: runbook, auth-service, session-management
+RELATED: PROJ-312, INC1115
+--------------------------------------------------------------------
+BODY:
+This page documents how session timeouts are configured in
+auth-service and what to check if users report being logged out
+unexpectedly. The documented default inactivity timeout is 30 minutes.
+
+If users report shorter-than-expected session lengths, check the
+session TTL config value directly rather than assuming a code-level
+bug — this exact class of issue has occurred before (INC1115) as a
+config regression introduced by an otherwise-unrelated deploy, not a
+logic error in the session-handling code itself.
+====================================================================
+
+PAGE: Payment Gateway Migration Runbook
+SPACE: Engineering / Runbooks
+AUTHOR: Marcus Webb
+LAST UPDATED: 2026-07-15
+LABELS: runbook, payment-gateway, migration
+RELATED: (general — written ahead of the migration, predates specific incidents)
+--------------------------------------------------------------------
+BODY:
+This runbook was written ahead of the payment gateway migration
+project to capture known risk areas. Chief among them: any webhook
+handler that parses the gateway's payload format needs explicit
+review during migration, since a silent parsing mismatch (rather than
+a loud error) is the most likely way a handler could break without
+being immediately noticed. Refund and subscription-renewal webhook
+handlers are specifically called out as worth double-checking, given
+how infrequently their code paths are exercised compared to the main
+payment flow.
+====================================================================
+
+PAGE: Partner Integration Best Practices
+SPACE: Engineering / Public API Docs
+AUTHOR: Yuki Tanaka
+LAST UPDATED: 2026-08-09
+LABELS: api-docs, partner-integrations
+RELATED: PROJ-330
+--------------------------------------------------------------------
+BODY:
+Guidance for onboarding new partner API integrations. Covers
+authentication setup, recommended request patterns, and expected
+throughput — partner-tier accounts should expect the higher end of the
+rate limits documented in the API Rate Limiting Guide, and new
+integrations should explicitly verify their account is provisioned at
+partner tier before load testing, since tier assignment has
+occasionally defaulted incorrectly during onboarding.
+====================================================================
+
+PAGE: Q3 Design Review Notes
+SPACE: Engineering / Meeting Notes
+AUTHOR: Design Team
+LAST UPDATED: 2026-08-01
+LABELS: meeting-notes, design-review
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Notes from the quarterly cross-team design review. Covered upcoming UI
+refresh proposals for the account settings and checkout flows, general
+feedback on consistency of button styles across the app, and a
+proposal to establish a shared component library. No action items
+tied to any specific incident or engineering ticket.
+====================================================================
+
+PAGE: Vendor Contract Renewals — Q3
+SPACE: Engineering / Meeting Notes
+AUTHOR: Finance & Infra Working Group
+LAST UPDATED: 2026-08-05
+LABELS: meeting-notes, vendor, procurement
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Summary of upcoming vendor contract renewals for Q3, including the
+external payment processor, the shipping carrier API, and the
+monitoring/alerting platform. Standard procurement review, no
+technical or incident-related content.
+====================================================================
+
+PAGE: Team Offsite Planning — Fall 2026
+SPACE: Engineering / General
+AUTHOR: People Team
+LAST UPDATED: 2026-08-03
+LABELS: general, offsite, planning
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Logistics planning for the upcoming fall engineering offsite —
+venue options, proposed agenda topics, and a request for team leads to
+submit session ideas. No technical content.
+====================================================================
+
+PAGE: Coupon & Discount Validation Rules
+SPACE: Engineering / Design Docs
+AUTHOR: Aisha Rahman
+LAST UPDATED: 2026-08-10
+LABELS: design-doc, checkout-service, coupons
+RELATED: PROJ-401, PR-701
+--------------------------------------------------------------------
+BODY:
+Following INC1201 (coupon stacking allowed double discounts), this
+page documents the validation rules for coupon codes at checkout: one
+coupon per order, validated at cart-finalization time rather than at
+code-entry time, to close the gap where two distinct valid codes could
+both be applied before the single-coupon rule was enforced.
+====================================================================
+
+PAGE: Email Deliverability Runbook
+SPACE: Engineering / Runbooks
+AUTHOR: Chen Liu
+LAST UPDATED: 2026-08-12
+LABELS: runbook, notification-service, deliverability
+RELATED: PROJ-410, INC1215
+--------------------------------------------------------------------
+BODY:
+Covers common causes of email deliverability problems: DNS/DKIM
+misconfiguration after domain changes, sender reputation issues with
+specific providers, and content-based spam filtering. Provider-specific
+filtering (as seen with Gmail in INC1215) is called out specifically —
+some providers validate DKIM more strictly than others, so a broken
+record can silently affect only a subset of recipients rather than
+everyone, which makes it easy to miss without provider-segmented
+delivery metrics. This page was prompted partly by an earlier,
+still-open investigation into a broader delivery-rate drop that hadn't
+been narrowed to a single cause at the time of writing.
+====================================================================
+
+PAGE: Bulk Export Architecture
+SPACE: Engineering / Design Docs
+AUTHOR: Sam Okafor
+LAST UPDATED: 2026-08-16
+LABELS: architecture, export-service, design-doc
+RELATED: PROJ-430, PR-715
+--------------------------------------------------------------------
+BODY:
+Describes the redesigned bulk export pipeline after INC1250, which
+streams results in bounded-size chunks rather than building the full
+export synchronously in memory. Includes guidance for any future
+export-like feature: anything reading a full account's history should
+default to a streaming or paginated approach rather than assuming
+account size stays small, since large-account timeouts are easy to
+miss in testing against typical-sized test accounts.
+====================================================================
+
+PAGE: Mobile Notification Permission Best Practices
+SPACE: Engineering / Design Docs
+AUTHOR: Sam Okafor
+LAST UPDATED: 2026-08-17
+LABELS: mobile, notifications, design-doc
+RELATED: (general — written while INC1257 is still under investigation)
+--------------------------------------------------------------------
+BODY:
+General guidance on requesting push notification permissions on
+mobile: prompt timing significantly affects opt-in rates, and prompting
+immediately on first app open tends to perform worse than prompting
+after a user has seen value from the app. Written partly in response
+to a recent, still-unconfirmed drop in opt-in rate that the product
+team suspects is related to a permission-prompt timing change.
+====================================================================
+
+PAGE: Engineering All-Hands Notes — August 2026
+SPACE: Engineering / Meeting Notes
+AUTHOR: Engineering Leadership
+LAST UPDATED: 2026-08-11
+LABELS: meeting-notes, all-hands
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Notes from the monthly engineering all-hands: roadmap update for next
+quarter, recognition of recent incident responders, and a reminder
+about the upcoming performance review cycle. No incident-specific
+content.
+====================================================================
+
+PAGE: Remote Work Policy FAQ
+SPACE: Engineering / General
+AUTHOR: People Team
+LAST UPDATED: 2026-08-09
+LABELS: general, policy, faq
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Frequently asked questions about the company's remote work policy —
+eligibility, equipment stipends, and expectations for in-office days.
+No technical content.
+====================================================================
+
+PAGE: Conference & Training Budget Request Process
+SPACE: Engineering / General
+AUTHOR: Engineering Leadership
+LAST UPDATED: 2026-08-13
+LABELS: general, process, budget
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Describes how to request budget approval for conference attendance or
+external training courses. Administrative process document.
+====================================================================
+
+PAGE: Q3 Hiring Plan Summary
+SPACE: Engineering / General
+AUTHOR: Engineering Leadership
+LAST UPDATED: 2026-08-14
+LABELS: general, hiring
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Summary of open engineering headcount for Q3 by team, shared for
+planning visibility. No technical content.
+====================================================================
+
+PAGE: Design System Component Guidelines
+SPACE: Engineering / Design Docs
+AUTHOR: Design Team
+LAST UPDATED: 2026-08-15
+LABELS: design-doc, frontend, style-guide
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Guidelines for using the shared component library — spacing, button
+variants, and accessibility requirements for new UI work. General
+reference, not tied to any specific incident or ticket.
+====================================================================
+
+PAGE: On-Call Compensation Policy
+SPACE: Engineering / General
+AUTHOR: People Team
+LAST UPDATED: 2026-08-08
+LABELS: general, policy, on-call
+RELATED: (none)
+--------------------------------------------------------------------
+BODY:
+Describes how on-call compensation works, including rates for weekday
+vs. weekend rotations. Administrative policy document.
+====================================================================
+
+PAGE: Postmortem Template v2
+SPACE: Engineering / Process
+AUTHOR: Reliability Engineering
+LAST UPDATED: 2026-08-10
+LABELS: process, template, postmortem
+RELATED: (none — general template, supersedes the format used informally before)
+--------------------------------------------------------------------
+BODY:
+Updated postmortem template with clearer sections for root cause,
+timeline, and action-item ownership. Intended to standardize
+postmortem quality going forward; existing postmortems are not
+required to be retroactively reformatted.
+====================================================================
+
+PAGE: Email Delivery Service — Operational Runbook
+SPACE: Engineering / Runbooks
+AUTHOR: Sam Okafor
+LAST UPDATED: 2026-08-17
+LABELS: runbook, email-delivery-service, operations
+RELATED: (none — general operational reference, not tied to a specific incident)
+--------------------------------------------------------------------
+BODY:
+This page is the on-call reference for email-delivery-service, which
+handles all outbound transactional email (password resets, order
+confirmations, shipping updates) via a third-party email provider.
+
+WHAT TO CHECK FIRST:
+If delivery times look elevated, check the provider-side queue depth
+dashboard before assuming the problem is in our own service --
+several past delays have turned out to be a backlog on the provider's
+side rather than anything wrong with email-delivery-service itself.
+In those cases there is usually nothing to fix on our end; the queue
+clears on its own once the provider catches up, and the only action
+needed is keeping support informed so they can reassure customers
+asking about delayed password-reset emails.
+
+If the provider-side dashboard looks normal but delivery is still
+slow, escalate to the Data Platform on-call to check
+email-delivery-service's own outbound queue instead.
+====================================================================

@@ -1,0 +1,85 @@
+{
+  "case_number": 22,
+  "question": "Did the order-service pool issue come back?",
+  "expected_doc_ids": [
+    "INC0980",
+    "order-service-on-call-runbook",
+    "PR-508",
+    "order-platform-2026-08-07",
+    "q3-2026-infra-cost-review-meeting-notes"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.8,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC0980",
+        "PR-508",
+        "order-platform-2026-08-07",
+        "order-service-on-call-runbook"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 2242,
+      "cost_usd": 0.01254,
+      "time_sec": 11.980190992355347,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.8,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC0980",
+        "PR-508",
+        "order-platform-2026-08-07",
+        "order-service-on-call-runbook"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1911,
+      "cost_usd": 0.008974,
+      "time_sec": 9.487964153289795,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC0980",
+        "PR-508",
+        "order-platform-2026-08-07",
+        "order-service-on-call-runbook",
+        "q3-2026-infra-cost-review-meeting-notes"
+      ],
+      "retrieval_calls": 90,
+      "llm_calls": 22,
+      "tokens": 76969,
+      "cost_usd": 0.20059000000000002,
+      "time_sec": 114.17996191978455,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents, **yes \u2014 it appears to have recurred**, though only informally reported (no new formal incident ticket has been filed for it).\n\n**Evidence:**\n- **INC0980** (May 2026): order-service went unresponsive for ~18 minutes due to full connection pool exhaustion, caused by a batch reconciliation job holding connections open. Resolution was a manual pool ceiling increase and killing the batch job \u2014 explicitly **no permanent code fix** was implemented.\n- **order-service-on-call-runbook**: Documents this as a \"known failure pattern,\" referencing INC0980, and notes that as of the runbook's writing, no permanent fix had been merged \u2014 only the undocumented manual mitigation from May.\n- **slack:order-platform-2026-08-07**: Diego Alvarez reports \"seeing elevated wait times on order-service again, feels like the same pool exhaustion pattern from a few months back.\" Aisha Rahman asks whether the batch job issue \"ever get a real fix or was it just the manual pool bump?\" Diego confirms it was only ever the manual bump, and mentions his own draft PR for proper pool tuning \"hasn't gone anywhere yet.\" Aisha suggests reviving it given the recurrence.\n- **PR-508**: A draft PR by Diego Alvarez exploring permanent connection pool tuning, explicitly motivated by \"the class of connection-pool-exhaustion problem seen in the past\" (referencing the prior incident). It's still in draft, not merged, and not linked to any open ticket.\n\n**Caveat:** The recurrence is documented only as an informal Slack observation on 2026-08-07 \u2014 there's no incident ticket (like a new INC number) in the provided documents confirming a formally logged repeat incident, and no confirmation that root cause matched exactly (it's described as \"feels like the same pattern\"). So the answer is yes based on team chatter, but it hasn't been formally re-incidented in these documents, and the permanent fix (PR-508) still hadn't been merged.",
+    "2-hop": "Yes \u2014 it appears to be recurring. According to the Slack thread from 2026-08-07 (slack:order-platform-2026-08-07), Diego Alvarez and Aisha Rahman observed elevated wait times on order-service that they identified as matching \"the same pool exhaustion pattern from a few months back,\" referring to the original incident INC0980 (May 2026), where order-service became unresponsive due to database connection pool exhaustion caused by a batch reconciliation job holding connections open.\n\nKey context on why it likely recurred:\n\n- **No permanent fix was ever merged.** Per INC0980's resolution notes and the Order Service On-Call Runbook (confluence:order-service-on-call-runbook), the original incident was only mitigated manually \u2014 the on-call engineer increased the pool ceiling and killed the offending batch job, but \"no permanent code fix was tracked in a ticket at the time.\"\n- **A draft fix existed but was never finished.** PR-508 (gitrepo:PR-508) is a draft PR from Diego Alvarez exploring proper connection pool size tuning, explicitly motivated by wanting \"a more permanent fix for the class of connection-pool-exhaustion problem seen in the past.\" As of the Slack thread, this PR \"hasn't gone anywhere\" and is not linked to any open ticket.\n- The runbook explicitly flags this as a \"known failure pattern\" and instructs staff to file a ticket for a permanent fix if it recurs \u2014 but the documents don't show evidence that a new ticket was filed for the August 2026 recurrence.\n\n**What's missing:** There is no incident ticket in the provided documents confirming a new, formally logged incident for the August 2026 recurrence \u2014 only the Slack conversation describing symptoms that match the pattern. I can't confirm from these documents whether root cause was formally re-confirmed as identical, or whether PR-508 was ultimately revived/merged, since no follow-up ticket or PR update is included.",
+    "ESG (v2)": "## Short Answer\n\n**Yes.** The order-service database connection pool exhaustion issue first documented in INC0980 (May 2026) appears to have recurred by August 2026, according to a Slack thread among the Order Platform team. No permanent fix had ever been merged between the original incident and the recurrence, and as of the latest evidence, the recurrence still has not been resolved with a real fix \u2014 only exploratory work (PR-508) exists.\n\n## Supporting Evidence\n\n**Original incident:**\n- **INC0980** (Resolved) documents order-service becoming unresponsive for ~18 minutes due to database connection pool exhaustion, caused by a batch reconciliation job holding connections open with a slow query pattern. The resolution notes explicitly state: *\"No permanent code fix was tracked in a ticket at the time; the on-call runbook was updated afterward with these mitigation steps for future recurrences.\"* The mitigation was a manual increase of the connection pool ceiling plus killing the batch job.\n\n- **Order Service On-Call Runbook** (confluence:order-service-on-call-runbook) codifies this as a \"known failure pattern,\" directly referencing INC0980 and describing the same manual mitigation steps. It confirms that *\"as of this writing, no permanent code fix has been merged; the pool ceiling increase from the May incident was a manual, undocumented mitigation only.\"*\n\n**Evidence of recurrence:**\n- The Slack thread **order-platform-2026-08-07**, titled \"pool issues again? same as before,\" shows Diego Alvarez reporting *\"seeing elevated wait times on order-service again, feels like the same pool exhaustion pattern from a few months back.\"* Aisha Rahman asks whether the batch job issue \"ever [got] a real fix or was it just the manual pool bump,\" and Diego confirms *\"just the manual bump as far as I know.\"* This strongly suggests a recurrence of the exact same unresolved issue from INC0980.\n\n**Status of a permanent fix:**\n- **PR-508** is a Draft PR from Diego Alvarez proposing connection pool size tuning for order-service, explicitly motivated by wanting \"a more permanent fix for the class of connection-pool-exhaustion problem seen in the past.\" As of this PR, it is still in draft/exploratory state, \"not linked to an open ticket yet,\" and in the Slack thread Diego notes it \"hasn't gone anywhere yet.\" Aisha suggests reviving it given the recurrence.\n\n**Tangential note (not directly relevant but present in the graph):**\n- The **Q3 2026 Infra Cost Review** notes mention that order-service database costs were up slightly, \"tentatively attributed to connection pool sizing changes made after a past incident\" \u2014 consistent with the manual pool ceiling increase from INC0980, but this is a cost observation, not confirmation of a fix or a new incident ticket.\n\n## Gaps\n\nThe graph does not contain a formal ticket or incident record for the August 2026 recurrence \u2014 only the informal Slack discussion. There is no evidence in the graph that PR-508 was ever merged or that any permanent fix was ultimately implemented following the recurrence. If a follow-up incident ticket or PR merge exists, it was not found in this investigation."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "All three answers correctly conclude \"yes, it recurred\" with appropriate hedging about lack of a formal ticket. ESG additionally retrieves and incorporates q3-2026-infra-cost-review-meeting-notes, which is part of the expected document set that both baselines missed. ESG correctly notes this document's relevance (cost increase tentatively attributed to pool sizing changes) while appropriately labeling it as tangential and not overclaiming its significance. This gives ESG more complete coverage of the expected documents without introducing any unsupported claims. The core narrative and hedging about gaps is materially the same across all three, but ESG is more complete."
+}

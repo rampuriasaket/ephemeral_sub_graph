@@ -1,0 +1,359 @@
+GIT REPOSITORY — PULL REQUEST NOTES & METADATA EXPORT
+System: Git (internal monorepo)
+Export scope: Pull request metadata and descriptions only (no code diffs)
+====================================================================
+
+PULL REQUEST: PR-455
+TITLE: Rotate JWT signing key and add expiry alerting in auth-service
+AUTHOR: Priya Nair
+REVIEWER: Tomas Berg (approved)
+STATUS: Merged
+BRANCH: fix/auth-jwt-key-rotation -> main
+COMPONENTS TOUCHED: auth-service, ops/alerting-config
+LINKED TICKET: PROJ-201
+--------------------------------------------------------------------
+DESCRIPTION:
+Rotates the expired JWT signing key that caused INC1042 and adds a
+scheduled job that checks key expiry dates daily, paging on-call 14
+days before any key in auth-service is due to expire. This is meant to
+prevent a repeat of today's login outage.
+
+REVIEW COMMENTS:
+- Tomas Berg: "Straightforward, and glad to see the alerting added
+  proactively. Approved."
+- Priya Nair: "Merging now given the incident is still fresh, will
+  monitor rollout closely."
+====================================================================
+
+PULL REQUEST: PR-470
+TITLE: Reduce search index refresh interval and add on-write trigger
+AUTHOR: Layla Haddad
+REVIEWER: Omar Farouk (approved)
+STATUS: Merged
+BRANCH: fix/search-index-staleness -> main
+COMPONENTS TOUCHED: search-service, search-indexer
+LINKED TICKET: PROJ-230
+--------------------------------------------------------------------
+DESCRIPTION:
+Fixes the stale search results issue tracked in PROJ-230. Reduces the
+background index refresh interval from 5 minutes to 30 seconds and
+adds an explicit refresh trigger on write, so newly created items
+become searchable within seconds instead of minutes.
+
+REVIEW COMMENTS:
+- Omar Farouk: "Confirmed in staging that new items now show up in
+  search almost immediately. Approved."
+====================================================================
+
+PULL REQUEST: PR-481
+TITLE: WIP — increase notification-worker consumer concurrency
+AUTHOR: Chen Liu
+REVIEWER: (review requested, not yet approved)
+STATUS: Open — Draft
+BRANCH: wip/notif-worker-concurrency -> main
+COMPONENTS TOUCHED: notification-worker, notification-queue-config
+LINKED TICKET: PROJ-244
+--------------------------------------------------------------------
+DESCRIPTION:
+Draft attempt to address the notification delivery delays tracked in
+PROJ-244 / INC1070 by increasing the number of concurrent consumers
+processing the notification-worker queue. Marked as draft because it
+still needs load testing to confirm it doesn't trigger downstream
+rate-limit errors on the push-notification-provider integration.
+
+REVIEW COMMENTS:
+- Chen Liu: "Opening as draft for visibility while I validate this
+  doesn't cause new problems downstream. Not ready to merge yet."
+====================================================================
+
+PULL REQUEST: PR-490
+TITLE: Bump logging library version in shared-utils
+AUTHOR: Tomas Berg
+REVIEWER: Diego Alvarez (approved)
+STATUS: Merged
+BRANCH: chore/bump-logging-lib -> main
+COMPONENTS TOUCHED: shared-utils
+LINKED TICKET: (none — routine dependency bump)
+--------------------------------------------------------------------
+DESCRIPTION:
+Routine version bump of the internal logging library used across
+services via shared-utils, to pick up a minor performance improvement
+and a couple of bug fixes upstream. No ticket needed for routine
+dependency maintenance.
+
+REVIEW COMMENTS:
+- Diego Alvarez: "Changelog looks safe, no breaking changes. Approved."
+====================================================================
+
+PULL REQUEST: PR-495
+TITLE: Fix typo in order confirmation email footer
+AUTHOR: Yuki Tanaka
+REVIEWER: Priya Nair (approved)
+STATUS: Merged
+BRANCH: fix/email-footer-typo -> main
+COMPONENTS TOUCHED: notification-templates
+LINKED TICKET: PROJ-275
+--------------------------------------------------------------------
+DESCRIPTION:
+Small copy fix in the order confirmation email template footer,
+correcting "Thank you for you order" to "Thank you for your order".
+
+REVIEW COMMENTS:
+- Priya Nair: "lol, approved."
+====================================================================
+
+PULL REQUEST: PR-501
+TITLE: Add retry logic with backoff to inventory-service client
+AUTHOR: Diego Alvarez
+REVIEWER: Aisha Rahman (approved)
+STATUS: Merged
+BRANCH: improve/inventory-client-retry -> main
+COMPONENTS TOUCHED: inventory-service-client, shared-utils
+LINKED TICKET: (none — proactive resilience improvement)
+--------------------------------------------------------------------
+DESCRIPTION:
+Adds exponential backoff retry logic to the shared inventory-service
+client library, to make calling services more resilient to transient
+inventory-service errors. Not tied to a specific incident — proactive
+hardening work identified during a reliability review.
+
+REVIEW COMMENTS:
+- Aisha Rahman: "Good defensive improvement. Approved — this should
+  help smooth over any brief blips in inventory-service."
+====================================================================
+
+PULL REQUEST: PR-508
+TITLE: Draft — experiment with connection pool size tuning in order-service
+AUTHOR: Diego Alvarez
+REVIEWER: (no reviewer assigned yet)
+STATUS: Open — Draft
+BRANCH: experiment/order-service-pool-tuning -> main
+COMPONENTS TOUCHED: order-service, db-connection-config
+LINKED TICKET: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Exploratory draft to tune the database connection pool sizing
+parameters for order-service. Motivated by wanting a more permanent
+fix for the class of connection-pool-exhaustion problem seen in the
+past (order-service has had at least one prior incident related to
+pool exhaustion under batch job load). Not linked to an open ticket
+yet — opened as a draft to get early feedback on the approach before
+formalizing it.
+
+REVIEW COMMENTS:
+- Diego Alvarez: "Putting this up as a draft to get early thoughts.
+  Haven't filed a ticket yet since this is still exploratory."
+====================================================================
+
+PULL REQUEST: PR-512
+TITLE: Update CI pipeline timeout configuration
+AUTHOR: Omar Farouk
+REVIEWER: Tomas Berg (approved)
+STATUS: Merged
+BRANCH: chore/ci-timeout-config -> main
+COMPONENTS TOUCHED: ci-pipeline-config
+LINKED TICKET: (none — routine infrastructure maintenance)
+--------------------------------------------------------------------
+DESCRIPTION:
+Increases the CI pipeline job timeout from 20 to 35 minutes after
+noticing several long-running integration test suites were being
+killed prematurely on busy CI days. Routine infrastructure tuning, not
+tied to any specific ticket.
+
+REVIEW COMMENTS:
+- Tomas Berg: "Reasonable given the test suite has grown. Approved."
+====================================================================
+
+PULL REQUEST: PR-520
+TITLE: Fix cache invalidation bug in reco-engine
+AUTHOR: Sofia Marchetti
+REVIEWER: Tomas Berg (approved)
+STATUS: Merged
+BRANCH: fix/reco-cache-invalidation -> main
+COMPONENTS TOUCHED: recommendation-engine, cache-service
+LINKED TICKET: PROJ-288
+--------------------------------------------------------------------
+DESCRIPTION:
+Fixes the stale-recommendation bug tracked in PROJ-288 / INC1105.
+Adds the personalization model version to the cache key used by
+recommendation-engine's result cache, so entries computed under an old
+model version can no longer be served after a model refresh.
+
+REVIEW COMMENTS:
+- Tomas Berg: "Makes sense — surprised the model version wasn't part
+  of the cache key already. Approved."
+- Sofia Marchetti: "Agreed, tech debt from when Recommendation Engine
+  was first built before multi-model support existed."
+====================================================================
+
+PULL REQUEST: PR-525
+TITLE: Add canary stage to cache-service deploy pipeline
+AUTHOR: F. Al-Sayed
+REVIEWER: Diego Alvarez (approved)
+STATUS: Merged
+BRANCH: feature/cache-service-canary -> main
+COMPONENTS TOUCHED: cache-service, deploy-pipeline-config
+LINKED TICKET: PROJ-295
+--------------------------------------------------------------------
+DESCRIPTION:
+Adds a canary stage to the cache-service deploy pipeline, per PROJ-295
+/ INC1110. Holds a new deploy at 5% of traffic for 10 minutes and
+auto-aborts the rollout if p99 latency regresses more than 20% versus
+the pre-deploy baseline.
+
+REVIEW COMMENTS:
+- Diego Alvarez: "This would have caught the regression from INC1110
+  automatically. Approved."
+====================================================================
+
+PULL REQUEST: PR-530
+TITLE: Add feature-flag routing between billing-service and billing-service-v2
+AUTHOR: Omar Farouk
+REVIEWER: Yuki Tanaka (approved)
+STATUS: Merged
+BRANCH: feature/billing-v2-flag-routing -> main
+COMPONENTS TOUCHED: billing-service, billing-service-v2, feature-flag-service
+LINKED TICKET: PROJ-300
+--------------------------------------------------------------------
+DESCRIPTION:
+First slice of the billing-service to billing-service-v2 migration
+tracked in PROJ-300. Adds feature-flag-gated routing so a configurable
+percentage of read-only billing queries can be sent to
+billing-service-v2 while the rest continue to be served by
+billing-service.
+
+REVIEW COMMENTS:
+- Yuki Tanaka: "Flag defaults to 0% which is good for safety. Approved
+  to merge, ramp-up can happen via config change."
+====================================================================
+
+PULL REQUEST: PR-535
+TITLE: Replace cache-service eviction heuristic with LRU policy
+AUTHOR: Fatima Al-Sayed
+REVIEWER: Tomas Berg (approved)
+STATUS: Merged
+BRANCH: fix/cache-service-lru-eviction -> main
+COMPONENTS TOUCHED: cache-service
+LINKED TICKET: PROJ-305
+--------------------------------------------------------------------
+DESCRIPTION:
+Replaces cache-service's threshold-based eviction with a proper LRU
+policy, per PROJ-305. This is meant to be the permanent fix for the
+aggressive-eviction-under-memory-pressure pattern that was previously
+only patched with a manual config change.
+
+REVIEW COMMENTS:
+- Tomas Berg: "Good to see this get a real fix instead of another
+  threshold tweak. Approved."
+====================================================================
+
+PULL REQUEST: PR-540
+TITLE: Update README with new local setup steps
+AUTHOR: Layla Haddad
+REVIEWER: Omar Farouk (approved)
+STATUS: Merged
+BRANCH: chore/readme-setup-update -> main
+COMPONENTS TOUCHED: docs
+LINKED TICKET: (none — routine documentation update)
+--------------------------------------------------------------------
+DESCRIPTION:
+Updates the repository README with corrected local environment setup
+steps after a couple of new hires reported the old instructions were
+out of date.
+
+REVIEW COMMENTS:
+- Omar Farouk: "Confirmed these steps work on a fresh machine.
+  Approved."
+====================================================================
+
+PULL REQUEST: PR-545
+TITLE: Add retry-with-jitter to image-processing-service resize worker
+AUTHOR: Diego Alvarez
+REVIEWER: Priya Nair (approved)
+STATUS: Merged
+BRANCH: improve/resize-worker-retry-jitter -> main
+COMPONENTS TOUCHED: image-processing-service
+LINKED TICKET: (none — proactive resilience improvement)
+--------------------------------------------------------------------
+DESCRIPTION:
+Adds retry-with-jitter around the resize worker's image transform
+step so transient timeouts under burst load don't fail the whole
+upload outright. Motivated by image-processing-service having
+struggled more than once during bulk-upload bursts, each time needing
+a manual worker-pool restart to recover. Not tied to a specific
+incident ticket -- opened as general hardening after noticing the
+pattern.
+
+REVIEW COMMENTS:
+- Priya Nair: "Makes sense, jitter should smooth out the thundering
+  herd on retry. Approved."
+====================================================================
+
+PULL REQUEST: PR-550
+TITLE: Add memory-pressure alerting and eviction tuning to session-store
+AUTHOR: Aisha Rahman
+REVIEWER: Chen Liu (approved)
+STATUS: Merged
+BRANCH: improve/session-store-memory-alerting -> main
+COMPONENTS TOUCHED: session-store
+LINKED TICKET: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Adds proactive alerting when session-store approaches memory-pressure
+eviction thresholds, plus a tuning pass on the eviction policy itself.
+Session-store has evicted active sessions earlier than expected under
+memory pressure before, each time only caught after users were
+already logged out unexpectedly and each time handled as a one-off
+manual flush. This is meant to catch the next one before it affects
+users rather than after.
+
+REVIEW COMMENTS:
+- Chen Liu: "Glad to see this get proactive alerting instead of
+  waiting for support tickets to notice. Approved."
+====================================================================
+
+PULL REQUEST: PR-555
+TITLE: Add TTL and explicit invalidation hook to feature-flag-service client cache
+AUTHOR: Omar Farouk
+REVIEWER: Fatima Al-Sayed (approved)
+STATUS: Merged
+BRANCH: fix/feature-flag-client-cache-invalidation -> main
+COMPONENTS TOUCHED: feature-flag-service
+LINKED TICKET: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Adds an explicit cache-invalidation hook to the feature-flag-service
+client so a flag change propagates immediately instead of waiting on
+the existing TTL alone. Prior to this, a stale cached flag value has
+caused unexpected behavior after a flag was changed, requiring a
+manual cluster-wide cache flush to clear. Not linked to a specific
+ticket -- opened directly as a follow-up hardening change after
+noticing the gap.
+
+REVIEW COMMENTS:
+- Fatima Al-Sayed: "Good catch that TTL alone wasn't enough here.
+  Approved."
+====================================================================
+
+PULL REQUEST: PR-560
+TITLE: Add canary stage to rate-limiter-service config rollout
+AUTHOR: Chen Liu
+REVIEWER: Yuki Tanaka (approved)
+STATUS: Merged
+BRANCH: improve/rate-limiter-config-canary -> main
+COMPONENTS TOUCHED: rate-limiter-service
+LINKED TICKET: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Adds a canary/gradual-rollout stage for rate-limiter-service threshold
+config changes, so a new threshold is applied to a small percentage
+of traffic first instead of globally all at once. Motivated by a
+config change that was pushed to all traffic simultaneously and ended
+up throttling legitimate customer requests before it was caught and
+rolled back.
+
+REVIEW COMMENTS:
+- Yuki Tanaka: "Should have had this from the start given how global
+  these config pushes are. Approved."
+====================================================================
+

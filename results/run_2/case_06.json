@@ -1,0 +1,82 @@
+{
+  "case_number": 6,
+  "question": "order-service keeps having connection pool issues, what's actually being done about it?",
+  "expected_doc_ids": [
+    "INC0980",
+    "order-service-on-call-runbook",
+    "PR-508",
+    "order-platform-2026-08-07"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.75,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC0980",
+        "PR-508",
+        "order-service-on-call-runbook"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1674,
+      "cost_usd": 0.00858,
+      "time_sec": 9.983662128448486,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.75,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC0980",
+        "PR-508",
+        "order-service-on-call-runbook"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1593,
+      "cost_usd": 0.007514,
+      "time_sec": 7.1594297885894775,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.8,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC0980",
+        "PR-508",
+        "order-platform-2026-08-07",
+        "order-service-on-call-runbook",
+        "q3-2026-infra-cost-review-meeting-notes"
+      ],
+      "retrieval_calls": 85,
+      "llm_calls": 21,
+      "tokens": 79394,
+      "cost_usd": 0.23654,
+      "time_sec": 120.31964898109436,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents, here's the actual state of things \u2014 and it's less resolved than \"keeps having issues\" might suggest a fix exists for:\n\n**What happened (INC0980):** order-service went fully unresponsive for ~18 minutes due to connection pool exhaustion, caused by a slow query pattern from a batch reconciliation job holding connections open. The fix applied was **manual and temporary**: the on-call engineer increased the pool ceiling and killed the batch job. No permanent code fix was tracked in a ticket at that time.\n\n**What's documented for recurrence (order-service-on-call-runbook):** The runbook now treats this as a \"known failure pattern,\" citing INC0980 explicitly. It gives mitigation steps (check/kill long-running batch jobs, manually raise the pool ceiling, page Order Platform team) but explicitly states: *\"as of this writing, no permanent code fix has been merged; the pool ceiling increase from the May incident was a manual, undocumented mitigation only.\"* Step 3 of the runbook is literally \"file a ticket to investigate a permanent fix\" \u2014 implying that hadn't been done yet.\n\n**What's in progress (PR-508):** There's a draft PR exploring connection pool size tuning as a more permanent fix, motivated explicitly by this history of pool exhaustion. However:\n- It's still a **draft**, opened to \"get early feedback\" before formalizing.\n- It is **not linked to any open ticket** \u2014 the author (Diego Alvarez) notes a ticket hasn't been filed since it's \"still exploratory.\"\n\n**Bottom line:** Nothing permanent has actually landed. The only real mitigation in place is the manual runbook procedure (increase pool ceiling, kill batch jobs). There's an exploratory draft PR (PR-508) aimed at a real fix, but it's not merged, not ticketed, and still in early feedback stage \u2014 so if order-service is having pool issues again now, it's hitting the same unresolved gap the runbook warned about.",
+    "2-hop": "Based on the documents, here's the actual state of things:\n\n**What happened:** INC0980 (May 2026) \u2014 order-service went unresponsive for ~18 minutes due to connection pool exhaustion, caused by a batch reconciliation job holding connections open too long [servicenow:INC0980].\n\n**What was done at the time:** Purely reactive/manual mitigation \u2014 the on-call engineer manually raised the connection pool ceiling and killed the offending batch job. No permanent code fix was tracked in a ticket [servicenow:INC0980].\n\n**What's in place now:** The Order Service On-Call Runbook was updated to document this as a known failure pattern, with a manual playbook (check/kill batch jobs, manually raise pool ceiling if needed, page Order Platform team) [confluence:order-service-on-call-runbook]. The runbook explicitly states that as of its writing, **no permanent fix has been merged** and the prior ceiling increase was \"manual, undocumented mitigation only.\"\n\n**Toward a permanent fix:** There's PR-508, a **draft** PR exploring connection pool size tuning as a more permanent solution. However, it's explicitly exploratory \u2014 not linked to any open ticket, and the author (Diego Alvarez) notes a ticket hasn't even been filed yet since it's \"still exploratory\" [gitrepo:PR-508].\n\n**Bottom line:** Nothing permanent has actually shipped. The response so far is a manual mitigation runbook plus one unmerged, unticketed draft PR exploring pool tuning. There is no tracked ticket, no committed fix, and no timeline for resolution evident in these documents.",
+    "ESG (v2)": "## Short Answer\n\nNot much, actually \u2014 there is no permanent fix in place. The connection pool problem has been handled only with a manual, undocumented mitigation (bumping the pool ceiling) since at least May 2026, and it recurred again in August 2026. The only real \"fix\" effort is a draft PR (PR-508) from Diego Alvarez that is exploratory, not linked to any ticket, and \u2014 as of the latest evidence \u2014 has not progressed, despite a teammate suggesting it should be revived.\n\n## Supporting Evidence\n\n**The original incident (INC0980, Resolved):** order-service went fully unresponsive for ~18 minutes when its database connection pool was exhausted, caused by connections held open by a slow query pattern in a batch reconciliation job. Resolution notes explicitly state: \"No permanent code fix was tracked in a ticket at the time; the on-call runbook was updated afterward with these mitigation steps for future recurrences.\" The fix applied was the on-call engineer manually raising the pool ceiling and killing the batch job \u2014 a stopgap, not a code change.\n\n**Runbook codifies the mitigation, not a fix (Order Service On-Call Runbook / confluence:order-service-on-call-runbook:0):** The runbook documents this as a \"known failure pattern,\" referencing INC0980, and lays out manual steps to take if it recurs: kill offending batch jobs, manually raise the pool ceiling if needed, and page the Order Platform team. It states plainly: \"as of this writing, no permanent code fix has been merged; the pool ceiling increase from the May incident was a manual, undocumented mitigation only.\" It also instructs whoever hits this again to \"file a ticket to investigate a permanent fix\" \u2014 implying that hadn't happened yet.\n\n**The only attempt at a real fix (PR-508, Open/Draft):** Diego Alvarez opened a draft PR to tune connection pool sizing parameters in order-service, explicitly motivated by wanting \"a more permanent fix\" for this class of problem. Per his own comment, it's \"exploratory\" and \"not linked to an open ticket yet\" \u2014 i.e., no formal tracking, no committed timeline, just early feedback-gathering.\n\n**It's recurring, and the draft still hasn't moved (slack:order-platform-2026-08-07):** In August 2026, Diego reports \"elevated wait times on order-service again... feels like the same pool exhaustion pattern from a few months back.\" Aisha Rahman asks whether the batch job issue \"ever got a real fix or was it just the manual pool bump\" \u2014 Diego confirms it was \"just the manual bump as far as I know,\" and that his draft PR (PR-508) \"hasn't gone anywhere yet.\" Aisha suggests it's \"worth reviving given it's happening again,\" but there's no evidence in the graph that this happened.\n\n**Possible side effect noted, unconfirmed (Q3 2026 Infra Cost Review notes):** Database costs for order-service ticked up slightly, \"tentatively attributed to connection pool sizing changes made after a past incident.\" No action items were assigned in that review.\n\n## What's Missing\n\nThe graph has no evidence of: a filed ticket to track a permanent fix, PR-508 being merged or moving out of draft, or any other concrete engineering work beyond the manual pool-ceiling bump. If such work exists, it wasn't surfaced in this investigation \u2014 based on what's here, the honest answer is that nothing durable has been done yet beyond a stalled draft PR and a runbook workaround."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "ESG retrieved and incorporated order-platform-2026-08-07, one of the expected documents that both baselines missed. This gives a materially important update: the issue recurred in August 2026, and the draft PR \"hasn't gone anywhere yet\" despite a suggestion to revive it. This is new, grounded information not present in either baseline answer, directly answering \"what's actually being done about it\" more completely and currently. ESG also appropriately hedges on the extra infra-cost document as \"unconfirmed\" and clearly flags what's missing. No fabrication is evident since cited documents align with retrieved list. This makes ESG's answer strictly more complete and equally well-calibrated compared to the baselines."
+}

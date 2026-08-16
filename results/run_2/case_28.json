@@ -1,0 +1,75 @@
+{
+  "case_number": 28,
+  "question": "What's happening with the mobile push notification opt-in rate?",
+  "expected_doc_ids": [
+    "INC1257",
+    "mobile-notification-permission-best-practices",
+    "mobile-eng-2026-08-17"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.3333333333333333,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1257"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 575,
+      "cost_usd": 0.003318,
+      "time_sec": 5.834104061126709,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.3333333333333333,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1257"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 576,
+      "cost_usd": 0.003072,
+      "time_sec": 5.738852024078369,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1257",
+        "mobile-eng-2026-08-17",
+        "mobile-notification-permission-best-practices"
+      ],
+      "retrieval_calls": 50,
+      "llm_calls": 11,
+      "tokens": 35316,
+      "cost_usd": 0.10764199999999999,
+      "time_sec": 59.77403521537781,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the document provided, here's what's known about INC1257:\n\n- **What's happening:** The push notification opt-in rate for new installs has dropped noticeably, starting a few days before the incident was logged.\n- **Suspected cause:** The product team suspects a recent change to the permission-prompt timing may be responsible.\n- **Status:** This has **not been confirmed by engineering yet** \u2014 so the root cause is still unverified.\n\nThat's the extent of what's in the available document (INC1257). There's no additional information here on:\n- The exact magnitude of the drop (e.g., percentage decline)\n- When the permission-prompt timing change was made or by whom\n- Any engineering investigation findings or resolution steps\n- Current status/severity of the incident\n\nIf you need those details, they aren't present in the retrieved document, so I can't provide them without guessing.",
+    "2-hop": "Based on the single document available, here's what's known:\n\n**INC1257 \u2014 Mobile push notification opt-in rate dropped sharply**\n\n- The opt-in rate for push notifications among new app installs has dropped noticeably, starting a few days before the ticket was filed.\n- The product team suspects the cause is a recent change to the permission-prompt timing, but this has **not been confirmed by engineering**.\n\nThat's the extent of what these documents cover \u2014 there's no additional incident, PR, or ticket referenced in INC1257 that could be pulled for further detail (e.g., no linked engineering investigation, root-cause analysis, or resolution status). If you need confirmation of the cause, current status, or fix, that information isn't present in the retrieved documents.",
+    "ESG (v2)": "## Direct Answer\n\nMobile push notification opt-in rate for new installs has dropped noticeably over the past few days (tracked as **INC1257**, status: Investigating). The leading theory \u2014 from both the Product team and mobile engineering \u2014 is that a recent change to the permission-prompt timing (moving the prompt later in the app flow) is responsible. However, **this has not been confirmed by engineering**, and the team has explicitly flagged that it could be something else entirely. An A/B test has been proposed to confirm the cause before any revert is made.\n\n## Supporting Evidence\n\n**The incident (INC1257):**\n- `servicenow:INC1257:0` \u2014 Formal incident record stating the opt-in rate for new installs \"dropped noticeably starting a few days ago,\" with the Product team suspecting a recent permission-prompt timing change, but \"hasn't been confirmed by engineering yet.\" Status is **Investigating**, i.e., not yet resolved.\n\n**Corroborating engineering discussion:**\n- `slack:mobile-eng-2026-08-17:0` \u2014 Sam Okafor (mobile-team) independently raises the same observation: opt-in rate for new installs is down noticeably over the last few days. The mobile-team recalls they recently \"moved [the prompt] later in the flow.\" Sam agrees timing \"might be related\" but is careful to note it's \"not confirmed yet ... could be something else entirely.\" The thread concludes with a suggestion to run an A/B test to actually confirm the cause before reverting the change.\n\n**Supporting context/guidance:**\n- `confluence:mobile-notification-permission-best-practices:0` \u2014 A best-practices wiki page (written partly in response to this incident) notes general industry guidance that prompt timing significantly affects opt-in rates, and that prompting immediately on first app open tends to underperform vs. prompting after the user has seen value. This page reinforces the plausibility of the timing theory but is guidance, not confirmation.\n\n## What's Missing\n\nThe graph does not contain:\n- Confirmation from engineering (or A/B test results) establishing the prompt-timing change as the actual root cause.\n- Any resolution, fix, or rollback action tied to INC1257.\n- Specific data on the magnitude of the opt-in rate drop or the exact date/details of the permission-prompt timing change.\n\nIn short: this is an **open, unconfirmed incident** with a plausible but unverified hypothesis (permission-prompt timing) and a proposed but not-yet-reported A/B test to validate it."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "ESG retrieved all three expected documents and synthesized them accurately: it captures the INC1257 core facts (drop in opt-in rate, unconfirmed permission-prompt-timing theory), and adds corroborating detail from the mobile-eng Slack thread (independent observation, A/B test proposal) and the best-practices doc (industry guidance on prompt timing affecting opt-in rates). This is materially more complete than both baselines, which only retrieved INC1257 and explicitly stated they lacked further detail. ESG appropriately hedges on what remains unconfirmed (root cause, resolution) without asserting anything unsupported. No fabrication is evident since all cited documents are in ESG's retrieved list and align with the expected set."
+}

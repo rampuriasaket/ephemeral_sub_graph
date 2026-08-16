@@ -1,0 +1,83 @@
+{
+  "case_number": 11,
+  "question": "are transactional emails like password resets being delayed right now?",
+  "expected_doc_ids": [
+    "INC1175",
+    "email-delivery-service-operational-runbook",
+    "INC1165",
+    "PROJ-340",
+    "eng-notifications-2026-08-08"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.2,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1175"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 807,
+      "cost_usd": 0.004878,
+      "time_sec": 5.423972845077515,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.2,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1175"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 823,
+      "cost_usd": 0.004782,
+      "time_sec": 5.41354775428772,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.5555555555555556,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1165",
+        "INC1175",
+        "INC1215",
+        "PR-710",
+        "PROJ-340",
+        "PROJ-410",
+        "email-deliverability-runbook",
+        "email-delivery-service-operational-runbook",
+        "eng-notifications-2026-08-08"
+      ],
+      "retrieval_calls": 145,
+      "llm_calls": 27,
+      "tokens": 94405,
+      "cost_usd": 0.275398,
+      "time_sec": 140.90788674354553,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the one document available (**servicenow:INC1175**), this appears to be a **resolved, past incident** \u2014 not an ongoing issue.\n\n**What INC1175 says:**\n- Password-reset and order-confirmation emails sent via `email-delivery-service` were delayed by approximately 30 minutes.\n- Root cause: a queue backlog on the **third-party email provider's** side \u2014 not a problem with `email-delivery-service` itself.\n- **Resolution:** No action was needed internally. The provider's backlog cleared on its own, and delivery times returned to normal.\n- Support was notified at the time so they could reassure customers who asked about delayed password-reset emails during that window.\n\n**What's missing:** This document doesn't include a timestamp for when the incident occurred or was closed, so I can't confirm whether \"right now\" refers to this same event or a new occurrence. If you're seeing delays currently, this ticket doesn't confirm they're related \u2014 there's no record here of an active, unresolved delay. You'd need a current status check or a new/updated incident ticket to confirm if this is happening again right now.",
+    "2-hop": "Based on the available documentation, I found one relevant record: **INC1175**, titled \"Transactional emails delayed approximately 30 minutes.\"\n\nHere's what it says:\n- Password-reset and order-confirmation emails sent via `email-delivery-service` **were** delayed by about 30 minutes.\n- The cause was a queue backlog on the **third-party email provider's** side, not an issue with the internal email-delivery-service.\n- **Resolution:** No action was needed \u2014 the provider's backlog cleared on its own, and delivery times returned to normal. Support was notified to reassure customers who asked about delayed password-reset emails during that window.\n\n**Caveat:** This incident record describes a past, resolved event \u2014 it does not indicate an ongoing or current delay. I don't have any document showing an active/open incident or current timestamp confirming emails are being delayed *right now*. If you're seeing delays currently, this specific incident (INC1175) doesn't confirm that \u2014 it would require a new/open ticket to verify present status, which isn't in the provided documents.",
+    "ESG (v2)": "## Short Answer\n\nNot currently, based on the available records \u2014 but this needs a caveat. The specific incident matching this question (INC1175, transactional emails including password resets delayed ~30 minutes) is marked **Resolved**, with the delay traced to a third-party provider queue backlog that cleared on its own. However, the graph also shows a *related but distinct* issue (INC1165 / PROJ-340, a ~15% drop in transactional email delivery rate) that was still **\"Investigating\"** / **\"In Progress\"** as of the most recent update, with no fix confirmed. So while the specific \"delay\" incident is closed, there is an open, unresolved deliverability concern in the same system that hasn't been ruled out.\n\n## Supporting Evidence\n\n**The delay incident itself (INC1175) \u2014 Resolved:**\n- `servicenow:INC1175:0` describes transactional emails (password resets, order confirmations) via `email-delivery-service` being delayed ~30 minutes. Root cause was a queue backlog on the third-party email provider's side, not the internal service. It resolved on its own once the provider's backlog cleared, and no engineering action was needed \u2014 only a heads-up to Support.\n- The `confluence:email-delivery-service-operational-runbook:0` page confirms this is a known pattern: check the provider-side queue depth dashboard first, since \"several past delays have turned out to be a backlog on the provider's side rather than anything wrong with email-delivery-service itself.\" If that dashboard looks normal but delivery is still slow, the runbook says to escalate to the **Data Platform** on-call to check the service's own outbound queue.\n\n**A separate, still-open concern (INC1165 / PROJ-340) \u2014 not a \"delay\" but a delivery-rate drop:**\n- `servicenow:INC1165:0` (status: Investigating) reports a ~15% drop in transactional email delivery rate compared to baseline, with no root cause confirmed yet \u2014 suspected to be a deliverability/reputation issue with the provider, \"still being confirmed with the vendor. No fix yet.\"\n- `jira:PROJ-340:0` (status: In Progress) tracks this same investigation; Chen Liu's comments note they're checking sender reputation with the provider but it's \"unclear if this is on our side or theirs. Still investigating.\"\n- `slack:eng-notifications-2026-08-08:0` corroborates this is still open as of that thread \u2014 Chen Liu states delivery is down ~15% with \"no fix to report, still open.\"\n\n**A related, resolved Gmail-specific issue (INC1215 / PROJ-410 / PR-710):**\n- `servicenow:INC1215:0` describes password reset emails specifically failing to reach Gmail users due to a DKIM record not being updated after a sender-domain change. This was fixed via PR-710 (`gitrepo:PR-710:0`, merged, reviewed by Marcus Webb) and tracked in `jira:PROJ-410:0` (status: Done). This incident is explicitly called out in `servicenow:INC1215:0` as \"related to the general deliverability concerns raised earlier this month\" \u2014 i.e., connected to the INC1165/PROJ-340 investigation, though it was a distinct, narrower root cause (Gmail-specific DKIM filtering, not a general delay).\n- `confluence:email-deliverability-runbook:0` further notes this DKIM issue was one plausible cause of the broader unresolved delivery-rate drop, but that the broader investigation \"hadn't been narrowed to a single cause at the time of writing.\"\n\n## What's Missing / Caveat\n\nThe graph does not contain any record more recent than these tickets confirming whether INC1165/PROJ-340 (the 15% delivery-rate drop) has since been resolved, or whether it is connected to further delays. There's also no current/live incident data timestamped \"right now\" \u2014 INC1175 is the closest match to the question but is already resolved. So the honest answer is: **the specific delay incident on record is resolved, but a related delivery-rate investigation was still open with no confirmed fix at last update**, and the graph doesn't show anything newer to confirm the current live status."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "The expected documents include INC1175, email-delivery-service-operational-runbook, INC1165, PROJ-340, and eng-notifications-2026-08-08 \u2014 indicating the gold answer should cover both the resolved delay incident AND the still-open/investigating delivery-rate drop (INC1165/PROJ-340/eng-notifications-2026-08-08). Both baselines only retrieved INC1175 and thus only report the resolved incident, completely missing the still-open INC1165/PROJ-340 investigation, which is central to answering \"is this delayed right now\" \u2014 the correct nuanced answer is that the specific delay is resolved but a related unresolved issue (15% delivery drop) was still open with no fix as of the last update. ESG's answer surfaces exactly this: it cites INC1175 (resolved), the operational runbook, and critically INC1165/PROJ-340/eng-notifications-2026-08-08 showing the open investigation, giving a much more complete and accurate picture. ESG also appropriately hedges about not having timestamped \"right now\" confirmation, matching the caveating style of the baselines while providing substantially more grounded detail. The additional documents ESG references (INC1215, PROJ-410, PR-710, email-deliverability-runbook) are in its own retrieved list, so they are legitimately retrieved (not fabricated), and are used to add relevant context about a related Gmail-specific issue, appropriately caveated as distinct from the main question. This makes ESG's answer clearly better than either baseline, which entirely miss the material fact that a related delivery-rate problem was still unresolved."
+}

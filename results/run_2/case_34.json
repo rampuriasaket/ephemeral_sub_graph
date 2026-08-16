@@ -1,0 +1,93 @@
+{
+  "case_number": 34,
+  "question": "Can you give me context on PROJ-355?",
+  "expected_doc_ids": [
+    "PROJ-355",
+    "PR-645"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "incident-response-process-standard-operating-procedure"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1557,
+      "cost_usd": 0.005106,
+      "time_sec": 3.582493782043457,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "incident-response-process-standard-operating-procedure"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1565,
+      "cost_usd": 0.00493,
+      "time_sec": 3.381068229675293,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "incident-response-process-standard-operating-procedure"
+      ],
+      "retrieval_calls": 150,
+      "llm_calls": 32,
+      "tokens": 99112,
+      "cost_usd": 0.28794400000000003,
+      "time_sec": 143.25722694396973,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "**PROJ-355: Fix misaligned button on account settings page**\n\nThis is a minor cosmetic issue: the design team flagged that the \"Save\" button on the account settings page was misaligned at certain viewport widths.\n\n**Resolution:**\n- Layla Haddad implemented a small CSS fix, tracked in **PR-645** (\"Fix misaligned settings-page button at narrow viewport widths\").\n- The PR was reviewed by Yuki Tanaka, who confirmed the fix worked at the reported width and approved it.\n- The change was merged with the next release (per Layla Haddad's comment on PROJ-355).\n\nThere's nothing indicating this was tied to any incident or larger issue \u2014 it appears to be a standalone, low-priority UI bug fix.",
+    "2-hop": "**PROJ-355 \u2014 Fix misaligned button on account settings page**\n\nThis was a minor cosmetic bug: the design team flagged that the \"Save\" button on the account settings page was misaligned at certain viewport widths.\n\nContext/resolution:\n- Layla Haddad handled the fix as a small CSS change, tracked in **PR-645** (\"Fix misaligned settings-page button at narrow viewport widths\").\n- The PR was reviewed by Yuki Tanaka, who confirmed the fix worked at the reported width and approved it.\n- Layla Haddad noted the fix was merged and shipped with the next release.\n\nNo further complications or follow-up work are mentioned in the ticket.",
+    "ESG (v2)": "## Direct Answer\n\n**PROJ-355** is a completed (Done) ticket titled *\"Fix misaligned button on account settings page.\"* It was a minor cosmetic bug: the Design team flagged that the \"Save\" button on the account settings page was misaligned at certain narrow viewport widths. It was resolved with a small CSS fix in **PR-645**, authored/tracked by **Layla Haddad**, and merged into the next release.\n\n## Supporting Evidence\n\n**The ticket itself \u2014 jira:PROJ-355:0 (status: Done)**\n- Description: Design team flagged a misaligned \"Save\" button on the account settings page at certain viewport widths \u2014 described as a \"minor cosmetic fix.\"\n- Comments from Layla Haddad:\n  - \"Small CSS fix, PR-645.\"\n  - \"Merged with next release.\"\n\n**The associated pull request \u2014 gitrepo:PR-645:0 (status: Merged)**\n- Title: \"Fix misaligned settings-page button at narrow viewport widths\"\n- Description confirms it was a small CSS fix for the misaligned \"Save\" button on the account settings page, flagged by the design team at narrow viewport widths (consistent with PROJ-355's description).\n- Review comment from **Yuki Tanaka**: \"Confirmed fixed at the reported width. Approved.\"\n\n## Summary of the Story\n\n1. The Design team noticed a visual bug \u2014 a misaligned Save button on the account settings page, appearing only at certain narrow viewport widths.\n2. PROJ-355 was opened to track the fix.\n3. Layla Haddad implemented the fix as a small CSS change in PR-645.\n4. Yuki Tanaka reviewed and approved the PR, confirming the fix worked at the reported viewport width.\n5. The PR was merged and shipped with the next release, and the ticket was closed as Done.\n\n## Notes on Scope\n\nThe rest of the graph (PROJ-440, PROJ-255, PROJ-350, PROJ-345, PROJ-270) was explored as part of the search but does not connect to PROJ-355 \u2014 those are unrelated backlog/documentation tickets (CI provider evaluation, rate-limit docs, wiki template refresh, CSV export refactor, report export refactor) and are not part of PROJ-355's context. There is no further detail in the graph (e.g., no linked incident, no follow-up tickets) beyond what's captured in PROJ-355 and PR-645."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers convey the same core facts: PROJ-355 is a minor cosmetic bug fix (misaligned Save button), resolved via PR-645 by Layla Haddad, reviewed/approved by Yuki Tanaka, merged in next release. ESG adds slightly more structure, explicit status (Done/Merged), and explicitly notes the other retrieved documents are unrelated, which is a helpful clarification but not a material fact difference. No fabrications, no contradictions with expected/excluded docs. Differences are essentially cosmetic/organizational."
+}

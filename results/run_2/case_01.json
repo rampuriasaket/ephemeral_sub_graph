@@ -1,0 +1,102 @@
+{
+  "case_number": 1,
+  "question": "why did auth-service go down?",
+  "expected_doc_ids": [
+    "INC1042",
+    "PROJ-201",
+    "PR-455",
+    "auth-service-outage-postmortem-august-2026",
+    "eng-platform-2026-08-08"
+  ],
+  "excluded_doc_ids": [
+    "new-hire-onboarding-engineering-wiki-home",
+    "incident-response-process-standard-operating-procedure"
+  ],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.6,
+      "precision": 0.6,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PROJ-201",
+        "PROJ-312"
+      ],
+      "retrieved_doc_ids": [
+        "INC1042",
+        "INC1115",
+        "PR-455",
+        "PR-611",
+        "auth-service-outage-postmortem-august-2026"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 2231,
+      "cost_usd": 0.01003,
+      "time_sec": 8.804744005203247,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.8,
+      "precision": 0.5,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1042",
+        "INC1115",
+        "PR-455",
+        "PR-611",
+        "PROJ-201",
+        "PROJ-312",
+        "auth-service-outage-postmortem-august-2026",
+        "session-management-runbook"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 1,
+      "tokens": 3046,
+      "cost_usd": 0.012044,
+      "time_sec": 9.01016879081726,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.45454545454545453,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1042",
+        "INC1115",
+        "INC1166",
+        "PR-455",
+        "PR-550",
+        "PR-611",
+        "PROJ-201",
+        "PROJ-312",
+        "auth-service-outage-postmortem-august-2026",
+        "eng-platform-2026-08-08",
+        "session-management-runbook"
+      ],
+      "retrieval_calls": 175,
+      "llm_calls": 35,
+      "tokens": 125898,
+      "cost_usd": 0.36251799999999984,
+      "time_sec": 181.61819076538086,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents, \"auth-service going down\" appears to refer to **INC1042**, a ~2.5 hour outage on 2026-08-01 where auth-service returned HTTP 401 errors for a large percentage of valid login attempts (~60% failure rate per the postmortem).\n\n**Root cause** (per INC1042 and confluence:auth-service-outage-postmortem-august-2026):\n- An expired JWT signing key had not been rotated ahead of its expiry window.\n- The postmortem clarifies the underlying process failure: key rotation was a **manual process relying on a calendar reminder, which was missed**.\n- Traffic volume was normal, ruling out a capacity/load issue \u2014 the 401s were caused specifically by the invalid/expired signing key.\n\n**Resolution:**\n- The key was rotated manually, restoring login success rates within minutes (INC1042).\n- Fix shipped via **PR-455**, which rotated the key and added a scheduled job to check key expiry daily, paging on-call 14 days before future expirations (tracked as follow-up story **PROJ-201**).\n\n**Note on a separate, unrelated issue:** There's also **INC1115**, where users were being logged out after 5 minutes instead of 30 minutes. This was **not** a \"down\" incident (no login failures) but a session TTL config regression from a different, unrelated auth-service deploy. PR-611's review comments explicitly confirm this was \"unrelated to the JWT key rotation work \u2014 just an unlucky second issue in the same service this month.\" This was fixed by reverting the TTL config (PROJ-312, PR-611).\n\nIf your question was actually about the logout/session-timeout issue rather than the login-failure outage, let me know \u2014 the cause there is different (TTL config regression, not the JWT key).",
+    "2-hop": "Auth-service experienced two distinct incidents \u2014 the question doesn't specify which, so here's what the documents show for each:\n\n**INC1042 (the actual outage \u2014 users got 401s on login):**\nRoot cause was an **expired JWT signing key that had not been rotated ahead of its expiry window** [servicenow:INC1042]. The postmortem clarifies the underlying process failure: key rotation was a **manual process relying on a calendar reminder that was missed** [confluence:auth-service-outage-postmortem-august-2026]. This caused ~60% of login attempts to fail over a ~2.5 hour window on 2026-08-01. It was fixed by manually rotating the key, and PR-455 added automated expiry alerting (paging on-call 14 days before any key expiry) to prevent recurrence [gitrepo:PR-455], tracked in [jira:PROJ-201].\n\n**INC1115 (a separate, unrelated issue \u2014 users logged out after 5 min instead of 30):**\nThis was **not a full outage** but a session TTL config regression shipped in a recent, unrelated auth-service deploy [servicenow:INC1115]. It was explicitly confirmed as unrelated to the JWT key rotation work in PROJ-201/PR-455 [jira:PROJ-312, gitrepo:PR-611]. Fixed by reverting the TTL value to 30 minutes via PR-611.\n\nSo: if \"went down\" means the login-failure outage, the cause was the expired/un-rotated JWT signing key (INC1042). If it refers to the shorter-session-timeout complaint, that was a config regression (INC1115), unrelated to the first issue.",
+    "ESG (v2)": "## Direct Answer\n\nauth-service went down (INC1042) because an **expired JWT signing key** was not rotated before its expiry window. Starting around 03:00 UTC, this caused auth-service to return HTTP 401 on a large percentage of valid login attempts \u2014 an estimated 60% of login attempts failed during the roughly 2.5-hour incident. This was **not** a traffic/capacity issue; internal test accounts failed too, confirming it was an authentication/key problem, not load-related.\n\n## Supporting Evidence\n\n**The outage itself \u2014 INC1042**\nPer `servicenow:INC1042:0`, users could not log in starting ~03:00 UTC, with auth-service returning 401s for valid credentials. Traffic was healthy, ruling out capacity as the cause. Root cause was traced to the expired JWT signing key; once rotated, login success returned to baseline within minutes.\n\n**Root cause detail \u2014 postmortem**\n`confluence:auth-service-outage-postmortem-august-2026:0` confirms the same event on 2026-08-01: ~2.5 hours of degraded login availability (~60% failure rate) due to the expired JWT signing key. It clarifies the underlying process failure: **the key rotation process was manual and relied on a calendar reminder that was missed** \u2014 a corroborating slack message in `slack:eng-platform-2026-08-08:0` (Tomas Berg) says \"calendar reminders are how we got there in the first place.\"\n\n**Fix and follow-up \u2014 PROJ-201 / PR-455**\n`jira:PROJ-201:0` and `gitrepo:PR-455:0` document the remediation: the expired key was rotated manually as an immediate fix, and PR-455 added automated alerting that pages on-call 14 days before any signing key in auth-service is due to expire, to prevent recurrence. Reviewed/approved by Tomas Berg and Priya Nair.\n\n**A separate, unrelated auth-service issue \u2014 INC1115/PROJ-312**\nIt's worth noting there was a *second, unrelated* auth-service problem the same month: INC1115, where users were logged out after 5 minutes instead of 30 minutes, due to a session TTL config regression introduced in an unrelated deploy \u2014 explicitly **not** connected to the JWT key rotation/INC1042 issue (confirmed by Tomas Berg's review comment on `gitrepo:PR-611:0` and Priya Nair's comment on `jira:PROJ-312:0`). This was fixed via PR-611. This is relevant only in that it shows auth-service had two distinct incidents that month, but it did not cause the \"down\" outage described by INC1042.\n\n**Not directly relevant:** INC1166 and PR-550 concern `session-store` (a shared redis-backed session cache) being evicted under memory pressure from an unrelated service \u2014 this affected session persistence/logouts, not auth-service's login-serving capability, and is not tied to the auth-service outage in question.\n\n## Gaps\n\nThe graph does not include any details beyond what's summarized above (e.g., exact duration of the manual key rotation, or the outcome of the still-open postmortem action item to audit other services for similar manual key rotation risk). No further leads were found before the frontier exhausted, so this is the complete picture the investigation surfaced."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "All three answers correctly identify the root cause: expired JWT signing key not rotated, due to manual calendar-reminder process, fixed via PR-455/PROJ-201, and correctly distinguish the unrelated INC1115 TTL issue. ESG additionally cites eng-platform-2026-08-08 (an expected document that flat-RAG missed and 2-hop also missed retrieving/citing), adding the corroborating Slack detail about calendar reminders, which is grounded in the expected doc set. ESG also correctly notes INC1166/PR-550 as not relevant, showing good discrimination without fabricating relevance. This is essentially the same core content as 2-hop but with the additional expected document (eng-platform-2026-08-08) properly incorporated, which neither baseline used. This is a genuine improvement using an expected document, not overreach."
+}

@@ -1,0 +1,73 @@
+{
+  "case_number": 10,
+  "question": "did a recent feature flag change cause errors for customers?",
+  "expected_doc_ids": [
+    "INC1170",
+    "PR-555"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1170"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 734,
+      "cost_usd": 0.003612,
+      "time_sec": 5.1207709312438965,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1170"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 752,
+      "cost_usd": 0.003536,
+      "time_sec": 5.408707857131958,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1170",
+        "PR-555"
+      ],
+      "retrieval_calls": 50,
+      "llm_calls": 10,
+      "tokens": 32225,
+      "cost_usd": 0.086334,
+      "time_sec": 55.72782588005066,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Yes \u2014 according to **INC1170**, a feature flag was disabled in `feature-flag-service`, and shortly after, a subset of users began receiving HTTP 500 errors on checkout.\n\n**Root cause:** The `feature-flag-service` client cache served a stale cached copy of the flag value to some instances. Those instances kept executing a code path that assumed the flag was still enabled, even after it had actually been turned off \u2014 causing the errors.\n\n**Resolution:** On-call manually flushed the feature-flag-service client cache cluster-wide, which resolved the errors within minutes.\n\n**Note from the ticket:** This wasn't the first occurrence \u2014 the notes state there is currently no automatic cache invalidation when a flag value changes, only a cache TTL, implying this type of stale-flag issue has happened before and could recur.",
+    "2-hop": "Yes \u2014 this matches incident INC1170: shortly after a feature flag was disabled in feature-flag-service, a subset of users began receiving HTTP 500 errors on checkout. The root cause was a stale cached copy of the flag value served by feature-flag-service's client cache to some instances, which kept executing a code path assuming the flag was still enabled after it had actually been turned off.\n\nResolution: On-call manually flushed the feature-flag-service client cache cluster-wide, which resolved the errors within minutes. The notes also flag that this isn't the first time a stale cached flag value has caused unexpected behavior after a flag change, since there is currently no automatic cache invalidation on flag changes \u2014 only a TTL-based expiry.\n\n(Source: servicenow:INC1170)",
+    "ESG (v2)": "## Short Answer\n\n**Yes.** A feature flag change did cause customer-facing errors. Per **INC1170**, disabling a feature flag in **feature-flag-service** led to a subset of users receiving HTTP 500 errors on **checkout**, caused by a stale cached copy of the flag value. This was resolved by manually flushing the cache, and a follow-up fix (**PR-555**) has since been merged to prevent recurrence.\n\n## Supporting Evidence\n\n**Incident: INC1170 (servicenow, status: Resolved)**\n- Title: \"Stale feature-flag cache caused 500 errors for a subset of users\"\n- Description: Shortly after a feature flag was disabled in `feature-flag-service`, a subset of users began receiving HTTP 500 errors on checkout.\n- Root cause: A stale cached copy of the flag value was being served by `feature-flag-service`'s client cache to some instances. Those instances kept executing a code path that assumed the flag was still enabled after it had actually been turned off.\n- Resolution: On-call manually flushed the `feature-flag-service` client cache cluster-wide, resolving the errors within minutes.\n- Notably, the resolution notes flag that this was **not the first occurrence** \u2014 stale cached flag values had caused unexpected behavior after flag changes before, and at the time there was no automatic invalidation on flag value change, only a cache TTL.\n\n**Follow-up fix: PR-555 (gitrepo, status: Merged)**\n- Title: \"Add TTL and explicit invalidation hook to feature-flag-service client cache\"\n- Adds an explicit cache-invalidation hook to the `feature-flag-service` client so that a flag change propagates immediately, rather than relying solely on the TTL.\n- The PR description explicitly references the same underlying gap described in INC1170 (\"a stale cached flag value has caused unexpected behavior after a flag was changed, requiring a manual cluster-wide cache flush to clear\"), though it is **not formally linked to a specific ticket** \u2014 it was opened proactively as a hardening change after the gap was noticed.\n- Reviewed and approved by **Fatima Al-Sayed**, who commented: \"Good catch that TTL alone wasn't enough here. Approved.\"\n\n## Notes / Gaps\n\n- The graph does not explicitly confirm whether PR-555 was merged *because of* INC1170 specifically (the PR text says it's \"not linked to a specific ticket\"), so while the two are clearly related in substance (same root-cause mechanism \u2014 stale flag cache in `feature-flag-service`), a direct causal/tracking link between the incident ticket and the PR is not documented, only inferred from matching descriptions.\n- No information is available on the current state of the fix in production (e.g., whether PR-555 has fully eliminated the risk of recurrence) beyond it being marked \"Merged.\""
+  },
+  "verdict": "better",
+  "verdict_reasoning": "Both baselines correctly answer the core question using INC1170, describing root cause and resolution accurately. ESG includes the same INC1170 information plus PR-555, which is part of the expected document set that baselines missed. ESG's discussion of PR-555 is appropriately hedged (notes it's \"not formally linked to a specific ticket\" but related in substance), which is a calibrated, non-fabricated addition. This gives readers a fuller picture (that a follow-up fix was merged) without overstating certainty. No confident false claims are present. Thus ESG is more complete than either baseline while maintaining appropriate hedging."
+}

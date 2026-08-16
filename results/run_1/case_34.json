@@ -1,0 +1,94 @@
+{
+  "case_number": 34,
+  "question": "Can you give me context on PROJ-355?",
+  "expected_doc_ids": [
+    "PROJ-355",
+    "PR-645"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "incident-response-process-standard-operating-procedure"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1649,
+      "cost_usd": 0.006026,
+      "time_sec": 4.828201770782471,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "incident-response-process-standard-operating-procedure"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1648,
+      "cost_usd": 0.00576,
+      "time_sec": 4.096892833709717,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.2222222222222222,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-645",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-345",
+        "PROJ-350",
+        "PROJ-355",
+        "PROJ-440",
+        "api-rate-limiting-guide",
+        "incident-response-process-standard-operating-procedure"
+      ],
+      "retrieval_calls": 160,
+      "llm_calls": 31,
+      "tokens": 106418,
+      "cost_usd": 0.317571,
+      "time_sec": 161.46748900413513,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents provided, here's the context on **PROJ-355**:\n\n**PROJ-355 \u2014 Fix misaligned button on account settings page**\n\n- **Description**: The design team flagged a misaligned \"Save\" button on the account settings page at certain viewport widths. It's characterized as a minor cosmetic fix.\n- **Resolution**: Layla Haddad noted it was a small CSS fix, tracked via **PR-645**, and confirmed it was \"Merged with next release.\"\n\n**Related PR**: [gitrepo:PR-645] \u2014 \"Fix misaligned settings-page button at narrow viewport widths\"\n- This PR contains the actual code change: a small CSS fix for the misaligned \"Save\" button, flagged by the design team at certain narrow viewport widths.\n- Yuki Tanaka reviewed and approved it, commenting: \"Confirmed fixed at the reported width. Approved.\"\n\nSo in short, PROJ-355 is a minor UI bug ticket that was resolved via PR-645, verified by design/review, and merged.",
+    "2-hop": "PROJ-355 \u2014 \"Fix misaligned button on account settings page\"\n\n**Context:**\n- The design team flagged that the \"Save\" button on the account settings page was misaligned at certain viewport widths \u2014 described as a minor cosmetic fix (jira:PROJ-355).\n- Layla Haddad noted it was a small CSS fix, tracked in PR-645, and confirmed it was merged with the next release (jira:PROJ-355).\n- The linked pull request, PR-645, contains the actual fix: a small CSS change addressing the misaligned \"Save\" button at narrow viewport widths (gitrepo:PR-645).\n- Yuki Tanaka reviewed PR-645 and confirmed the fix worked at the reported width, approving it (gitrepo:PR-645).\n\nThat's the full extent of what's documented \u2014 a straightforward, low-severity UI bug reported by design, fixed via a small CSS change, reviewed, and merged.",
+    "ESG (v2)": "## Direct Answer\n\n**PROJ-355** was a small, closed ticket titled *\"Fix misaligned button on account settings page.\"* It was a minor cosmetic UI bug \u2014 the design team flagged that the \"Save\" button on the account settings page was misaligned at certain viewport widths. It was fixed with a small CSS change in **PR-645** and shipped in the next release. Status: **Done**.\n\n## Supporting Evidence\n\n**The ticket itself (jira:PROJ-355:0):**\n- Description: \"Design team flagged a misaligned 'Save' button on the account settings page at certain viewport widths. Minor cosmetic fix.\"\n- Comments from **Layla Haddad** (who appears to have done the work):\n  - \"Small CSS fix, PR-645.\"\n  - \"Merged with next release.\"\n\n**The linked pull request (gitrepo:PR-645:0):**\n- Title: \"Fix misaligned settings-page button at narrow viewport widths\"\n- Description confirms it's a small CSS fix for the same \"Save\" button issue flagged by the design team.\n- Review comment from **Yuki Tanaka**: \"Confirmed fixed at the reported width. Approved.\"\n- Status: Merged.\n\n**Related component:** the fix touched the `settings-page` component.\n\n## What's Not in the Graph\n\nThere's no further detail available on:\n- Who originally reported/filed the ticket (beyond \"design team\" being the source of the flag).\n- Exact release version or date it shipped in.\n- Any follow-up issues or regressions tied to this fix.\n\nThe other tickets and entities in the graph (PROJ-440, PROJ-255, PROJ-350, PROJ-345, PROJ-270, the rate-limit config/API Rate Limiting Guide material, incident response SOP) are unrelated to PROJ-355 \u2014 they surfaced during the search but don't bear on this ticket, so I've excluded them from the substantive answer.\n\nIn short: the graph gives a complete, self-contained picture of PROJ-355 as a minor, resolved cosmetic bug fix, with no open threads or unresolved questions remaining about it."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers correctly identify PROJ-355 as a minor cosmetic UI bug (misaligned Save button), resolved via PR-645, reviewed by Yuki Tanaka, merged. ESG adds a bit more detail (status: Done, component: settings-page) and explicitly notes what's not in the graph and why other retrieved docs are irrelevant, which is helpful transparency without asserting unsupported facts. This is materially the same core information as flat-RAG and 2-hop, with minor additional grounded details and appropriate hedging on unknowns. No fabrication or confident wrong claims are present. The differences are largely cosmetic/organizational rather than substantive."
+}

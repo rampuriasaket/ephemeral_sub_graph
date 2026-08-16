@@ -1,0 +1,110 @@
+{
+  "case_number": 29,
+  "question": "What's been discussed in recent team meetings?",
+  "expected_doc_ids": [
+    "q3-design-review-notes",
+    "eng-onboarding-2026-08-16",
+    "eng-database-2026-08-13",
+    "eng-general-2026-08-14"
+  ],
+  "excluded_doc_ids": [
+    "team-offsite-planning-fall-2026",
+    "vendor-contract-renewals-q3",
+    "engineering-all-hands-notes-august-2026",
+    "standup-notes-2026-08-06",
+    "standup-notes-2026-08-13"
+  ],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.0,
+      "precision": 0.0,
+      "excl_hit": true,
+      "excl_hit_docs": [
+        "standup-notes-2026-08-06",
+        "team-offsite-planning-fall-2026"
+      ],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "eng-database-2026-08-13",
+        "eng-general-2026-08-14",
+        "eng-onboarding-2026-08-16",
+        "social-committee-2026-08-01",
+        "standup-notes-2026-08-06",
+        "team-offsite-planning-fall-2026"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1709,
+      "cost_usd": 0.009354,
+      "time_sec": 11.105595111846924,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.0,
+      "precision": 0.0,
+      "excl_hit": true,
+      "excl_hit_docs": [
+        "standup-notes-2026-08-06",
+        "team-offsite-planning-fall-2026"
+      ],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "eng-database-2026-08-13",
+        "eng-general-2026-08-14",
+        "eng-onboarding-2026-08-16",
+        "social-committee-2026-08-01",
+        "standup-notes-2026-08-06",
+        "team-offsite-planning-fall-2026"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1641,
+      "cost_usd": 0.008418,
+      "time_sec": 12.677841901779175,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 0.75,
+      "precision": 0.3,
+      "excl_hit": true,
+      "excl_hit_docs": [
+        "engineering-all-hands-notes-august-2026",
+        "standup-notes-2026-08-06",
+        "standup-notes-2026-08-13",
+        "team-offsite-planning-fall-2026"
+      ],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1222",
+        "eng-database-2026-08-13",
+        "eng-general-2026-08-14",
+        "eng-onboarding-2026-08-16",
+        "engineering-all-hands-notes-august-2026",
+        "social-committee-2026-08-01",
+        "social-committee-2026-08-15",
+        "standup-notes-2026-08-06",
+        "standup-notes-2026-08-13",
+        "team-offsite-planning-fall-2026"
+      ],
+      "retrieval_calls": 90,
+      "llm_calls": 26,
+      "tokens": 82508,
+      "cost_usd": 0.24289700000000003,
+      "time_sec": 128.4298369884491,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents available, none of them are explicitly labeled as \"team meeting\" notes or minutes \u2014 they're a mix of Slack thread discussions and one Confluence planning page. Here's what those sources cover:\n\n- **Fall offsite planning** (confluence:team-offsite-planning-fall-2026): Logistics for the fall engineering offsite \u2014 venue options, proposed agenda topics, and a request for team leads to submit session ideas. No technical content.\n\n- **Holiday party planning** (slack:social-committee-2026-08-01): Social committee kicking off holiday party planning, discussing venue ideas, leaning toward reusing last year's venue.\n\n- **Daily async standup** (slack:standup-notes-2026-08-06): Routine standup updates \u2014 code review backlog, onboarding a new teammate, and sprint planning prep, with no blockers reported.\n\n- **Query performance discussion** (slack:eng-database-2026-08-13): Diego Alvarez flagged endpoints \"gradually slower\" across the week, not isolated to one service. Database team saw no schema changes on their end and suggested a broader look at query plans across services rather than assuming a single team's change caused it. This one seems unresolved as of the thread.\n\n- **New laptop rollout** (slack:eng-general-2026-08-14): IT rolling out laptop refreshes by team over the next month; no urgency expressed.\n\n- **New engineer welcome** (slack:eng-onboarding-2026-08-16): Team welcoming a new engineer starting that day.\n\n**What's missing:** There are no formal \"team meeting\" notes/minutes in the provided documents (e.g., sprint retro, all-hands, or 1:1 summaries) \u2014 only Slack threads and one planning wiki page. If you're looking for discussion from a specific recurring meeting, that content isn't present in this document set.",
+    "2-hop": "Based on the documents retrieved, here's what's been discussed across recent team communications:\n\n- **Team offsite planning** (confluence:team-offsite-planning-fall-2026): Logistics for the fall engineering offsite \u2014 venue options, proposed agenda topics, and a request for team leads to submit session ideas. Explicitly noted as having \"no technical content.\"\n\n- **Holiday party planning** (slack:social-committee-2026-08-01): Kickoff discussion about venue ideas for the holiday party, with a suggestion to reuse last year's venue since it worked well.\n\n- **Daily standups** (slack:standup-notes-2026-08-06): Routine async updates covering code review backlog, onboarding a new teammate, and sprint planning prep \u2014 no blockers reported.\n\n- **Query performance concerns** (slack:eng-database-2026-08-13): Diego Alvarez flagged that endpoints seemed to be gradually slowing down over the week, but the issue was scattered across services rather than isolated to one. The database team saw no obvious cause (no recent schema changes) and suggested a broader look at query plans across services rather than assuming it was tied to one team's change. This appears unresolved in the discussion as documented.\n\n- **Laptop rollout** (slack:eng-general-2026-08-14): IT confirmed a new laptop refresh rolling out by team over the coming month.\n\n- **New hire welcome** (slack:eng-onboarding-2026-08-16): Team welcomed a new engineer starting that day.\n\n**Note:** None of these documents are explicitly labeled as \"team meeting\" notes \u2014 they're a mix of a wiki planning page and Slack threads (standups, social planning, and topic-specific channels). If you're looking for formal meeting minutes (e.g., sprint retros, all-hands, 1:1s), those aren't present in the retrieved documents.",
+    "ESG (v2)": "## Direct Answer\n\nRecent team discussions span a mix of routine operational chatter and one emerging technical concern: a gradual, unexplained slowdown in API response times across multiple services (now tracked as incident INC1222). Alongside that, teams have discussed logistics topics \u2014 offsite planning, a holiday party kickoff, a birthday shoutout, laptop refresh timing, onboarding a new engineer, and daily standup updates \u2014 plus a monthly all-hands covering roadmap and performance review reminders. None of these except the API slowdown thread appear technically substantive.\n\n## Supporting Evidence\n\n**Technical/incident-related discussion:**\n- In the `eng-database-2026-08-13` Slack thread, Diego Alvarez raised that endpoints seemed to be \"gradually slower\" this week, with no single service isolated as the cause. The `database-team` responded that they saw no schema changes on their end and suggested a broader look at query plans across services rather than assuming it was one team's issue.\n- This matches incident **INC1222** (\"API response times degraded across several endpoints\"), which describes a gradual p95 latency increase over several days with no traffic increase and no single root cause identified \u2014 multiple teams independently investigating their own query patterns. This is currently in \"Investigating\" status.\n\n**Non-technical / routine meeting content:**\n- `team-offsite-planning-fall-2026` (Confluence): logistics for the fall engineering offsite \u2014 venue options, agenda topics, request for session ideas from team leads. No technical content.\n- `engineering-all-hands-notes-august-2026` (Confluence): monthly all-hands notes covering a roadmap update for next quarter, recognition of recent incident responders, and a reminder about the upcoming performance review cycle. No incident-specific detail.\n- `social-committee-2026-08-01`: kickoff of holiday party planning (venue ideas).\n- `social-committee-2026-08-15`: birthday shoutout/cake in the kitchen.\n- `eng-general-2026-08-14`: discussion of new laptop rollout timeline, with IT rolling it out team-by-team over the next month.\n- `eng-onboarding-2026-08-16`: welcome message for a new engineer joining the team.\n- `standup-notes-2026-08-06` and `standup-notes-2026-08-13`: routine daily async standups \u2014 code review backlog, onboarding, sprint planning prep, bug triage, design review prep, pairing on an export fix. No blockers reported.\n\n## Gaps\n\nThe graph doesn't include any dedicated \"team meeting\" minutes beyond the all-hands notes and standups shown above \u2014 there's no deeper detail on the all-hands roadmap discussion, no resolution or root-cause update for INC1222 beyond \"Investigating,\" and no further meetings turned up after the search frontier was exhausted. If there are other recurring team meetings (e.g., sprint retros, 1:1s), none appeared in this data."
+  },
+  "verdict": "worse",
+  "verdict_reasoning": "The expected sources include q3-design-review-notes, eng-onboarding-2026-08-16, eng-database-2026-08-13, eng-general-2026-08-14. Neither flat-RAG nor 2-hop retrieved q3-design-review-notes at all, and both missed it entirely, framing their answer around Slack threads and offsite planning, explicitly stating no \"team meeting\" notes exist \u2014 this is a miss since q3-design-review-notes presumably is an actual meeting notes doc that should have been surfaced.\n\nESG also does not cite q3-design-review-notes directly, but it does retrieve engineering-all-hands-notes-august-2026 (a distractor per the gold labels) and standup-notes-2026-08-13, which references \"design review prep\" \u2014 closer to touching on the design review topic than flat-RAG/2-hop, though it never actually reaches or cites the q3-design-review-notes document itself. So all three miss the same expected document.\n\nESG additionally introduces INC1222 and engineering-all-hands-notes-august-2026, which are actually retrieved by ESG (so not fabricated), but engineering-all-hands-notes-august-2026 is explicitly listed as a distractor/irrelevant document in the gold set. ESG treats it as legitimate content (\"monthly all-hands covering roadmap...\") which incorporates a known irrelevant document into the confident answer, potentially misleading the reader. However, since it was actually retrieved, it's not a fabrication \u00e2\u20ac\u201c it's an unlabeled-but-real citation, though the gold explicitly marks it as a distractor, meaning it's likely not relevant to the \"recent team meetings\" topic, yet ESG presents it as a real part of the answer, alongside the invented \"INC1222\" incident narrative that isn't part of expected sources either.\n\nGiven that all three miss q3-design-review-notes, and ESG uses a distractor document confidently as being relevant to the discussion, while also adding a somewhat speculative incident narrative not in expected docs, ESG doesn't clearly improve accuracy over baselines. It's roughly the same overall in terms of key facts (all miss key expected the design review notes), but ESG introduces additional content from a known distractor with confidence, which could mislead the reader about what's relevant. This is a modest downgrade relative to flat-RAG/2-hop's cleaner (if incomplete) hedged answer."
+}

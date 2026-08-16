@@ -1,0 +1,73 @@
+{
+  "case_number": 7,
+  "question": "are there known issues with image uploads or thumbnail generation under load?",
+  "expected_doc_ids": [
+    "INC1155",
+    "PR-545"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1155"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 964,
+      "cost_usd": 0.005808,
+      "time_sec": 8.520195007324219,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1155"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 893,
+      "cost_usd": 0.004842,
+      "time_sec": 5.123552083969116,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1155",
+        "PR-545"
+      ],
+      "retrieval_calls": 50,
+      "llm_calls": 9,
+      "tokens": 31521,
+      "cost_usd": 0.082577,
+      "time_sec": 49.76377201080322,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Yes \u2014 there is a documented incident matching that description.\n\n**INC1155** (servicenow): *\"image-processing-service resize worker failing intermittently under burst upload load\"*\n\nKey details:\n- **Trigger**: A burst of bulk photo uploads (from a large seller onboarding batch) caused the image-processing-service resize worker to throw sporadic timeout errors.\n- **Impact**: A subset of uploaded images \u2014 only those caught during the peak of the burst, not all \u2014 ended up without generated thumbnails.\n- **Resolution**: On-call restarted the resize worker pool, which cleared the backlog and resolved the immediate problem.\n- **Notable caveat**: The resolution notes explicitly state this was **not the first time** image-processing-service has struggled under a sudden burst of uploads, and the working theory is that the worker pool \"doesn't handle transient overload gracefully\" and needs a manual restart when it recurs. It was treated as a one-off operational mitigation, and **no ticket was filed at the time** of prior occurrences.\n\nSo per this document, yes \u2014 there's a known, recurring pattern of thumbnail generation failing under burst/load conditions, but it appears to have been handled ad hoc (restart the worker pool) rather than root-caused or permanently fixed. I don't have any other documents (e.g., a follow-up RCA, engineering ticket, or postmortem) that address a permanent fix, so I can't say whether this has since been resolved at the code/architecture level.",
+    "2-hop": "Yes \u2014 **INC1155** documents exactly this: the image-processing-service resize worker began throwing sporadic timeout errors during a burst of bulk photo uploads (a large seller onboarding batch), leaving a percentage of uploaded images without generated thumbnails. Not all requests failed, only a subset caught during the peak of the burst.\n\nNotably, the resolution notes state this is **not an isolated incident** \u2014 \"this is not the first time image-processing-service has struggled under a sudden burst of uploads.\" The working theory recorded is that the worker pool doesn't handle transient overload gracefully, and the standard mitigation has been to restart the resize worker pool to clear the backlog when it happens.\n\nOne caveat from the document: this particular occurrence was treated as a one-off operational mitigation, and no formal ticket was filed at the time it happened (INC1155 appears to be the record of this event itself). So while the underlying pattern is acknowledged as recurring, there's no indication in these documents of a dedicated root-cause investigation, permanent fix, or tracking ticket beyond INC1155.",
+    "ESG (v2)": "## Short Answer\n\n**Yes.** There is a documented, recurring issue with thumbnail generation under burst upload load, tracked in incident **INC1155** and addressed (at least partially) by **PR-545**. The failure mode is intermittent timeouts in the resize worker of the `image-processing-service` when upload volume spikes, resulting in some images not getting thumbnails.\n\n## Supporting Evidence\n\n**INC1155 (Resolved)** \u2014 \"image-processing-service resize worker failing intermittently under burst upload load\"\n- During a burst of bulk photo uploads (a large seller onboarding batch), the **resize worker** in the **image-processing-service** began throwing sporadic timeout errors.\n- Not every upload failed \u2014 only a subset caught during the peak of the burst \u2014 leaving those images without generated thumbnails.\n- Resolution was operational only: on-call restarted the resize worker pool to clear the backlog.\n- Notably, the resolution notes state this **was not the first time** image-processing-service struggled under sudden upload bursts, and the working theory at the time was that the worker pool \"doesn't handle transient overload gracefully and just needs a restart when it happens.\" No ticket had been filed for the prior occurrences \u2014 this was treated as a one-off mitigation.\n\n**PR-545 (Merged)** \u2014 \"Add retry-with-jitter to image-processing-service resize worker\"\n- This change adds retry-with-jitter around the resize worker's image transform step specifically so that transient timeouts under burst load don't fail the whole upload.\n- The PR description confirms the recurring pattern: image-processing-service \"having struggled more than once during bulk-upload bursts, each time needing a manual worker-pool restart to recover.\"\n- The PR was **not tied to a specific incident ticket** \u2014 it was opened as general hardening after the pattern was noticed, so it isn't formally linked to INC1155 in the record, though it addresses the same failure mode.\n- Reviewed and approved by Priya Nair, who noted the jitter should help smooth out \"thundering herd\" retry behavior.\n\n## Assessment\n\nCombining these two records: there is a known, recurring problem where the resize worker in image-processing-service times out intermittently during high-volume/burst upload periods, causing some thumbnails to fail generation. It had previously been handled only by manual restarts, and PR-545 represents an attempted fix (retry-with-jitter) to make the worker more resilient to transient overload.\n\n**Gaps in the graph:** There's no confirmation in the retrieved data that PR-545 was actually deployed and verified to resolve the issue (no follow-up incident-free period or post-deployment validation is documented), and no explicit link/reference connects PR-545 to INC1155 as its root-cause fix \u2014 the PR author states it was opened independently as general hardening rather than in response to a specific ticket. So while the underlying issue is well-documented, whether it's now fully resolved in production is not established by the available evidence."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "Both baselines only retrieved INC1155 and correctly describe the recurring thumbnail generation failure under burst load, but note there is no fix/RCA documented. ESG retrieved both expected documents (INC1155 and PR-545), and additionally surfaces that PR-545 introduced a retry-with-jitter fix attempting to address the issue, while appropriately hedging that it's not confirmed to be deployed/verified or explicitly linked to INC1155. This adds material, correctly-grounded information beyond what the baselines provide, without overstating confidence."
+}

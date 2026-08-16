@@ -1,0 +1,83 @@
+{
+  "case_number": 15,
+  "question": "Why did the analytics dashboard show revenue below actual?",
+  "expected_doc_ids": [
+    "INC1208",
+    "PROJ-405",
+    "PR-705",
+    "eng-data-2026-08-11"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.25,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-705",
+        "PROJ-405"
+      ],
+      "retrieved_doc_ids": [
+        "INC1208"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 558,
+      "cost_usd": 0.002492,
+      "time_sec": 4.340629816055298,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1208",
+        "PR-705",
+        "PROJ-405",
+        "eng-data-2026-08-11"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 1,
+      "tokens": 1280,
+      "cost_usd": 0.004816,
+      "time_sec": 5.484892129898071,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1208",
+        "PR-705",
+        "PROJ-405",
+        "eng-data-2026-08-11"
+      ],
+      "retrieval_calls": 85,
+      "llm_calls": 17,
+      "tokens": 51421,
+      "cost_usd": 0.137004,
+      "time_sec": 89.26903510093689,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on ServiceNow ticket INC1208, the analytics dashboard undercounted revenue because of a **join condition bug** in the dashboard's aggregation query. This bug caused the query to **exclude orders that used a coupon code**, which undercounted their revenue contribution \u2014 resulting in the dashboard reporting daily revenue roughly 20% below what the payment processor's own reports showed for the same period.\n\nThe fix involved correcting the join logic, tracked under **PROJ-405** and implemented via **PR-705**.",
+    "2-hop": "The analytics dashboard was reporting revenue roughly 20% below the payment processor's actual numbers because of a bug in the dashboard's revenue aggregation query: a join condition was filtering on a field that ended up null whenever an order had a coupon applied, so **all orders with a coupon code were silently excluded from the revenue aggregation**, undercounting total revenue (INC1208, PROJ-405).\n\nThis was not an intentional filter\u2014Sam Okafor described it as \"just a bad join\" (PROJ-405 comments), and it's unclear how long the bug had been present (slack:eng-data-2026-08-11).\n\nThe fix was implemented in PR-705, which corrected the join condition so discounted/coupon orders are properly included. Layla Haddad verified post-fix that the dashboard numbers matched the payment processor's totals (PR-705 review comments).",
+    "ESG (v2)": "## Short Answer\n\nThe analytics dashboard undercounted revenue (~20% below the payment processor's actual numbers) because of a **bug in a join condition in the revenue aggregation query**. The join filtered on a field that was `null` whenever a coupon code was applied to an order, which caused **all discounted/coupon orders to be silently excluded** from the revenue totals. This was fixed by correcting the join logic in PR-705.\n\n## Supporting Evidence\n\n**Incident (INC1208):** Finance flagged that the internal analytics dashboard was reporting daily revenue roughly 20% below the payment processor's own reported figures for the same period. The resolution notes state the root cause as \"the dashboard's aggregation query was excluding orders that used a coupon code due to a join condition bug, undercounting their revenue contribution\" (servicenow:INC1208:0).\n\n**Engineering ticket (PROJ-405):** This ticket tracked the fix and confirms the same root cause \u2014 the discrepancy was traced to \"a join condition excluding orders with a coupon applied.\" In the comments, Sam Okafor explains the mechanics: \"join was filtering on a field that's null whenever a coupon's involved. Not intentional, just a bad join\" (jira:PROJ-405:0).\n\n**Slack discussion (eng-data-2026-08-11):** Sam Okafor and Layla Haddad discuss the discovery of the issue. Sam notes finance reported the ~20% gap, and after investigation found \"the bug \u2014 join drops any order that used a coupon.\" Sam also notes there was no recent change to the aggregation query and no clear sense of how long the bug had been present (slack:eng-data-2026-08-11:0).\n\n**Fix (PR-705):** The pull request \"Fix join condition excluding discounted orders from revenue aggregation\" directly addresses the bug: \"Fixes a join condition in the revenue aggregation query that was silently excluding orders with a coupon applied, causing the dashboard to undercount total revenue.\" Layla Haddad reviewed and verified the fix, confirming \"numbers match now\" against processor totals (gitrepo:PR-705:0).\n\n## Summary of Causal Chain\n\n1. The revenue aggregation query behind the dashboard used a join that relied on a field which was `null` for any order with a coupon applied.\n2. This caused all coupon/discounted orders to be dropped from the join results, undercounting revenue by ~20%.\n3. Finance noticed the discrepancy versus the payment processor's reports (INC1208).\n4. Engineering traced it to the join bug (PROJ-405, Slack thread eng-data-2026-08-11).\n5. PR-705 fixed the join condition, and totals were verified to match the processor's numbers post-fix.\n\n## Gaps\n\nThe graph does not indicate **how long** the bug had been present before detection (Sam Okafor explicitly says \"no idea how long that's been wrong\") or **when/why** the faulty join was originally introduced \u2014 no prior commit or PR history for the original join logic is included in the retrieved data."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All four expected documents are retrieved and cited by both 2-hop and ESG, and both give materially the same core answer: a join condition bug filtered out coupon orders (null field), undercounting revenue ~20%, fixed in PR-705, discussed in PROJ-405 and slack eng-data-2026-08-11. ESG provides slightly more detail/structure and explicitly flags the same gap (how long bug existed) that 2-hop also mentions. No fabricated claims are evident in either; ESG's citations align with retrieved docs. The flat-RAG baseline is weaker since it only used INC1208 and missed the slack/PR-705 detail nuance. Comparing ESG to the best baseline (2-hop), the content is essentially equivalent\u2014same facts, same hedges, similar confidence. Differences are cosmetic (extra formatting, quotes) rather than substantive new information or corrected errors."
+}

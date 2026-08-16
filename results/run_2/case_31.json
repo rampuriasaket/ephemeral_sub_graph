@@ -1,0 +1,118 @@
+{
+  "case_number": 31,
+  "question": "What's the latest on PROJ-305?",
+  "expected_doc_ids": [
+    "PROJ-305",
+    "eng-search-2026-08-05",
+    "PR-605"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.25,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PROJ-230"
+      ],
+      "retrieved_doc_ids": [
+        "INC1108",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 2698,
+      "cost_usd": 0.00874,
+      "time_sec": 6.140427827835083,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.16666666666666666,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1070",
+        "INC1108",
+        "INC1236",
+        "PR-470",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-230",
+        "PROJ-244",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05",
+        "support-eng-2026-08-14"
+      ],
+      "retrieval_calls": 65,
+      "llm_calls": 1,
+      "tokens": 3882,
+      "cost_usd": 0.010604,
+      "time_sec": 5.326807022094727,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.23076923076923078,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-470",
+        "PROJ-230"
+      ],
+      "retrieved_doc_ids": [
+        "INC1070",
+        "INC1108",
+        "PR-481",
+        "PR-490",
+        "PR-605",
+        "PR-725",
+        "PROJ-255",
+        "PROJ-270",
+        "PROJ-305",
+        "PROJ-350",
+        "PROJ-420",
+        "PROJ-440",
+        "eng-search-2026-08-05"
+      ],
+      "retrieval_calls": 145,
+      "llm_calls": 41,
+      "tokens": 103774,
+      "cost_usd": 0.268237,
+      "time_sec": 126.75123190879822,
+      "stop_reason": "reached processing cap (20/20)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents, PROJ-305 has been resolved.\n\n**Summary of the latest status:**\n- **Issue**: Autocomplete was showing stale/outdated product names because it pulled from a separate, slower-refreshing cache instead of the primary search index (root cause tied to INC1108).\n- **Latest comments (Layla Haddad)**: \n  - Identified this as the same category of staleness issue as PROJ-230, but affecting a completely separate cache that was never repointed when the main index was fixed.\n  - Confirmed **PR-605** (which points autocomplete at the primary index) was **merged and verified in staging**.\n- **Related PR-605** review comment from Omar Farouk notes it makes sense this was missed initially since autocomplete is a different service, and the PR was **approved**.\n- **Related incident INC1108** resolution notes confirm the fix: autocomplete was repointed at the primary, already-fresh index, and the fix is tracked in PROJ-305 via PR-605.\n\n**Bottom line**: PROJ-305 appears complete \u2014 the fix was merged and verified in staging per PR-605, and the incident (INC1108) resolution notes align with this being fixed. There's no indication of any remaining work or open follow-up in the ticket itself.",
+    "2-hop": "**PROJ-305 \u2014 Autocomplete index uses stale cache separate from main search index: Resolved/Merged**\n\nSummary of latest status:\n- Root cause identified: autocomplete-service was pulling suggestions from a separate, slower-refreshing cache instead of the primary search index \u2014 a similar staleness category as PROJ-230, but a distinct cache that hadn't been touched when that earlier fix went in (jira:PROJ-305, comment from Layla Haddad).\n- Fix implemented via **PR-605**, which repoints autocomplete-service at the primary search index. It was **merged and verified in staging** (jira:PROJ-305; gitrepo:PR-605).\n- This closed out the customer-facing issue tracked in **INC1108** (outdated product names in autocomplete), whose resolution notes confirm the same root cause and point to PROJ-305/PR-605 as the fix (servicenow:INC1108).\n\nNet: the ticket appears complete \u2014 root cause found, fix merged, and verified in staging. No open follow-up items are mentioned in the available documents.",
+    "ESG (v2)": "## Direct Answer\n\n**PROJ-305 is Done/Resolved.** It tracked autocomplete suggestions showing outdated/discontinued product names, and it was fixed by repointing the autocomplete service at the primary search index. The fix (PR-605) has been merged and verified in staging.\n\n## Supporting Evidence\n\n**The ticket itself** (jira:PROJ-305:0, status: Done): \"Autocomplete index uses stale cache separate from main search index.\" Autocomplete was pulling from its own slower-refreshing cache instead of the primary search index used by main search. Layla Haddad's comments confirm resolution:\n- \"Same category of staleness issue as PROJ-230, but a completely separate cache \u2014 autocomplete was never repointed when we fixed the main index.\"\n- \"PR-605 points autocomplete at the primary index directly. Merged, verified in staging.\"\n\n**The linked incident** (servicenow:INC1108:0, status: Resolved): Customers reported autocomplete suggesting renamed/discontinued products even though main search was fine. Root cause matched PROJ-305's description \u2014 a separate, slower-refreshing autocomplete cache. Resolution: autocomplete was repointed at the already-fresh primary index. The incident record explicitly states it was \"Tracked in PROJ-305, fixed via PR-605.\"\n\n**The fix PR** (gitrepo:PR-605:0, status: Merged): \"Point autocomplete at primary search index\" \u2014 repoints autocomplete-service at the primary search index (the one fixed for staleness in PROJ-230/PR-470) instead of its own cache. Reviewer Omar Farouk approved: \"Makes sense that this got missed the first time since it's a different service. Approved.\"\n\n**Related context**: This is a repeat/spillover of an earlier fix. PROJ-230 (via PR-470) previously fixed staleness on the *main* search index, but autocomplete used a separate cache that wasn't touched at the time \u2014 hence PROJ-305 being opened later when the same category of problem resurfaced in autocomplete specifically. This progression is also discussed informally in slack:eng-search-2026-08-05:0, where Layla Haddad and Omar Farouk trace the issue back to PROJ-230 and agree to repoint autocomplete at the primary index (the plan that became PR-605).\n\n## Summary\n\nEverything in the graph consistently points to PROJ-305 being closed out: root cause identified, fix merged (PR-605), and verified in staging, with the related incident (INC1108) also marked Resolved. There's no indication of any further open work or follow-up items on this ticket in the current graph."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "All three answers converge on the same core facts: PROJ-305 tracked stale autocomplete cache, fixed via PR-605, merged and verified in staging, related to INC1108. Both flat-RAG and ESG retrieved and cited eng-search-2026-08-05 (the Slack discussion) among expected docs, though flat-RAG's answer text doesn't explicitly mention or quote it, while ESG explicitly cites and summarizes the slack:eng-search-2026-08-05 content, adding the discussion between Layla Haddad and Omar Farouk that led to the PR-605 plan. This makes ESG's answer more complete relative to the full expected document set. No fabrication is evident: all cited docs appear in ESG's retrieved list. The extra detail is grounded and factually consistent with the other documents, not contradicted. Thus ESG's answer is slightly more complete but not fundamentally different in facts or confidence."
+}

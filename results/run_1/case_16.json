@@ -1,0 +1,83 @@
+{
+  "case_number": 16,
+  "question": "Why weren't Gmail users getting password reset emails?",
+  "expected_doc_ids": [
+    "INC1215",
+    "PROJ-410",
+    "PR-710",
+    "email-deliverability-runbook"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.25,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-710",
+        "PROJ-410"
+      ],
+      "retrieved_doc_ids": [
+        "INC1215"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 700,
+      "cost_usd": 0.003832,
+      "time_sec": 6.35651421546936,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1215",
+        "PR-710",
+        "PROJ-410",
+        "email-deliverability-runbook"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 1,
+      "tokens": 1532,
+      "cost_usd": 0.006776,
+      "time_sec": 6.553504228591919,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1215",
+        "PR-710",
+        "PROJ-410",
+        "email-deliverability-runbook"
+      ],
+      "retrieval_calls": 75,
+      "llm_calls": 14,
+      "tokens": 45952,
+      "cost_usd": 0.12409099999999999,
+      "time_sec": 79.85177683830261,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on ticket INC1215, Gmail users weren't getting password reset emails because of a DNS/authentication issue:\n\n- A recent change to the sender-domain authentication had not updated the **DKIM record**, and Gmail specifically validates DKIM strictly.\n- Because the DKIM record was out of date, Gmail's strict validation caused the password reset emails to be **silently filtered** \u2014 they weren't bouncing or landing in spam in a visible way, just not arriving.\n- Other email providers were unaffected because they don't enforce DKIM validation as strictly as Gmail does.\n\n**Resolution:** The DNS record (DKIM) was fixed. This was tracked under project **PROJ-410** and fixed via **PR-710**.\n\n**Note:** The ticket also mentions this issue is \"related to the general deliverability concerns raised earlier this month around transactional email,\" but no further detail on that broader issue is provided in this document.",
+    "2-hop": "Gmail users weren't receiving password reset emails because a recent sender-domain authentication change hadn't updated the DKIM record that Gmail validates strictly against. This mismatch caused Gmail to silently filter the emails, while other providers\u2014being more lenient with DKIM validation\u2014were unaffected (INC1215, PROJ-410).\n\nThe fix involved updating the DKIM record and sender configuration to match the new domain settings, implemented in PR-710. As Chen Liu noted in PROJ-410, this required \"DNS fix plus a code change to reference the new record,\" and after PR-710 was merged, delivery rates were monitored to confirm resolution.\n\nThe confluence:email-deliverability-runbook page adds context: provider-specific filtering like this is a known risk pattern with DKIM issues, since some providers (like Gmail) validate more strictly than others, making such problems easy to miss without provider-segmented delivery metrics.\n\nOne caveat from the documents: INC1215 mentions this incident was \"related to the general deliverability concerns raised earlier this month around transactional email,\" and the runbook references \"an earlier, still-open investigation into a broader delivery-rate drop that hadn't been narrowed to a single cause at the time of writing.\" However, no ticket ID for that broader investigation is provided in these documents, so I can't confirm whether it was fully separate from INC1215 or how (if at all) it was ultimately resolved.",
+    "ESG (v2)": "## Short Answer\n\nGmail users weren't receiving password reset emails because a recent sender-domain authentication change left the DKIM record outdated \u2014 and Gmail validates DKIM more strictly than other email providers. This caused Gmail to silently filter (drop) the password reset emails, while other providers' more lenient validation let the same emails through unaffected. The issue was tracked as **INC1215**, root-caused and scoped in **PROJ-410**, and fixed by **PR-710**, which updated the DKIM record and sender configuration.\n\n## Supporting Evidence\n\n**The incident (INC1215):** Support began receiving reports specifically from Gmail users that password reset emails never arrived, while other providers seemed unaffected (`servicenow:INC1215:0`). The resolution notes identify the root cause as a sender-domain authentication change that had not updated the DKIM record Gmail specifically validates strictly against, causing silent filtering. The fix was applying the correct DNS record, tracked in PROJ-410 and shipped via PR-710.\n\n**The Jira issue (PROJ-410):** This ticket confirms the same root cause \u2014 \"DKIM record not updated for Gmail's strict validation after domain change\" \u2014 and explicitly ties it to INC1215 (`jira:PROJ-410:0`). Chen Liu's comments clarify why the problem was Gmail-specific: \"Other providers are more lenient so this only showed up for Gmail. DNS fix plus a code change to reference the new record.\" Chen Liu also notes PR-710 was merged and delivery rate was being monitored afterward.\n\n**The fix (PR-710):** The pull request updated the DKIM record and sender configuration to match the recent domain change, directly addressing the silent filtering by Gmail's strict validation (`gitrepo:PR-710:0`). Reviewer Marcus Webb's comment reinforces the provider-specific nature of the bug: \"Explains why we only heard about this from Gmail users. Approved.\"\n\n**Supporting context (runbook):** The Email Deliverability Runbook (`confluence:email-deliverability-runbook:0`) generalizes this pattern: DNS/DKIM misconfiguration after domain changes can silently affect only a subset of recipients because some providers (like Gmail, as seen in INC1215) validate DKIM more strictly than others. It notes this makes such issues easy to miss without provider-segmented delivery metrics \u2014 explaining why only Gmail users noticed the problem.\n\n## Note on Scope\n\nThe runbook also mentions \"an earlier, still-open investigation into a broader delivery-rate drop that hadn't been narrowed to a single cause at the time of writing.\" This appears to be a separate, unresolved issue distinct from INC1215/PROJ-410, and the graph contains no further detail on it \u2014 so it's mentioned here only for completeness, not as part of the answer to why Gmail specifically was affected."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "Both 2-hop and ESG retrieved all four expected documents and give materially the same core answer: outdated DKIM record after a domain authentication change, Gmail's strict validation caused silent filtering, fixed via PR-710 tracked in PROJ-410, with runbook context about provider-specific filtering risk. Both correctly hedge on the \"broader deliverability concerns\" mention, noting no ticket ID is given and it's unclear if it's the same issue. ESG's answer is slightly more structured and cites specific quotes (Marcus Webb's review comment) but this is a cosmetic/completeness difference, not a material fact difference. Neither adds unsupported confident claims. The two answers are essentially equivalent in content and confidence calibration, with ESG being marginally more detailed but not substantively better."
+}

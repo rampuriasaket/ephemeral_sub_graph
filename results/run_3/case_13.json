@@ -1,0 +1,87 @@
+{
+  "case_number": 13,
+  "question": "is there anything engineers should be aware of right now?",
+  "expected_doc_ids": [
+    "INC1061",
+    "eng-onboarding-2026-08-16"
+  ],
+  "excluded_doc_ids": [
+    "new-hire-onboarding-engineering-wiki-home",
+    "incident-response-process-standard-operating-procedure",
+    "engineering-all-hands-notes-august-2026",
+    "PR-512",
+    "PR-490"
+  ],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.0,
+      "precision": 0.0,
+      "excl_hit": true,
+      "excl_hit_docs": [
+        "engineering-all-hands-notes-august-2026"
+      ],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "eng-onboarding-2026-08-16",
+        "engineering-all-hands-notes-august-2026"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 707,
+      "cost_usd": 0.003654,
+      "time_sec": 6.3771750926971436,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.0,
+      "precision": 0.0,
+      "excl_hit": true,
+      "excl_hit_docs": [
+        "engineering-all-hands-notes-august-2026"
+      ],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "eng-onboarding-2026-08-16",
+        "engineering-all-hands-notes-august-2026"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 722,
+      "cost_usd": 0.003548,
+      "time_sec": 4.458672761917114,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 0.5,
+      "precision": 0.5,
+      "excl_hit": true,
+      "excl_hit_docs": [
+        "engineering-all-hands-notes-august-2026"
+      ],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "eng-onboarding-2026-08-16",
+        "engineering-all-hands-notes-august-2026"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 6,
+      "tokens": 14955,
+      "cost_usd": 0.046759999999999996,
+      "time_sec": 30.59929895401001,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents provided, there is no current engineering-relevant information to flag.\n\n- **confluence:engineering-all-hands-notes-august-2026** \u2014 This is a routine all-hands summary covering a roadmap update, recognition of incident responders, and a note about the upcoming performance review cycle. It explicitly states there is \"no incident-specific content.\"\n- **slack:eng-onboarding-2026-08-16** \u2014 This is a welcome thread for a new engineer joining the team, with no technical or operational content.\n\nNeither document contains information about active incidents, outages, ongoing bugs, deployment risks, or other actionable items engineers would need to be aware of right now. If you're looking for something specific (e.g., an active incident, a known issue, or a deprecation notice), I don't have documents covering that here \u2014 you'd need to check other sources like incident trackers or recent PRs.",
+    "2-hop": "Based on the documents provided, there's nothing here that flags an active issue engineers need to be aware of right now.\n\n- **confluence:engineering-all-hands-notes-august-2026** \u2014 Covers a roadmap update, recognition of past incident responders, and a performance review cycle reminder. It explicitly states \"No incident-specific content.\"\n- **slack:eng-onboarding-2026-08-16** \u2014 Just an onboarding welcome thread for a new engineer, unrelated to any technical or operational concern.\n\nNeither document mentions any open incidents, ongoing tickets, PRs needing attention, or risks. If there's a specific current issue you're expecting to see (e.g., an active incident or a recent PR), it isn't present in these retrieved documents \u2014 you'd need to search for it directly by ID or more specific terms.",
+    "ESG (v2)": "## Short Answer\n\nBased on the current investigation graph, **no specific incidents, active issues, or urgent technical concerns were found that engineers need to be aware of right now.** The two documents retrieved are not substantive incident or operational content \u2014 they are a Slack onboarding welcome thread and a general all-hands summary that explicitly states it has \"no incident-specific content.\"\n\n## Supporting Evidence\n\n- **slack:eng-onboarding-2026-08-16:0** \u2014 This is a Slack thread welcoming a new engineer to the team. It contains only greeting messages (\"welcome!!\", \"excited to be here, thanks all\") and has no bearing on current operational or technical awareness items.\n\n- **confluence:engineering-all-hands-notes-august-2026:0** \u2014 This is a Confluence page with notes from the August 2026 engineering all-hands. It covers a roadmap update for the next quarter, recognition of recent incident responders, and a reminder about the upcoming performance review cycle. The document itself explicitly notes it has **no incident-specific content**.\n\nNeither chunk surfaces any open incidents, active tickets, PRs, outages, or risks that would answer the question directly.\n\n## What's Missing\n\nThe search frontier was exhausted without turning up any chunks describing active incidents, ongoing PRs, known bugs, or operational risks. To properly answer \"is there anything engineers should be aware of right now,\" the graph would need documents such as:\n- Open incident tickets or postmortems\n- Recent PR discussions flagging risks or regressions\n- On-call handoff notes or status pages\n- Alerts/monitoring dashboards summaries\n\nNone of these are present in the current graph. Given the data available, **I cannot confirm any specific current concern for engineers** \u2014 the investigation simply did not surface relevant material, rather than confirming that everything is fine. If this answer is needed with confidence, additional searches (e.g., recent incident channels, on-call logs, or open PR queues) should be run, as they were not part of this graph."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "The expected sources include INC1061, which none of the three systems actually retrieved (all retrieved only eng-onboarding-2026-08-16 and engineering-all-hands-notes-august-2026). Since none of the systems surfaced INC1061, all three miss the actual answer content. All three answers are essentially the same: they correctly report that the retrieved documents contain no actionable incident info, and hedge that they cannot confirm one way or the other. ESG's answer is slightly more elaborate in structure (\"What's Missing\" section) but conveys the same substantive information and same degree of hedging as flat-RAG and 2-hop. No system fabricates anything, and none surfaces INC1061. Differences are cosmetic/formatting only."
+}

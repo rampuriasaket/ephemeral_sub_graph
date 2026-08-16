@@ -1,0 +1,625 @@
+JIRA — ISSUE EXPORT
+System: Jira (Project: PROJ)
+Export scope: Issues updated in last 90 days
+====================================================================
+
+ISSUE: PROJ-201
+TYPE: Bug
+TITLE: Add automated alerting for JWT signing key expiry in auth-service
+STATUS: Done
+ASSIGNEE: Priya Nair
+SPRINT: Sprint 44
+LINKED PULL REQUEST: PR-455
+RELATED INCIDENT: INC1042
+--------------------------------------------------------------------
+DESCRIPTION:
+Following INC1042 (auth-service outage caused by an expired JWT
+signing key), this story tracks the follow-up work to rotate the
+affected key immediately and add monitoring so an expiring signing key
+never silently causes a production outage again.
+
+COMMENTS:
+- Priya Nair: "Rotated the key manually as an immediate fix, incident
+  is resolved. Opening this story to track the alerting work so we
+  don't repeat this."
+- Priya Nair: "PR up — see PR-455. Adds a scheduled check that pages
+  on-call 14 days before any signing key in auth-service expires."
+- Priya Nair: "Merged and deployed. Closing this out. Postmortem doc
+  linked in Confluence."
+====================================================================
+
+ISSUE: PROJ-215
+TYPE: Task
+TITLE: Investigate payment-gateway timeout under load
+STATUS: In Progress
+ASSIGNEE: Marcus Webb
+SPRINT: Sprint 45
+LINKED PULL REQUEST: (none yet)
+RELATED INCIDENT: INC1055
+--------------------------------------------------------------------
+DESCRIPTION:
+payment-gateway is timing out on a small but customer-impacting
+percentage of checkout requests during peak traffic (see INC1055).
+Need to identify root cause — suspect connection pool exhaustion but
+not yet confirmed — and propose a fix.
+
+COMMENTS:
+- Marcus Webb: "Reproduced a similar timeout pattern in staging under
+  synthetic load, but the failure rate is lower than what we're seeing
+  in production. Still investigating whether pool size or a slow
+  downstream dependency is the real driver."
+- Marcus Webb: "No fix ready yet. Will update once we have a
+  reproducible root cause."
+====================================================================
+
+ISSUE: PROJ-230
+TYPE: Bug
+TITLE: Search results missing recently created items
+STATUS: Done
+ASSIGNEE: Layla Haddad
+SPRINT: Sprint 43
+LINKED PULL REQUEST: PR-470
+RELATED INCIDENT: (none — found internally by QA, not a production incident)
+--------------------------------------------------------------------
+DESCRIPTION:
+QA noticed that items created within the last few minutes were not
+appearing in search-service results, even though they existed in the
+primary data store. Root cause was a stale index refresh interval that
+was too long relative to how quickly new items needed to be
+searchable.
+
+COMMENTS:
+- Layla Haddad: "Confirmed the index refresh interval was set to 5
+  minutes; reducing it and adding a manual refresh trigger on write.
+  PR-470 has the fix."
+- Layla Haddad: "Merged. Verified in staging — new items now appear in
+  search within a few seconds."
+====================================================================
+
+ISSUE: PROJ-244
+TYPE: Task
+TITLE: Investigate notification-worker queue backlog
+STATUS: In Progress
+ASSIGNEE: Chen Liu
+SPRINT: Sprint 45
+LINKED PULL REQUEST: PR-481 (draft, not merged)
+RELATED INCIDENT: INC1070
+--------------------------------------------------------------------
+DESCRIPTION:
+Notification delivery has been running 10-20 minutes behind for a
+subset of users (INC1070). Queue depth metrics show the
+notification-worker consumers are falling behind incoming message
+volume rather than any message loss occurring.
+
+COMMENTS:
+- Chen Liu: "Queue depth has roughly tripled over the last 48 hours
+  without a corresponding traffic increase, so this looks like a
+  consumer throughput regression rather than pure load growth."
+- Chen Liu: "Opened a draft PR (PR-481) to increase worker concurrency
+  as a first attempt. Still validating it doesn't cause downstream
+  rate-limit issues before merging."
+====================================================================
+
+ISSUE: PROJ-255
+TYPE: Task
+TITLE: Update rate-limit config docs to match current code defaults
+STATUS: Done
+ASSIGNEE: Yuki Tanaka
+SPRINT: Sprint 44
+LINKED PULL REQUEST: (none — documentation-only change)
+RELATED INCIDENT: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+The public-facing API Rate Limiting Guide in Confluence listed default
+rate limits that no longer matched the actual defaults shipped in
+code, causing confusion for a partner integration team. This story
+tracks correcting the documentation.
+
+COMMENTS:
+- Yuki Tanaka: "Confirmed the actual defaults with the platform team
+  and updated the Confluence page directly. No code change needed."
+- Yuki Tanaka: "Done — partner team confirmed the doc now matches
+  what they're seeing in practice."
+====================================================================
+
+ISSUE: PROJ-260
+TYPE: Bug
+TITLE: Investigate checkout latency under high concurrent load
+STATUS: In Progress
+ASSIGNEE: Aisha Rahman
+SPRINT: Sprint 45
+LINKED PULL REQUEST: (none yet)
+RELATED INCIDENT: INC1082
+--------------------------------------------------------------------
+DESCRIPTION:
+Checkout latency spiked significantly during today's flash sale event
+(INC1082). Need to identify the bottleneck under high concurrency and
+ship a fix before the next planned promotional event.
+
+COMMENTS:
+- Aisha Rahman: "Profiler output points at lock contention in
+  inventory-service during concurrent stock-decrement operations. Not
+  yet 100% confirmed as the only contributor — checkout-service itself
+  also showed elevated thread wait times."
+- Aisha Rahman: "Continuing to profile inventory-service locking
+  behavior tomorrow. No fix proposed yet."
+====================================================================
+
+ISSUE: PROJ-270
+TYPE: Task
+TITLE: Refactor legacy report export module
+STATUS: Backlog
+ASSIGNEE: Unassigned
+SPRINT: (unscheduled)
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+The legacy report export module in reporting-service has accumulated
+significant technical debt and is difficult to extend. This is a
+backlog item to refactor it, not yet scheduled into a sprint. No work
+has started.
+
+COMMENTS:
+(none yet)
+====================================================================
+
+ISSUE: PROJ-275
+TYPE: Bug
+TITLE: Typo in order confirmation email template footer
+STATUS: Done
+ASSIGNEE: Yuki Tanaka
+SPRINT: Sprint 44
+LINKED PULL REQUEST: PR-495
+RELATED INCIDENT: (none — cosmetic issue, reported by customer support)
+--------------------------------------------------------------------
+DESCRIPTION:
+Customer support flagged a typo in the footer of the order confirmation
+email template ("Thank you for you order" missing the word "your").
+Minor cosmetic fix.
+
+COMMENTS:
+- Yuki Tanaka: "Small fix, PR-495 up."
+- Yuki Tanaka: "Merged and deployed with the next scheduled release."
+====================================================================
+
+ISSUE: PROJ-301
+TYPE: Bug
+TITLE: Add idempotency key to checkout-service payment retries
+STATUS: Done
+ASSIGNEE: Aisha Rahman
+SPRINT: Sprint 46
+LINKED PULL REQUEST: PR-601
+RELATED INCIDENT: INC1101
+--------------------------------------------------------------------
+DESCRIPTION:
+Following INC1101 (customers double-charged during checkout), this
+story tracks adding an idempotency key to checkout-service's payment
+retry logic so a retried request after a timeout can never result in
+two separate charges.
+
+COMMENTS:
+- Aisha Rahman: "Confirmed root cause — no idempotency protection on
+  retries. Hotfix disabled auto-retry as a stopgap."
+- Aisha Rahman: "PR-601 up, adds a per-attempt idempotency key stored
+  alongside the checkout session."
+- Aisha Rahman: "Merged and deployed. Re-enabled retries with the fix
+  in place. Closing this out."
+====================================================================
+
+ISSUE: PROJ-305
+TYPE: Bug
+TITLE: Autocomplete index uses stale cache separate from main search index
+STATUS: Done
+ASSIGNEE: Layla Haddad
+SPRINT: Sprint 46
+LINKED PULL REQUEST: PR-605
+RELATED INCIDENT: INC1108
+--------------------------------------------------------------------
+DESCRIPTION:
+Autocomplete suggestions were showing outdated product names (INC1108)
+even though main search results were current. Root cause: autocomplete
+pulls from a separate, slower-refreshing cache rather than the primary
+search index.
+
+COMMENTS:
+- Layla Haddad: "Same category of staleness issue as PROJ-230, but a
+  completely separate cache — autocomplete was never repointed when we
+  fixed the main index."
+- Layla Haddad: "PR-605 points autocomplete at the primary index
+  directly. Merged, verified in staging."
+====================================================================
+
+ISSUE: PROJ-312
+TYPE: Bug
+TITLE: Session TTL misconfigured to 5 min after recent auth-service deploy
+STATUS: Done
+ASSIGNEE: Priya Nair
+SPRINT: Sprint 46
+LINKED PULL REQUEST: PR-611
+RELATED INCIDENT: INC1115
+--------------------------------------------------------------------
+DESCRIPTION:
+Users were being logged out after 5 minutes instead of the documented
+30 (INC1115). Traced to a config regression in a recent auth-service
+deploy, unrelated to the earlier JWT key rotation work.
+
+COMMENTS:
+- Priya Nair: "Confirmed the TTL value got reset during last week's
+  deploy — separate issue from PROJ-201, just bad timing that it's the
+  same service again."
+- Priya Nair: "PR-611 reverts the TTL to 30 minutes. Merged."
+====================================================================
+
+ISSUE: PROJ-318
+TYPE: Task
+TITLE: Investigate carrier API rate limiting on shipping label generation
+STATUS: In Progress
+ASSIGNEE: Diego Alvarez
+SPRINT: Sprint 46
+LINKED PULL REQUEST: (none yet)
+RELATED INCIDENT: INC1130
+--------------------------------------------------------------------
+DESCRIPTION:
+shipping-label-service is intermittently failing during peak order
+volume (INC1130). Logs show 429 rate-limit responses from the external
+carrier API during these windows.
+
+COMMENTS:
+- Diego Alvarez: "429s track tightly with peak-hour order volume.
+  Weighing client-side backoff vs. asking the carrier for a higher
+  limit — the latter has a longer lead time."
+- Diego Alvarez: "No fix merged yet, still deciding the approach."
+====================================================================
+
+ISSUE: PROJ-325
+TYPE: Bug
+TITLE: Refund webhook handler broken after payment gateway migration
+STATUS: Done
+ASSIGNEE: Marcus Webb
+SPRINT: Sprint 46
+LINKED PULL REQUEST: PR-618
+RELATED INCIDENT: INC1144
+--------------------------------------------------------------------
+DESCRIPTION:
+Refunds were taking 5+ days to process (INC1144) following last
+month's payment gateway migration. Root cause: the refund webhook
+handler wasn't updated for the new gateway's payload format and was
+silently failing.
+
+COMMENTS:
+- Marcus Webb: "Handler was matching on an old field name that the new
+  gateway renamed — failing silently instead of erroring loudly, which
+  is why this took a while to notice."
+- Marcus Webb: "PR-618 fixes the handler and reprocesses the stuck
+  backlog. Merged and verified."
+====================================================================
+
+ISSUE: PROJ-330
+TYPE: Bug
+TITLE: New partner accounts default to standard rate-limit tier instead of partner tier
+STATUS: Done
+ASSIGNEE: Yuki Tanaka
+SPRINT: Sprint 46
+LINKED PULL REQUEST: PR-625
+RELATED INCIDENT: INC1151
+--------------------------------------------------------------------
+DESCRIPTION:
+A newly onboarded partner was being rate-limited at the standard tier
+(100 req/min) instead of partner tier (500 req/min per the current
+API Rate Limiting Guide), causing significant request failures
+(INC1151).
+
+COMMENTS:
+- Yuki Tanaka: "Provisioning flow defaults new accounts to standard
+  tier and partner tier has to be set explicitly — easy to miss, this
+  is the second time it's bitten someone."
+- Yuki Tanaka: "PR-625 fixes the default and re-provisions the
+  affected account. Merged."
+====================================================================
+
+ISSUE: PROJ-335
+TYPE: Task
+TITLE: Investigate intermittent Redis latency spikes
+STATUS: In Progress
+ASSIGNEE: Unassigned
+SPRINT: Sprint 46
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: INC1158
+--------------------------------------------------------------------
+DESCRIPTION:
+Multiple services are seeing intermittent Redis latency spikes
+(INC1158) with no clear trigger. Connection pool sizing has been ruled
+out.
+
+COMMENTS:
+- (unassigned, no comments yet) "Escalating to infra team to check for
+  a network-level cause — nothing found at the application layer so
+  far."
+====================================================================
+
+ISSUE: PROJ-340
+TYPE: Task
+TITLE: Investigate drop in transactional email delivery rate
+STATUS: In Progress
+ASSIGNEE: Chen Liu
+SPRINT: Sprint 46
+LINKED PULL REQUEST: (none yet)
+RELATED INCIDENT: INC1165
+--------------------------------------------------------------------
+DESCRIPTION:
+Transactional email delivery rate dropped ~15% this week (INC1165), no
+change in send volume or templates identified as a cause.
+
+COMMENTS:
+- Chen Liu: "Reaching out to the email provider to check sender
+  reputation/deliverability — unclear if this is on our side or
+  theirs. Still investigating."
+====================================================================
+
+ISSUE: PROJ-345
+TYPE: Task
+TITLE: Refactor legacy CSV export utility
+STATUS: Backlog
+ASSIGNEE: Unassigned
+SPRINT: (unscheduled)
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+The CSV export utility used by a handful of internal admin tools has
+accumulated tech debt. Backlog item, not yet scheduled. No work
+started.
+
+COMMENTS:
+(none yet)
+====================================================================
+
+ISSUE: PROJ-350
+TYPE: Task
+TITLE: Update team wiki template
+STATUS: Backlog
+ASSIGNEE: Unassigned
+SPRINT: (unscheduled)
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Minor housekeeping task to refresh the team's Confluence page template.
+Unscheduled, no activity.
+
+COMMENTS:
+(none yet)
+====================================================================
+
+ISSUE: PROJ-355
+TYPE: Bug
+TITLE: Fix misaligned button on account settings page
+STATUS: Done
+ASSIGNEE: Layla Haddad
+SPRINT: Sprint 46
+LINKED PULL REQUEST: PR-645
+RELATED INCIDENT: (none — cosmetic, reported by design team)
+--------------------------------------------------------------------
+DESCRIPTION:
+Design team flagged a misaligned "Save" button on the account settings
+page at certain viewport widths. Minor cosmetic fix.
+
+COMMENTS:
+- Layla Haddad: "Small CSS fix, PR-645."
+- Layla Haddad: "Merged with next release."
+====================================================================
+
+ISSUE: PROJ-401
+TYPE: Bug
+TITLE: Enforce single-coupon-per-order at validation layer
+STATUS: Done
+ASSIGNEE: Aisha Rahman
+SPRINT: Sprint 47
+LINKED PULL REQUEST: PR-701
+RELATED INCIDENT: INC1201
+--------------------------------------------------------------------
+DESCRIPTION:
+Following INC1201, coupon validation only rejected duplicate codes,
+not multiple distinct codes on the same order, allowing discounts to
+stack unintentionally.
+
+COMMENTS:
+- Aisha Rahman: "Confirmed — validation logic checked 'is this code
+  already applied' not 'is any code already applied'. Easy miss."
+- Aisha Rahman: "PR-701 enforces single-coupon-per-order. Merged."
+====================================================================
+
+ISSUE: PROJ-405
+TYPE: Bug
+TITLE: Analytics dashboard undercounting revenue on discounted orders
+STATUS: Done
+ASSIGNEE: Sam Okafor
+SPRINT: Sprint 47
+LINKED PULL REQUEST: PR-705
+RELATED INCIDENT: INC1208
+--------------------------------------------------------------------
+DESCRIPTION:
+Dashboard revenue figures were ~20% below the payment processor's own
+numbers (INC1208). Traced to a join condition excluding orders with a
+coupon applied.
+
+COMMENTS:
+- Sam Okafor: "Found it — join was filtering on a field that's null
+  whenever a coupon's involved. Not intentional, just a bad join."
+- Sam Okafor: "PR-705 fixes the join. Numbers match processor totals
+  now."
+====================================================================
+
+ISSUE: PROJ-410
+TYPE: Bug
+TITLE: DKIM record not updated for Gmail's strict validation after domain change
+STATUS: Done
+ASSIGNEE: Chen Liu
+SPRINT: Sprint 47
+LINKED PULL REQUEST: PR-710
+RELATED INCIDENT: INC1215
+--------------------------------------------------------------------
+DESCRIPTION:
+Password reset emails weren't reaching Gmail users specifically
+(INC1215). A recent sender-domain change hadn't updated the DKIM
+record Gmail validates strictly against.
+
+COMMENTS:
+- Chen Liu: "Other providers are more lenient so this only showed up
+  for Gmail. DNS fix plus a code change to reference the new record."
+- Chen Liu: "PR-710 up and merged, monitoring delivery rate now."
+====================================================================
+
+ISSUE: PROJ-415
+TYPE: Task
+TITLE: Investigate third-party analytics script blocking page render
+STATUS: In Progress
+ASSIGNEE: Layla Haddad
+SPRINT: Sprint 47
+LINKED PULL REQUEST: (none yet)
+RELATED INCIDENT: INC1229
+--------------------------------------------------------------------
+DESCRIPTION:
+New analytics script correlates with a page-load regression (INC1229),
+appears to block rendering under slow network conditions.
+
+COMMENTS:
+- Layla Haddad: "Confirmed it's render-blocking as loaded. Looking at
+  whether we can defer or async-load it without breaking their
+  tracking requirements."
+====================================================================
+
+ISSUE: PROJ-420
+TYPE: Task
+TITLE: Investigate rising support queue response times
+STATUS: In Progress
+ASSIGNEE: Unassigned
+SPRINT: Sprint 47
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: INC1236
+--------------------------------------------------------------------
+DESCRIPTION:
+Support queue time-to-first-response has climbed steadily (INC1236),
+support leadership suspects a tooling issue.
+
+COMMENTS:
+- (unassigned) "Checking whether the support tool's ticket-routing
+  integration has slowed down — no conclusion yet."
+====================================================================
+
+ISSUE: PROJ-425
+TYPE: Task
+TITLE: Investigate sporadic API gateway 502s
+STATUS: In Progress
+ASSIGNEE: Unassigned
+SPRINT: Sprint 47
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: INC1243
+--------------------------------------------------------------------
+DESCRIPTION:
+Low-frequency 502s at the API gateway (INC1243), unable to reproduce
+consistently, no pattern identified by endpoint or time.
+
+COMMENTS:
+- (unassigned) "Tried reproducing under synthetic load, no luck.
+  Might need to wait for it to recur and capture more detail live."
+====================================================================
+
+ISSUE: PROJ-430
+TYPE: Bug
+TITLE: Bulk export times out for large accounts — needs pagination/streaming
+STATUS: Done
+ASSIGNEE: Sam Okafor
+SPRINT: Sprint 47
+LINKED PULL REQUEST: PR-715
+RELATED INCIDENT: INC1250
+--------------------------------------------------------------------
+DESCRIPTION:
+Bulk export ran as a single synchronous request with no pagination,
+timing out entirely for large accounts (INC1250) instead of just being
+slow.
+
+COMMENTS:
+- Sam Okafor: "Reworked to stream results in chunks instead of
+  building the whole export in memory first. PR-715."
+- Sam Okafor: "Tested against our largest enterprise account's data
+  volume, completes in under a minute now."
+====================================================================
+
+ISSUE: PROJ-435
+TYPE: Task
+TITLE: Update internal admin UI theme
+STATUS: Backlog
+ASSIGNEE: Unassigned
+SPRINT: (unscheduled)
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Minor visual refresh for the internal admin UI, low priority, not
+scheduled.
+
+COMMENTS:
+(none yet)
+====================================================================
+
+ISSUE: PROJ-440
+TYPE: Task
+TITLE: Explore migrating to a new CI provider
+STATUS: Backlog
+ASSIGNEE: Unassigned
+SPRINT: (unscheduled)
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+Exploratory backlog item to evaluate alternative CI providers for cost
+and speed. No urgency, no work started.
+
+COMMENTS:
+(none yet)
+====================================================================
+
+ISSUE: PROJ-445
+TYPE: Task
+TITLE: Minor tweak to SSL cert renewal automation script
+STATUS: Done
+ASSIGNEE: Omar Farouk
+SPRINT: Sprint 47
+LINKED PULL REQUEST: PR-740
+RELATED INCIDENT: (none — proactive maintenance)
+--------------------------------------------------------------------
+DESCRIPTION:
+Small robustness improvement to the automated SSL certificate renewal
+script, unrelated to any incident.
+
+COMMENTS:
+- Omar Farouk: "PR-740, routine. Merged."
+====================================================================
+
+ISSUE: PROJ-320
+TYPE: Task
+TITLE: Build backpressure and dead-letter-queue handling for webhook-dispatcher-service
+STATUS: Backlog
+ASSIGNEE: Layla Haddad
+SPRINT: (unscheduled)
+LINKED PULL REQUEST: (none)
+RELATED INCIDENT: (none)
+--------------------------------------------------------------------
+DESCRIPTION:
+webhook-dispatcher-service currently has no automatic backpressure or
+queuing mechanism to absorb a sudden spike in outbound partner
+webhook volume -- when it falls behind, the only lever today is an
+on-call engineer manually scaling up the worker pool. This ticket
+proposes building a proper dead-letter-queue and backpressure
+mechanism so a traffic spike doesn't require manual intervention to
+clear the backlog. Not yet scheduled into a sprint.
+
+COMMENTS:
+- Layla Haddad: "webhook-dispatcher-service has fallen behind more
+  than once during a traffic spike now, always resolved the same way
+  -- someone notices and manually scales the worker pool. Want to fix
+  this properly instead of relying on someone being on-call and
+  noticing in time."
+====================================================================

@@ -1,0 +1,97 @@
+{
+  "case_number": 9,
+  "question": "some users are reporting random logouts, do we know why?",
+  "expected_doc_ids": [
+    "INC1166",
+    "PR-550"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.5,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-455",
+        "PR-611",
+        "PROJ-201",
+        "PROJ-312"
+      ],
+      "retrieved_doc_ids": [
+        "INC1115",
+        "INC1166",
+        "PR-550",
+        "session-management-runbook"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 2110,
+      "cost_usd": 0.012108,
+      "time_sec": 13.558928728103638,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.2,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1042",
+        "INC1115",
+        "INC1166",
+        "PR-455",
+        "PR-550",
+        "PR-611",
+        "PROJ-201",
+        "PROJ-312",
+        "auth-service-outage-postmortem-august-2026",
+        "session-management-runbook"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 1,
+      "tokens": 3862,
+      "cost_usd": 0.01602,
+      "time_sec": 14.84592890739441,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.3333333333333333,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": true,
+      "fabrication_docs": [
+        "PR-455",
+        "PROJ-201"
+      ],
+      "retrieved_doc_ids": [
+        "INC1115",
+        "INC1166",
+        "PR-550",
+        "PR-611",
+        "PROJ-312",
+        "session-management-runbook"
+      ],
+      "retrieval_calls": 135,
+      "llm_calls": 25,
+      "tokens": 91565,
+      "cost_usd": 0.24352400000000002,
+      "time_sec": 139.3623490333557,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the documents, there are **two distinct known causes** for logout complaints, and which one applies depends on the exact symptom users are reporting:\n\n**1. Random/intermittent logouts despite session still being valid \u2014 INC1166**\nTraced to the shared Redis-backed session-store cluster evicting active session entries early under memory pressure. The memory pressure in that case was caused by an unrelated traffic spike to *another service* sharing the same cluster. It was resolved by flushing/rebalancing the session-store cluster.\n\nNotably, INC1166 states this is a **recurring pattern**: \"Session-store has hit memory pressure before in a similar way, but each time it has been handled as a one-off manual mitigation rather than a permanent fix.\" PR-550 was opened specifically to address this by adding proactive memory-pressure alerting and eviction-policy tuning to session-store, \"to catch the next one before it affects users rather than after\" \u2014 implying no permanent fix was in place as of INC1166.\n\n**2. Consistently short session length (logged out after ~5 min instead of 30) \u2014 INC1115**\nThis is a different symptom \u2014 not random, but a fixed shorter timeout for everyone affected. Root cause was a session TTL config regression accidentally shipped in an unrelated auth-service deploy (separate from the JWT key rotation work in PROJ-201/PR-455). Fixed by reverting the TTL config (PROJ-312, PR-611).\n\nThe `session-management-runbook` page explicitly warns to check the TTL config value directly if users report shorter-than-expected session lengths, since this has happened before as a config regression rather than a logic bug.\n\n**What's missing:** the documents don't tell us which specific symptom the current users are experiencing (i.e., is it truly random/sporadic, consistent with memory-pressure eviction from INC1166, or a uniformly shortened timeout consistent with INC1115's TTL regression). You'd want to confirm which pattern matches before pointing at a specific root cause \u2014 the two incidents have different mechanisms and different fixes.",
+    "2-hop": "Yes \u2014 there are two distinct, previously-identified root causes for users being unexpectedly logged out, and which one applies depends on the pattern reported:\n\n**1. Session-store (Redis) evicting active sessions under memory pressure \u2014 INC1166**\nA subset of logged-in users were unexpectedly signed out and forced to re-authenticate even though their session should still have been valid. Root cause: the shared Redis-backed session-store cluster evicted active session entries early under memory pressure caused by a traffic spike to an *unrelated* service sharing the same cluster (INC1166). This was mitigated on-call by flushing/rebalancing the cluster, but per the incident notes, this has happened before and was \"handled as a one-off manual mitigation rather than a permanent fix.\" PR-550 was later opened to add proactive memory-pressure alerting and eviction tuning specifically to catch this before users are affected next time.\n\n**2. Session TTL misconfiguration causing short logouts (~5 min instead of 30) \u2014 INC1115 / PROJ-312**\nThis looked like \"random\" early logouts but was actually consistent: users were logged out after ~5 minutes of inactivity instead of the documented 30-minute timeout. Root cause: a config regression shipped in an unrelated auth-service deploy that reset the session TTL value (PROJ-312). It was unrelated to the JWT key rotation work (PROJ-201/PR-455). Fixed by reverting the TTL config via PR-611. The session-management-runbook (confluence:session-management-runbook) explicitly notes this is a known failure class \u2014 check the TTL config value directly if users report shorter-than-expected sessions, since it's happened before as a config regression, not a logic bug.\n\n**What's not yet resolved:** For the memory-pressure/eviction cause (INC1166), the underlying fix (PR-550's alerting/tuning) is described as being added, but the incident notes indicate this had previously recurred without a permanent fix \u2014 so if new \"random logout\" reports are coming in now, it's worth checking whether PR-550 has actually been merged/deployed, since that detail isn't confirmed in these documents.\n\n**To pin down the current reports**, it would help to know:\n- Are affected users logged out consistently around a short, similar duration (~5 min) regardless of activity? \u2192 points to a TTL-regression-style issue like INC1115.\n- Or is it happening unpredictably/intermittently, possibly correlated with traffic spikes elsewhere in the infrastructure? \u2192 points to session-store eviction like INC1166.\n\nThere's no information in these documents about a third possible cause, so beyond these two known patterns, I can't say more without additional detail on the current reports.",
+    "ESG (v2)": "## Short Answer\n\nYes \u2014 there are two distinct, already-diagnosed causes of \"random logout\" reports in the recent history, and they are unrelated to each other:\n\n1. **Session-store eviction under memory pressure** (INC1166) \u2014 the shared Redis-backed session cache evicted active sessions early when an unrelated service sharing the same cluster spiked in traffic.\n2. **A session TTL config regression in auth-service** (INC1115 / PROJ-312) \u2014 a deploy accidentally shipped a 5-minute session timeout instead of the documented 30-minute one, causing logouts that looked \"random\" but were actually just premature expirations.\n\nBoth have been fixed, though one fix is a permanent guard and the other is a manual/reactive mitigation. If new random-logout reports are coming in now, the graph doesn't show a currently-open root cause \u2014 it only shows these two historical, resolved incidents, so further investigation would be needed to confirm which (if either) is recurring.\n\n## Supporting Evidence\n\n**Cause 1 \u2014 session-store eviction (INC1166, session-store)**\n- `servicenow:INC1166:0`: Users were intermittently logged out even though their sessions should still have been valid. Investigation traced this to `session-store`, the shared Redis-backed session cache, evicting active session entries early under memory pressure caused by an unrelated traffic spike to another service sharing the same cluster.\n- Resolution was manual: on-call flushed and rebalanced the session-store cluster. Notably, the incident notes that **this has happened before and each time was treated as a one-off manual fix rather than a permanent solution** \u2014 implying a real risk of recurrence.\n- `gitrepo:PR-550:0` (merged, reviewed by Chen Liu) directly addresses this gap: it adds proactive memory-pressure alerting and tunes the eviction policy for session-store, explicitly to catch this class of issue \"before it affects users rather than after.\" This is the closest thing to a durable fix for the session-store cause.\n\n**Cause 2 \u2014 session TTL misconfiguration (INC1115, PROJ-312, PR-611)**\n- `servicenow:INC1115:0`: Users were logged out after ~5 minutes of inactivity instead of the documented 30 minutes. Root cause: an unrelated `auth-service` deploy shipped a session TTL config regression \u2014 separate from the JWT key rotation work tracked in PROJ-201/PR-455.\n- `jira:PROJ-312:0`: Confirms (per Priya Nair) the TTL was reset during a recent deploy, unrelated to PROJ-201, \"just bad timing that it's the same service again.\"\n- `gitrepo:PR-611:0` (merged, reviewed by Tomas Berg): Reverts the TTL back to 30 minutes. Tomas Berg's review comment reiterates it's unrelated to the JWT key rotation work \u2014 just a second, unlucky issue in the same service.\n- `confluence:session-management-runbook:0`: The runbook documents the 30-minute default and explicitly advises checking the TTL config value first when users report short session lengths, since this exact class of config-regression issue (INC1115) has happened before and is not a code logic bug.\n\n**What's explicitly ruled out:** Both INC1115/PROJ-312 and PR-611 explicitly state that the TTL regression is **unrelated to PROJ-201/PR-455** (the JWT key rotation work), so JWT key rotation is not implicated in either logout cause found here.\n\n## Gaps\n\nThe graph only contains historical, resolved incidents (INC1166, INC1115/PROJ-312). There is no chunk describing a currently active/open \"random logout\" ticket, so we cannot confirm whether a new report today maps to one of these two known causes, a recurrence of the session-store eviction issue (which lacked a permanent fix until PR-550), or something new entirely. Recommend checking current session-store memory/eviction alerts (from PR-550) and confirming the current TTL config value as first diagnostic steps."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers correctly identify the two root causes (INC1166 session-store eviction, INC1115/PROJ-312 TTL regression) and appropriately hedge about which applies to current reports. ESG's answer says \"Both have been fixed\" - which is slightly overconfident regarding INC1166/PR-550, since the incident notes say prior mitigations were one-off and PR-550 adds alerting/tuning as \"closest thing to a durable fix\" but ESG's short answer summary states \"Both have been fixed, though one fix is a permanent guard and the other is a manual/reactive mitigation\" - this is a bit garbled/contradictory (says both fixed, then says one is manual/reactive, which contradicts \"fixed\"). But then in supporting evidence it clarifies PR-550 as the fix for INC1166's cause and PR-611 for INC1115. This matches flat-RAG and 2-hop's characterization closely. All three convey the same core facts and hedge similarly about not knowing the current symptom. ESG explicitly also notes the JWT rotation is ruled out, an extra detail not harmful. Overall ESG's answer is basically same substance as 2-hop's answer, just reorganized. No fabrication - PR-611, PROJ-312 are in retrieved list and relevant. This is materially the same as the 2-hop answer (which was the more complete baseline), with same hedging degree, just different structure/formatting."
+}

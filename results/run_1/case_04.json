@@ -1,0 +1,87 @@
+{
+  "case_number": 4,
+  "question": "I am hearing some partners complaining about delays in push notification to their apps. what do we know?",
+  "expected_doc_ids": [
+    "INC1070",
+    "PROJ-244",
+    "PR-481",
+    "notification-service-architecture"
+  ],
+  "excluded_doc_ids": [
+    "new-hire-onboarding-engineering-wiki-home"
+  ],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 0.5,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1070",
+        "INC1257",
+        "mobile-notification-permission-best-practices",
+        "notification-service-architecture"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1620,
+      "cost_usd": 0.00816,
+      "time_sec": 7.993227005004883,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 0.5,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1070",
+        "INC1257",
+        "mobile-notification-permission-best-practices",
+        "notification-service-architecture"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1853,
+      "cost_usd": 0.010234,
+      "time_sec": 11.580055713653564,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.6666666666666666,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1070",
+        "INC1257",
+        "PR-481",
+        "PROJ-244",
+        "mobile-notification-permission-best-practices",
+        "notification-service-architecture"
+      ],
+      "retrieval_calls": 130,
+      "llm_calls": 26,
+      "tokens": 81958,
+      "cost_usd": 0.21454499999999999,
+      "time_sec": 135.18676018714905,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Here's what we know about push notification delivery delays:\n\n**Root cause (per INC1070 and notification-service-architecture):**\n- INC1070 reports push notifications (order confirmations, shipping updates) arriving 10\u201320 minutes late for a subset of users, instead of near-instantly.\n- The notification-worker queue depth has been steadily climbing since the evening before the report, indicating the consumer side can't keep pace with incoming message volume. No message loss \u2014 only delay.\n- The notification-service-architecture doc explains the likely mechanism: consumer concurrency for notification-worker processes is fixed at a static pool size (set in notification-queue-config) based on initial launch traffic expectations, and hasn't been revisited since. This is flagged as a potential scaling bottleneck if queue depth or delivery latency trends upward \u2014 which is exactly what INC1070 is now seeing.\n\n**Current status:**\n- The messaging team has opened a Jira story to investigate the queue backlog and is prototyping a fix to increase worker concurrency.\n- That fix is still in a **draft pull request** \u2014 it has not been merged or deployed yet.\n\n**What's not related:** There's a separate incident (INC1257) and wiki page (mobile-notification-permission-best-practices) about a drop in push notification **opt-in rates**, suspected to be tied to a permission-prompt timing change \u2014 but that's a distinct issue (users not opting in) rather than delayed delivery to already-opted-in users, and it's still unconfirmed by engineering. Worth not conflating the two if partners mention both.\n\n**Gap:** No document confirms a fix has shipped or gives an ETA for resolution of the delay issue \u2014 only that a draft PR exists for increasing worker concurrency.",
+    "2-hop": "Here's what we know about push notification delays:\n\n**Root incident: INC1070 \u2014 \"Push notifications delayed by 10+ minutes for a subset of users\"**\n- Users reported push notifications (order confirmations, shipping updates) arriving 10-20 minutes late instead of near-instantly.\n- The notification-worker queue depth has been steadily climbing since the evening before the report, indicating the consumer side can't keep pace with incoming messages.\n- No message loss \u2014 only delay.\n- **Status**: The messaging team opened a Jira story to investigate the backlog and is prototyping a fix to increase worker concurrency, but that fix is still in a **draft pull request** \u2014 not merged or deployed yet. So the delay issue is still unresolved as of the last update.\n\n**Likely contributing architecture factor (confluence:notification-service-architecture):**\n- Messages flow from upstream services (order-service, shipping-service) into a queue, consumed by a pool of notification-worker processes that dispatch via the external push-notification-provider.\n- Consumer concurrency is a **static pool size** (set in `notification-queue-config`), sized for initial launch traffic and never revisited. The doc explicitly flags this as a potential scaling bottleneck \"if queue depth or delivery latency ever trends upward over time\" \u2014 which lines up with what's happening in INC1070.\n\n**Note on a separate, unrelated issue:** There's also INC1257, about a drop in push notification *opt-in rates* for new installs, suspected (unconfirmed) to be linked to a permission-prompt timing change (see confluence:mobile-notification-permission-best-practices). This is a different problem (opt-in/permission, not delivery delay) and doesn't appear connected to INC1070's queue backlog.\n\n**What's missing:** There's no confirmation yet that the draft PR/fix for worker concurrency has been merged, deployed, or actually resolved the queue backlog \u2014 so we can't say whether the delays partners are seeing now are still ongoing or already fixed. No RCA ticket or postmortem is available in these documents beyond the \"investigating/prototyping\" status.",
+    "ESG (v2)": "## Short Answer\n\nYes \u2014 this is a known, active issue. It's tracked as **INC1070**: push notifications (order confirmations, shipping updates) are arriving 10\u201320 minutes late for a subset of users, caused by the `notification-worker` queue consumers falling behind incoming message volume (queue depth has been climbing steadily). No messages are being lost, only delayed. A fix (increasing worker concurrency) is in progress but is still a **draft, unmerged pull request** \u2014 so the delays are ongoing and not yet resolved. There's a separate, unrelated issue (INC1257) about a drop in push *opt-in rates* that is not related to delivery delays.\n\n## Supporting Evidence\n\n**The incident itself \u2014 INC1070**\n- servicenow:INC1070:0 describes push notifications delayed by 10+ minutes for a subset of users, specifically order confirmations and shipping updates arriving 10-20 minutes late instead of near-instantly.\n- The root symptom identified is that `notification-worker` queue depth has been steadily climbing since the evening before the report, indicating consumers can't keep pace with incoming messages.\n- Explicitly no message loss \u2014 only delay.\n- Status: still \"Investigating.\" A fix is in progress but not deployed: \"Messaging team has opened a Jira story to investigate queue backlog causes and is prototyping a fix to increase worker concurrency. Fix is still in a draft pull request and has not been merged or deployed.\"\n\n**The investigation \u2014 PROJ-244**\n- jira:PROJ-244:0 (In Progress, owned within Messaging team context, worked by Chen Liu) ties directly back to INC1070, confirming delivery has been running 10-20 minutes behind for a subset of users.\n- Chen Liu's analysis: queue depth roughly *tripled* over 48 hours \"without a corresponding traffic increase,\" which points to a **consumer throughput regression** rather than simple load growth \u2014 i.e., something changed in processing capacity/efficiency, not just more traffic.\n- Chen Liu opened a draft PR (PR-481) to increase worker concurrency as a first fix attempt, but is still validating it doesn't cause downstream rate-limit issues before merging.\n\n**The proposed fix \u2014 PR-481**\n- gitrepo:PR-481:0 is an open **draft** PR to increase notification-worker consumer concurrency, meant to address the INC1070/PROJ-244 delays.\n- It is explicitly marked draft because it needs load testing to confirm it won't trigger downstream rate-limit errors on the `push-notification-provider` integration (the external service partners' apps ultimately receive notifications from).\n- Chen Liu's review comment: \"Opening as draft for visibility... Not ready to merge yet.\" So this fix is not yet deployed to production.\n\n**Relevant architectural context**\n- confluence:notification-service-architecture:0 explains the pipeline: order-service and shipping-service produce messages onto a queue, consumed by a pool of `notification-worker` processes, which then dispatch via `push-notification-provider`. Consumer concurrency is set via `notification-queue-config` and has been a **static pool size since initial launch, never revisited** \u2014 flagged in the doc itself as a potential scaling bottleneck \"if queue depth or delivery latency ever trends upward over time.\" This matches what's now happening in INC1070/PROJ-244.\n\n**Unrelated issue \u2014 worth flagging to avoid confusion**\n- INC1257 and confluence:mobile-notification-permission-best-practices:0 concern a *drop in push notification opt-in rates* for new installs, suspected (unconfirmed) to be related to a permission-prompt timing change on mobile. This is a separate problem from delivery delays and does not explain the partner complaints about delayed notifications.\n\n## What's Missing\n\n- No confirmation yet of the underlying root cause of the \"consumer throughput regression\" Chen Liu noted (why queue depth tripled without traffic increase) \u2014 that's still under investigation.\n- No timeline for when PR-481 will complete load testing and merge, so there's no ETA for resolution.\n- No direct evidence in the graph explicitly connecting \"partner\" complaints (as opposed to end-user complaints) to INC1070, though the described symptom (delayed push notifications to apps) matches what partners are likely experiencing."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "ESG's answer covers everything the baselines cover (INC1070 root cause, notification-service-architecture context, INC1257 unrelated issue) and additionally surfaces PROJ-244 and PR-481, which are part of the expected document set but missing from both baselines. This adds material facts (queue depth tripled over 48 hours without traffic increase, pointing to consumer throughput regression; PR-481 draft status and why it's not merged - pending load testing for rate-limit issues) that are grounded in the expected documents and not fabricated - both PROJ-244 and PR-481 appear in ESG's retrieved list. ESG also appropriately hedges on remaining gaps (root cause of throughput regression, no ETA, no explicit \"partner\" language in docs). This is a case where ESG surfaces additional grounded material facts from expected documents that both baselines missed entirely."
+}

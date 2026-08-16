@@ -1,0 +1,77 @@
+{
+  "case_number": 3,
+  "question": "checkout latency during the flash sale",
+  "expected_doc_ids": [
+    "INC1082",
+    "PROJ-260"
+  ],
+  "excluded_doc_ids": [
+    "new-hire-onboarding-engineering-wiki-home"
+  ],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1082",
+        "PROJ-260"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1256,
+      "cost_usd": 0.007304,
+      "time_sec": 7.388909101486206,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1082",
+        "PROJ-260"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 1149,
+      "cost_usd": 0.005978,
+      "time_sec": 7.663015842437744,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1082",
+        "PROJ-260"
+      ],
+      "retrieval_calls": 55,
+      "llm_calls": 12,
+      "tokens": 40582,
+      "cost_usd": 0.107779,
+      "time_sec": 71.67092394828796,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the two documents provided (INC1082 and PROJ-260), here's what's known about the checkout latency during the flash sale:\n\n**What happened:**\n- During the flash sale, checkout p95 latency rose from a baseline of ~400ms to over 6 seconds under peak concurrent load (INC1082).\n- Customers experienced the checkout button \"spinning\" for extended periods before either succeeding or timing out (INC1082).\n\n**Root cause status: NOT YET CONFIRMED**\n- Early profiling points toward **lock contention in inventory-service** during concurrent stock-decrement operations, but this is explicitly flagged as unconfirmed as the sole cause (INC1082, PROJ-260).\n- Aisha Rahman noted that **checkout-service itself also showed elevated thread wait times**, suggesting there may be more than one contributing factor (PROJ-260).\n\n**Current state:**\n- Profiling is still in progress \u2014 Aisha Rahman planned to continue profiling inventory-service locking behavior \"tomorrow\" (PROJ-260).\n- **No fix has been proposed yet** (PROJ-260).\n- Business stakeholders have been notified of the ongoing customer impact (INC1082).\n- The Jira story PROJ-260 was opened to track the investigation, with the stated goal of shipping a fix before the next planned promotional event.\n\n**What's missing from these documents:**\n- No confirmed root cause or final diagnosis.\n- No fix, remediation plan, or timeline for resolution.\n- No information on incident resolution/closure status.\n- No data on the specific promotional event mentioned as the deadline target.\n\nIf you need the eventual root cause or resolution details, that information isn't contained in the documents provided here \u2014 a follow-up on PROJ-260 or a related incident/change ticket would be needed.",
+    "2-hop": "Based on the retrieved documents, here's what's known about the checkout latency during the flash sale:\n\n**Incident: INC1082** \u2014 Checkout p95 latency rose from a baseline of ~400ms to over 6 seconds during peak concurrent load in today's flash sale. Customers experienced the checkout button \"spinning\" before either succeeding or timing out. The incident is currently in the profiling stage, and business stakeholders have been notified of ongoing customer impact.\n\n**Tracking issue: PROJ-260** \u2014 Opened to investigate the latency spike and ship a fix before the next promotional event. Per Aisha Rahman's comments:\n- Profiler output points to **lock contention in inventory-service** during concurrent stock-decrement operations as a likely contributor.\n- This is **not yet confirmed as the sole cause** \u2014 checkout-service itself also showed elevated thread wait times.\n- As of the latest update, profiling of inventory-service's locking behavior is ongoing, and **no fix has been proposed yet**.\n\n**What's missing:** There is no confirmed root cause, no fix/resolution, and no root-cause analysis document beyond the preliminary profiler findings. Both documents explicitly state the lock-contention theory is unconfirmed and that checkout-service's elevated thread wait times remain an open, unexplained factor. No further ticket IDs are referenced in these two documents to follow up on.",
+    "ESG (v2)": "## Short Answer\n\nThe checkout latency spike during the flash sale is tracked as **INC1082** (ServiceNow incident) and **PROJ-260** (Jira investigation story), and it is currently **unresolved** \u2014 both are still \"In Progress.\" The leading hypothesis is **lock contention in inventory-service** during concurrent stock-decrement operations, but this has explicitly **not been confirmed as the sole cause**, and no fix has been proposed yet.\n\n## Supporting Evidence\n\n**Incident details (INC1082):**\nDuring the flash sale, checkout p95 latency rose from a baseline of ~400ms to over 6 seconds under peak concurrent load, causing the checkout button to appear to hang or time out for customers. This is documented in `servicenow:INC1082:0`, which notes profiling was in progress at the time, pointing toward lock contention in `inventory-service` during concurrent stock-decrement operations \u2014 but this had **not been confirmed as the sole cause**. Business stakeholders were notified of ongoing customer impact, and a Jira story (PROJ-260) was opened to track the investigation.\n\n**Investigation details (PROJ-260):**\nThe Jira issue `jira:PROJ-260:0` (linked to INC1082) is titled \"Investigate checkout latency under high concurrent load\" and aims to identify the bottleneck and ship a fix before the next promotional event. Comments from **Aisha Rahman** provide the most recent technical findings:\n- Profiler output points at lock contention in `inventory-service` during concurrent stock-decrement operations.\n- This is **not yet 100% confirmed as the only contributor** \u2014 `checkout-service` itself also showed elevated thread wait times, suggesting the bottleneck may be distributed across more than one component.\n- As of the latest comment, Aisha planned to continue profiling `inventory-service` locking behavior, and **no fix has been proposed yet**.\n\n## What's Missing\n\nThe graph does not contain:\n- Any resolution, root-cause confirmation, or fix/PR associated with INC1082 or PROJ-260.\n- Further profiling results beyond Aisha Rahman's two comments.\n- Any information on whether the fix was shipped before the \"next planned promotional event\" referenced in PROJ-260.\n\nBased on the available data, this remains an open investigation with a probable but unconfirmed root cause (inventory-service lock contention, possibly compounded by checkout-service thread waits)."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers rely on the same two expected documents (INC1082, PROJ-260) and convey materially identical facts: latency rose from ~400ms baseline to 6s+ under peak load, lock contention in inventory-service is the leading but unconfirmed hypothesis, checkout-service also showed elevated thread waits, no fix yet, investigation ongoing. ESG's answer is essentially equivalent in content and hedging to flat-RAG and 2-hop, just reformatted with headers. No new material facts are added, and no fabrications are present. This is a cosmetic difference only."
+}

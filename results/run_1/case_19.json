@@ -1,0 +1,73 @@
+{
+  "case_number": 19,
+  "question": "Why don't the warehouse inventory counts match the system?",
+  "expected_doc_ids": [
+    "INC1137",
+    "ops-warehouse-2026-08-02"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 694,
+      "cost_usd": 0.004412,
+      "time_sec": 5.5161967277526855,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 519,
+      "cost_usd": 0.002406,
+      "time_sec": 5.016382932662964,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137",
+        "ops-warehouse-2026-08-02"
+      ],
+      "retrieval_calls": 45,
+      "llm_calls": 8,
+      "tokens": 26802,
+      "cost_usd": 0.08369300000000002,
+      "time_sec": 45.96993613243103,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the single document available (**INC1137**), I can't give you a definitive answer \u2014 the ticket explicitly states the cause hasn't been determined yet.\n\nWhat INC1137 tells us:\n- A routine warehouse audit discovered discrepancies between system-recorded inventory counts and physical counts for **several SKUs**.\n- The ticket notes it's **\"not yet clear whether this is a sync-job bug or a physical process issue\"** \u2014 i.e., two candidate explanations are on the table but neither has been confirmed.\n- It is explicitly marked as **\"not yet triaged\"** with **no related ticket** linking it to a known cause or prior incident.\n\n**What's missing:** There is no root-cause analysis, no linked PR or sync-job diagnostic, and no supporting incident that would confirm whether this is a software/sync issue or a warehouse process (e.g., miscounts, unlogged movements) issue. To answer definitively, you'd need the triage/RCA output for INC1137 or a related ticket once one is created \u2014 neither exists in the provided documents.",
+    "2-hop": "Based on the single document available, INC1137 reports the discrepancy but explicitly states that the root cause has not been determined: it's \"not yet clear whether this is a sync-job bug or a physical process issue,\" and the ticket is \"not yet triaged; no related ticket exists.\"\n\nThere is no other document in the retrieved set (no linked ticket, incident, or PR) that identifies a specific cause. So I can't determine why the counts don't match \u2014 the documentation provided doesn't go beyond noting the discrepancy and its untriaged status.",
+    "ESG (v2)": "## Short Answer\n\n**The root cause is not yet determined.** The investigation found only an unconfirmed hypothesis \u2014 a possible bug in the nightly inventory sync job \u2014 but no evidence has been gathered to confirm or rule this out. Both relevant sources explicitly state the issue has not been triaged or investigated in depth.\n\n## Supporting Evidence\n\n**INC1137** (ServiceNow, status: New) formally documents the problem: a routine warehouse audit found discrepancies between system-recorded inventory and physical counts across several SKUs. The ticket itself states plainly: *\"Not yet clear whether this is a sync-job bug or a physical process issue. Not yet triaged; no related ticket exists.\"* This means no diagnosis has been completed, and at the time this ticket was logged, it wasn't even linked to other related reports.\n\n**ops-warehouse-2026-08-02** (Slack thread) provides the operational context that likely preceded or paralleled INC1137. The **warehouse-ops-team** reported that the physical count on **aisle 12** didn't match the system \u2014 for the third time this month, on different SKUs. One team member speculated the cause might be *\"the sync job skipping items during the nightly run,\"* but explicitly caveated this as a guess, adding *\"haven't dug in.\"* The team flagged it for the next day's audit and wanted a second opinion before opening a formal ticket.\n\n## What's Missing\n\nThe graph does not contain:\n- Any confirmation (or refutation) of the sync-job theory \u2014 no logs, code, or PRs examining the nightly sync process.\n- Any linkage showing whether the Slack thread's recurring aisle-12 discrepancies are the same discrepancies described in INC1137 (the ServiceNow ticket notes \"no related ticket exists,\" and no relation was found tying the two chunks together beyond topical similarity).\n- Any audit results, root-cause analysis, or resolution from either the formal audit mentioned in Slack or a follow-up on INC1137.\n\n**Bottom line:** Based on the available evidence, the mismatch between warehouse inventory counts and the system is an open, unresolved issue. The leading theory is a possible defect in the nightly inventory sync job (it may be skipping items), but this is only a team member's unverified guess \u2014 there is no confirmed root cause in the graph."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "ESG retrieved both expected documents (INC1137 and ops-warehouse-2026-08-02), while both baselines only retrieved INC1137 and missed the Slack thread entirely. ESG's answer correctly incorporates the additional context from ops-warehouse-2026-08-02 (recurring aisle-12 discrepancies, the \"sync job skipping items\" hypothesis, explicitly flagged as an unverified guess) while maintaining the same appropriate hedge as the baselines that no root cause has been confirmed. This gives the reader materially more grounded information (a named hypothesis, its speculative status, and the recurring nature of the issue) without overstating confidence beyond what the documents support. Neither baseline surfaces this additional detail since they didn't retrieve the second document."
+}

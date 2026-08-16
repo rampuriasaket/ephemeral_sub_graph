@@ -1,0 +1,85 @@
+{
+  "case_number": 35,
+  "question": "What's the story behind PROJ-445?",
+  "expected_doc_ids": [
+    "PROJ-445",
+    "PR-740"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 1.0,
+      "precision": 0.5,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "PR-740",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445"
+      ],
+      "retrieval_calls": 15,
+      "llm_calls": 1,
+      "tokens": 1024,
+      "cost_usd": 0.004816,
+      "time_sec": 4.69217586517334,
+      "stop_reason": "single-pass + question-ID exact match"
+    },
+    {
+      "system": "2-hop",
+      "recall": 1.0,
+      "precision": 0.3333333333333333,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PR-740",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445",
+        "eng-infra-2026-08-15"
+      ],
+      "retrieval_calls": 25,
+      "llm_calls": 1,
+      "tokens": 1435,
+      "cost_usd": 0.006318,
+      "time_sec": 5.064733982086182,
+      "stop_reason": "single-pass, one follow-up hop + question-ID exact match"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.3333333333333333,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PR-740",
+        "PROJ-425",
+        "PROJ-440",
+        "PROJ-445",
+        "eng-infra-2026-08-15"
+      ],
+      "retrieval_calls": 115,
+      "llm_calls": 18,
+      "tokens": 71137,
+      "cost_usd": 0.219095,
+      "time_sec": 112.96984696388245,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the provided documents, here's the story behind PROJ-445:\n\n**PROJ-445** was a minor, routine maintenance ticket \u2014 a small robustness improvement to the automated SSL certificate renewal script. According to its description, it was **explicitly unrelated to any incident**.\n\nThe associated work was done in **PR-740** (\"Improve robustness of SSL cert renewal automation script\"), which added retry handling to the script. The PR description confirms this was \"proactive maintenance, not tied to an incident.\"\n\nReview/comment trail:\n- Tomas Berg approved PR-740.\n- Omar Farouk commented on PROJ-445: \"PR-740, routine. Merged.\"\n\nSo there's no deeper incident or root-cause story here \u2014 it was a straightforward, low-priority hardening change (adding retries) to existing automation, reviewed and merged without complications.\n\nNote: I don't see any connection between PROJ-445 and the other documents (PROJ-440, PROJ-425) \u2014 those appear to be unrelated tickets included in the retrieval set, not part of this story.",
+    "2-hop": "Based on the documents, PROJ-445 is a minor, routine engineering ticket unrelated to any incident.\n\n**The story:**\n- **PROJ-445** is described as a \"minor tweak to SSL cert renewal automation script\" \u2014 a \"small robustness improvement\" that is explicitly noted as \"unrelated to any incident.\"\n- It's linked to **PR-740** (\"Improve robustness of SSL cert renewal automation script\"), which adds retry handling to the automated SSL certificate renewal script. The PR description reiterates this was \"proactive maintenance, not tied to an incident.\"\n- The PR was reviewed and approved by Tomas Berg (\"Approved.\").\n- On the PROJ-445 ticket itself, Omar Farouk commented: \"PR-740, routine. Merged.\" \u2014 indicating the change was completed and merged without complication.\n\n**In short:** PROJ-445 has no dramatic backstory \u2014 it was a routine, proactive hardening of the SSL cert renewal script (adding retry logic via PR-740), reviewed, approved, and merged without incident.\n\nNo other documents (e.g., PROJ-425, INC1243, PROJ-440, the Slack thread) reference or connect to PROJ-445 \u2014 those appear to be unrelated items about sporadic API gateway 502s and a CI provider exploration.",
+    "ESG (v2)": "## Direct Answer\n\nPROJ-445 is a small, routine engineering ticket for a \"minor tweak to SSL cert renewal automation script\" \u2014 it added retry-handling robustness to an automated certificate renewal script. It was implemented via PR-740, reviewed and approved by Tomas Berg, merged, and closed out with a comment from Omar Farouk calling it \"routine.\" Notably, both the ticket and the PR explicitly state this work is **unrelated to any incident** \u2014 it's proactive maintenance, not a fix for a specific problem.\n\n## Supporting Evidence\n\n- **jira:PROJ-445:0** (status: Done) \u2014 The ticket itself: \"Small robustness improvement to the automated SSL certificate renewal script, unrelated to any incident.\" Omar Farouk's comment: \"PR-740, routine. Merged.\"\n\n- **gitrepo:PR-740:0** (status: Merged) \u2014 The associated pull request, \"Improve robustness of SSL cert renewal automation script,\" which \"adds retry handling to the automated SSL certificate renewal script.\" Described again as \"Proactive maintenance, not tied to an incident.\" Reviewed and approved by Tomas Berg.\n\nThat's the complete, self-contained story for PROJ-445 in the graph: a minor, uneventful maintenance ticket that was reviewed and merged without incident.\n\n## Note on Other Graph Material\n\nThe search also pulled in PROJ-425, INC1243, PROJ-440, and the eng-infra-2026-08-15 Slack thread, but these concern a *separate, unresolved* issue \u2014 sporadic/low-frequency 502 errors at the API gateway (INC1243/PROJ-425), which as of the last update was still \"Investigating\"/\"In Progress\" with no root cause identified, and an unrelated CI-provider exploration backlog item (PROJ-440). None of these connect back to PROJ-445 beyond being surfaced in the same search \u2014 the graph shows no relation linking PROJ-445 or PR-740 to the gateway 502 investigation. These appear to be unrelated threads that surfaced alongside the PROJ-445 query rather than part of its story."
+  },
+  "verdict": "same",
+  "verdict_reasoning": "All three answers convey the same core facts: PROJ-445 is a routine, incident-unrelated maintenance ticket implemented via PR-740, adding retry handling to SSL cert renewal automation, reviewed by Tomas Berg, closed by Omar Farouk's \"routine, merged\" comment. All correctly note the other retrieved documents (PROJ-425, PROJ-440, INC1243, Slack thread) are unrelated. ESG's answer is essentially the same content as the 2-hop baseline, just reformatted with headers. No new material facts are added, no hedging differences, no fabrications. This is a cosmetic difference in presentation only."
+}

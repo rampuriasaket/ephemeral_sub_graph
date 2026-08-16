@@ -1,0 +1,77 @@
+{
+  "case_number": 23,
+  "question": "Why are we seeing sporadic 502s from the API gateway?",
+  "expected_doc_ids": [
+    "INC1243",
+    "PROJ-425",
+    "eng-infra-2026-08-15"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.6666666666666666,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PROJ-425"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 780,
+      "cost_usd": 0.003976,
+      "time_sec": 5.318252801895142,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.6666666666666666,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PROJ-425"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 873,
+      "cost_usd": 0.00465,
+      "time_sec": 6.444546937942505,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1243",
+        "PROJ-425",
+        "eng-infra-2026-08-15"
+      ],
+      "retrieval_calls": 60,
+      "llm_calls": 11,
+      "tokens": 38391,
+      "cost_usd": 0.10014900000000002,
+      "time_sec": 59.42889904975891,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the provided documents, the root cause of the sporadic 502s from the API gateway has not been identified.\n\nWhat's known (from INC1243 and PROJ-425):\n- The 502s occur at a low frequency (roughly 0.05% of requests).\n- No consistent pattern has been found by endpoint, time of day, or upstream service.\n- Attempts to reproduce the issue on demand, including under synthetic load, have been unsuccessful.\n- The investigating engineer noted they may need to wait for the issue to recur and capture more detail live.\n\nWhat's missing: There is no root cause, contributing factor, or resolution documented in these tickets. Neither PROJ-425 nor INC1243 identifies a cause \u2014 both explicitly state the cause is unknown/unreproduced. Additional logs, traces, or a live capture during a recurrence would be needed to answer \"why\" definitively, but that information isn't present in the retrieved documents.",
+    "2-hop": "Based on the available documents, **the root cause of the sporadic 502 errors is unknown and has not yet been identified.**\n\nWhat is documented:\n\n- **INC1243** confirms the symptom: low-frequency 502 errors (~0.05% of requests) at the API gateway, with no consistent pattern by endpoint, time of day, or upstream service. Attempts to reproduce on demand have been unsuccessful.\n- **PROJ-425** tracks the investigation into this same issue, corroborating that the errors are low-frequency and unpredictable. A comment notes that attempts to reproduce the issue under synthetic load failed, and the suggested next step is to wait for the issue to recur in production and capture more diagnostic detail live.\n\n**What's missing:** Neither document identifies a root cause, contributing factor, or fix \u2014 the investigation is still open and inconclusive. There is no information here linking the 502s to a specific upstream service, infrastructure component, deployment, or configuration change. I don't have enough information to say *why* the 502s are occurring; only that they're being actively (and unsuccessfully, so far) investigated.",
+    "ESG (v2)": "## Short Answer\n\n**The root cause is not yet known.** This is an open, unresolved investigation \u2014 INC1243 (ServiceNow incident) and PROJ-425 (Jira issue) both explicitly track the sporadic 502s from the API gateway as an active, unsolved problem. No root cause, contributing factor, or fix has been identified in the available records. The team has been unable to reproduce the issue on demand and has no pattern to point to a cause.\n\n## What the Evidence Shows\n\n**Nature of the problem (INC1243):**\nThe ServiceNow incident INC1243 describes the issue as low-frequency 502 errors (~0.05% of requests) at the API gateway, with \"no consistent pattern by endpoint, time of day, or upstream service.\" Attempts to reproduce the issue on demand have been unsuccessful. Status remains \"Investigating.\"\n\n**Investigation status (PROJ-425):**\nThe linked Jira issue PROJ-425 confirms the same description and is still \"In Progress.\" A comment on the ticket notes that the team \"tried reproducing under synthetic load, no luck,\" and suggests they may \"need to wait for it to recur and capture more detail live\" \u2014 indicating no diagnostic breakthrough yet, just a plan to catch it happening in real time.\n\n**Team awareness (eng-infra-2026-08-15):**\nA Slack thread from the infra-team corroborates that this is a known, ongoing issue being noticed independently by multiple people: \"seeing occasional 502s at the gateway, can't pin down a pattern.\" The team's plan, per this thread, is to \"catch one live with more verbose logging next time it happens\" \u2014 again reinforcing that no cause has been isolated, only a strategy to gather better data next time.\n\n## What's Missing\n\nThe graph does not contain any data on:\n- Actual root cause analysis, logs, or captured live incidents\n- Whether the \"catch it live with verbose logging\" effort ever succeeded\n- Any upstream service, infrastructure change, deployment, or config that might correlate with the 502s\n- Resolution or follow-up updates to INC1243 or PROJ-425\n\nBased on the available evidence, this remains an **open investigation with no confirmed cause** \u2014 the honest answer to \"why are we seeing sporadic 502s\" is that the engineering team does not yet know, and is actively trying to capture more diagnostic detail the next time the issue recurs."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "All three systems correctly conclude the root cause is unknown, with consistent hedging. ESG additionally retrieves and incorporates eng-infra-2026-08-15, the third expected document, which corroborates the same facts (Slack thread showing the team independently noticed the issue and plans to capture more detail live). This adds grounded completeness without introducing unsupported claims. ESG's answer is thus more complete while maintaining the same calibrated hedge as the baselines, making it strictly better."
+}

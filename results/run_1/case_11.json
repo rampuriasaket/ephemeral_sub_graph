@@ -1,0 +1,83 @@
+{
+  "case_number": 11,
+  "question": "are transactional emails like password resets being delayed right now?",
+  "expected_doc_ids": [
+    "INC1175",
+    "email-delivery-service-operational-runbook",
+    "INC1165",
+    "PROJ-340",
+    "eng-notifications-2026-08-08"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.2,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1175"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 759,
+      "cost_usd": 0.004398,
+      "time_sec": 5.134652853012085,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.2,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1175"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 836,
+      "cost_usd": 0.004912,
+      "time_sec": 5.985749006271362,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 0.5555555555555556,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1165",
+        "INC1175",
+        "INC1215",
+        "PR-710",
+        "PROJ-340",
+        "PROJ-410",
+        "email-deliverability-runbook",
+        "email-delivery-service-operational-runbook",
+        "eng-notifications-2026-08-08"
+      ],
+      "retrieval_calls": 145,
+      "llm_calls": 27,
+      "tokens": 95075,
+      "cost_usd": 0.28327299999999994,
+      "time_sec": 149.66188597679138,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the only document available (**INC1175**), this was a **past incident**, not a current ongoing issue \u2014 and it has already been resolved:\n\n- **What happened:** Password-reset and order-confirmation emails sent via `email-delivery-service` were delayed by ~30 minutes.\n- **Root cause:** A queue backlog on the *third-party email provider's* side \u2014 not a problem with `email-delivery-service` itself.\n- **Resolution:** No action was needed internally; the provider's backlog cleared on its own, and delivery times returned to normal. Support was looped in to reassure customers who asked about delayed password-reset emails during that window.\n\n**Bottom line:** According to this record, the delay was a resolved, one-time event, not a current/active problem. I don't have any document indicating a new or ongoing delay right now \u2014 if you're seeing delays currently, that would be a separate, undocumented issue not covered by INC1175.",
+    "2-hop": "Based on the available documentation, **no** \u2014 this appears to have been a past, already-resolved issue rather than an active one.\n\n**INC1175** documents an incident where transactional emails (specifically password-reset and order-confirmation emails) sent via `email-delivery-service` were delayed by approximately 30 minutes. Key details:\n\n- **Root cause**: A queue backlog on the third-party email provider's side \u2014 not a problem with `email-delivery-service` itself.\n- **Resolution**: No action was needed internally; the provider's backlog cleared on its own and delivery times returned to normal.\n- Support was notified at the time so they could reassure customers who asked about delayed password-reset emails \"during the window\" \u2014 language implying the issue was time-bound and has since passed.\n\nI don't have any document indicating a current, ongoing incident with transactional email delays \u2014 only this closed/resolved incident record. If you're asking because you're seeing delays right now, this ticket wouldn't confirm an active problem; you'd want to check for a newer, currently-open incident, which isn't present in what was retrieved.",
+    "ESG (v2)": "## Short Answer\n\nBased on the tickets in this graph, there is **no currently active \"delay\" incident** matching the pattern described in INC1175 \u2014 that incident is marked **Resolved**. However, there **is** a separate, still-**open/unresolved** investigation (INC1165 / PROJ-340) into a ~15% drop in transactional email delivery rate that had not been root-caused as of the last update. So while the specific \"emails delayed ~30 minutes\" scenario has been closed out, the graph does not show a clean bill of health for transactional email delivery overall \u2014 a related deliverability problem was still being investigated with no fix confirmed.\n\n## Supporting Evidence\n\n**1. The specific delay incident is resolved (INC1175)**\n- `servicenow:INC1175:0` \u2014 \"Transactional emails delayed approximately 30 minutes.\" Password-reset and order-confirmation emails via `email-delivery-service` were delayed. Root cause was a queue backlog on the third-party email provider's side, not the internal service. Status: **Resolved** \u2014 \"the provider's queue backlog cleared on its own and delivery times returned to normal.\" No action was needed internally.\n- This matches the guidance in `confluence:email-delivery-service-operational-runbook:0`, which says this kind of delay pattern is a known, recurring, self-resolving issue: check the provider-side queue depth dashboard first, since past delays have traced to provider backlogs rather than problems in `email-delivery-service` itself. If the provider dashboard is normal but delivery is still slow, the runbook says to escalate to the **Data Platform** on-call team to check the service's own outbound queue \u2014 there's no indication in the graph that this escalation path was needed for INC1175.\n\n**2. A related but distinct, unresolved issue: overall delivery rate drop (INC1165 / PROJ-340)**\n- `servicenow:INC1165:0` \u2014 \"Transactional email delivery rate dropped 15% this week\" (order confirmations, password resets). Status: **Investigating**. \"Suspect a deliverability/reputation issue with the email provider, still being confirmed with the vendor. No fix yet.\"\n- `jira:PROJ-340:0` \u2014 tracks this same investigation, status **In Progress**. Chen Liu's comment: \"Reaching out to the email provider to check sender reputation/deliverability \u2014 unclear if this is on our side or theirs. Still investigating.\"\n- `slack:eng-notifications-2026-08-08:0` \u2014 Chen Liu confirms in Slack: \"transactional email delivery down ~15% this week, no change on our side that I can find yet... reaching out to the provider about sender reputation, might be on their end. no fix to report, still open.\"\n- This is a drop in *delivery rate* (emails not arriving) rather than a *delay*, but it's directly relevant to \"is something currently wrong with transactional email\" and, per the graph, remained unresolved with no fix reported as of the latest update.\n\n**3. A separate, already-fixed Gmail-specific issue (INC1215 / PROJ-410 / PR-710)**\n- `servicenow:INC1215:0` \u2014 Password reset emails weren't arriving for Gmail users specifically. Root cause: a DKIM record wasn't updated after a sender-domain change, causing Gmail's strict validation to silently filter the emails. Status: **Resolved**, fixed via DNS record update, tracked in `PROJ-410` and shipped in `PR-710`.\n- `jira:PROJ-410:0` \u2014 Status **Done**. Chen Liu: \"PR-710 up and merged, monitoring delivery rate now.\"\n- `gitrepo:PR-710:0` \u2014 Status **Merged**. Marcus Webb approved, noting it explains why only Gmail users reported the issue.\n- `confluence:email-deliverability-runbook:0` notes this Gmail/DKIM issue was \"related to the general deliverability concerns raised earlier this month\" (i.e., connected conceptually to the INC1165 investigation), and that provider-specific DKIM filtering can silently affect only a subset of users \u2014 making it easy to miss without provider-segmented metrics. This page also notes it was \"prompted partly by an earlier, still-open investigation into a broader delivery-rate drop\" \u2014 reinforcing that INC1165/PROJ-340 was open at time of writing.\n\n## What's"
+  },
+  "verdict": "better",
+  "verdict_reasoning": "The expected documents include INC1175, email-delivery-service-operational-runbook, INC1165, PROJ-340, and eng-notifications-2026-08-08 \u2014 indicating the gold answer should cover both the resolved delay incident (INC1175) AND the still-open, unresolved investigation into a 15% transactional email delivery rate drop (INC1165/PROJ-340/eng-notifications-2026-08-08). Both baselines only retrieved INC1175 and concluded there is no current issue, missing the still-open INC1165/PROJ-340 investigation entirely. This is a significant gap: the baselines' bottom-line answer (\"no ongoing issue, undocumented if you're seeing one\") is actually incomplete/misleading given the expected documents show there IS an open, unresolved issue affecting transactional email delivery (though framed as a rate drop rather than strict \"delay\").\n\nESG's answer correctly surfaces INC1175 as resolved, but crucially also surfaces the still-open INC1165/PROJ-340/eng-notifications-2026-08-08 investigation into a 15% delivery rate drop, correctly noting it remains unresolved with no fix confirmed. This directly aligns with the expected document set and gives a much more accurate, complete picture. ESG also brings in additional context (INC1215/PROJ-410/PR-710) which are not in the expected set, but these are presented as a separate, resolved, Gmail-specific issue and don't appear fabricated (they're in the retrieved list, real docs, and clearly labeled as resolved/separate) \u2014 this is supplementary context, not confident overreach beyond what documents show.\n\nESG's core claims are well-grounded: INC1175 resolved (matches expected), INC1165/PROJ-340 open dropped rate issue (matches expected exactly), and the runbook citation matches expected doc email-delivery-service-operational-runbook. This is a case where ESG surfaces material facts (open investigation) that both baselines completely miss, satisfying the \"better\" criteria without asserting anything unsupported.Given the answer is cut off at the end (\"What's...\") this seems like a formatting truncation but the substantive content is already delivered before the cutoff."
+}

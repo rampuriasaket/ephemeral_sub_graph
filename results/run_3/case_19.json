@@ -1,0 +1,73 @@
+{
+  "case_number": 19,
+  "question": "Why don't the warehouse inventory counts match the system?",
+  "expected_doc_ids": [
+    "INC1137",
+    "ops-warehouse-2026-08-02"
+  ],
+  "excluded_doc_ids": [],
+  "systems": [
+    {
+      "system": "flat-RAG",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 564,
+      "cost_usd": 0.003112,
+      "time_sec": 5.613110065460205,
+      "stop_reason": "single-pass (no traversal)"
+    },
+    {
+      "system": "2-hop",
+      "recall": 0.5,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137"
+      ],
+      "retrieval_calls": 5,
+      "llm_calls": 1,
+      "tokens": 547,
+      "cost_usd": 0.002686,
+      "time_sec": 5.954110145568848,
+      "stop_reason": "single-pass, one follow-up hop"
+    },
+    {
+      "system": "ESG (v2)",
+      "recall": 1.0,
+      "precision": 1.0,
+      "excl_hit": false,
+      "excl_hit_docs": [],
+      "fabrication": false,
+      "fabrication_docs": [],
+      "retrieved_doc_ids": [
+        "INC1137",
+        "ops-warehouse-2026-08-02"
+      ],
+      "retrieval_calls": 35,
+      "llm_calls": 7,
+      "tokens": 25046,
+      "cost_usd": 0.080175,
+      "time_sec": 45.77906584739685,
+      "stop_reason": "frontier exhausted (no more leads to follow)"
+    }
+  ],
+  "answers": {
+    "flat-RAG": "Based on the single document provided (INC1137), the root cause has not yet been determined. The ticket explicitly states:\n\n- A routine warehouse audit uncovered discrepancies between system-recorded inventory counts and physical counts for several SKUs.\n- It is **not yet clear** whether this is caused by a sync-job bug or a physical process issue.\n- The incident has **not yet been triaged**, and no related ticket exists to provide further diagnostic detail.\n\n**What's missing:** There is no root-cause analysis, no diagnostic findings, and no linked incident/PR in the provided documents that would explain the actual cause of the mismatch. I don't have enough information to say definitively why the counts don't match \u2014 only that the discrepancy was observed and is still under investigation.",
+    "2-hop": "Based on the available documentation, this cannot be fully answered. INC1137 confirms that a discrepancy exists between system-recorded inventory counts and physical warehouse counts for several SKUs, but the ticket explicitly states the root cause is unknown: it's \"not yet clear whether this is a sync-job bug or a physical process issue,\" and the incident has \"not yet [been] triaged\" with \"no related ticket exists.\"\n\nNo other documents were retrieved that identify a sync-job bug, process failure, or related incident that would explain the cause. To answer definitively, further investigation/triage of INC1137 would be needed.",
+    "ESG (v2)": "## Short Answer\n\nThe investigation did **not** reach a confirmed root cause. The available evidence shows that inventory discrepancies were reported in incident **INC1137** and corroborated by warehouse staff in Slack, with a *suspicion* (not confirmed) that a nightly inventory sync job is skipping items \u2014 but this incident was never formally triaged, and no supporting engineering ticket, log, or diagnosis exists in the graph to confirm or rule out that theory.\n\n## Supporting Evidence\n\n**INC1137 \u2014 the formal incident**\n`servicenow:INC1137:0` documents that a routine warehouse audit found discrepancies between system-recorded inventory and physical counts for several SKUs. The ticket explicitly states:\n- It is \"not yet clear whether this is a sync-job bug or a physical process issue\"\n- It has \"not yet been triaged\"\n- \"No related ticket exists\"\n\nThis means the incident record itself stops at symptom description with no root-cause determination.\n\n**Slack thread \u2014 supporting observations from the field**\n`slack:ops-warehouse-2026-08-02:0` (from the **warehouse-ops-team**) adds context that likely prompted or relates to INC1137:\n- Physical counts on **aisle 12** didn't match the system \u2014 the third occurrence this month, each time on different SKUs.\n- One team member speculated the cause \"could just be the sync job skipping items during the nightly run,\" but explicitly noted this was a guess and they \"haven't dug in.\"\n- The team flagged it for the next day's audit and wanted a second opinion before opening a formal ticket.\n\n## What's Missing\n\nThe graph does not contain:\n- Any ticket, PR, or engineering investigation into the suspected \"nightly sync job\" that would confirm or refute the hypothesis.\n- Any information tying the recurring aisle 12 discrepancies to a specific SKU pattern, process failure, or system change.\n- A resolution, root-cause analysis, or fix associated with INC1137.\n\n**Bottom line:** Based on current evidence, the mismatch is a confirmed, recurring symptom (multiple SKUs, multiple weeks, specifically noted in aisle 12), and warehouse staff suspect a nightly sync job bug \u2014 but this is an unverified hypothesis, not a determined cause. The investigation frontier was exhausted before any diagnostic or engineering follow-up ticket was found, so the actual root cause remains unknown."
+  },
+  "verdict": "better",
+  "verdict_reasoning": "ESG retrieved both expected documents (INC1137 and ops-warehouse-2026-08-02) while both baselines only retrieved INC1137. ESG correctly surfaces the additional context from the Slack thread\u2014recurring discrepancies on aisle 12, and the team's hypothesis (explicitly flagged as unconfirmed) that a nightly sync job might be skipping items\u2014while still correctly hedging that no root cause was confirmed. This is materially more informative than the baselines, which only state that the cause is unknown, without surfacing the suspected sync-job hypothesis or the recurring aisle 12 pattern that the expected documents contain. ESG does not overstate confidence; it clearly labels the sync-job theory as speculation and unverified. This makes ESG strictly better than either baseline, which missed the second expected document entirely."
+}
